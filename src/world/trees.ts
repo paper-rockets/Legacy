@@ -13,7 +13,7 @@ const MAX_CAPACITY = 800;
 const MIN_TREE_HEIGHT = 4.5;
 const MAX_TREE_HEIGHT = 24.0;
 
-// ── Candy Color Presets ────────────────────────────────────────────────────────
+// ── Candy Color Presets (All Tuned for Radiant Glow) ───────────────────────────
 
 export type PresetKey = 'candy' | 'cotton' | 'lollipop' | 'mints' | 'berry';
 
@@ -27,33 +27,33 @@ export const COLOR_PRESETS: Record<PresetKey, ColorPreset> = {
     candy: {
         name: 'Candy Mix',
         canopyColors: [
-            new THREE.Color(0xff3388),  // vibrant candy pink
-            new THREE.Color(0xff66bb),  // bright bubblegum
-            new THREE.Color(0xb537f2),  // vivid purple
-            new THREE.Color(0x8b22ff),  // electric violet
-            new THREE.Color(0x38bdf8),  // electric sky blue
-            new THREE.Color(0x10b981),  // vibrant mint green
-            new THREE.Color(0xfacc15),  // lemon drop
-            new THREE.Color(0xf97316),  // orange taffy
-            new THREE.Color(0xf43f5e),  // cherry candy
+            new THREE.Color(0xff1493),  // deep neon pink
+            new THREE.Color(0xff69b4),  // hot bubblegum
+            new THREE.Color(0xb026ff),  // electric purple
+            new THREE.Color(0x8a2be2),  // blue violet
+            new THREE.Color(0x00d2ff),  // electric sky blue
+            new THREE.Color(0x00ff88),  // radioactive mint green
+            new THREE.Color(0xffe600),  // neon lemon drop
+            new THREE.Color(0xff7700),  // radiant orange taffy
+            new THREE.Color(0xff1744),  // electric cherry candy
         ],
         trunkColors: [
             new THREE.Color(0xffffff),  // glowing sugar white
             new THREE.Color(0xfff3e0),  // vanilla cream
             new THREE.Color(0xffe4e6),  // marshmallow pink
-            new THREE.Color(0xe2e8f0),  // frosted silver
+            new THREE.Color(0xe0f7fa),  // frosted mint ice
         ],
     },
     cotton: {
         name: 'Cotton Candy',
         canopyColors: [
-            new THREE.Color(0x38bdf8),  // vibrant sky blue
+            new THREE.Color(0x00bfff),  // vivid baby blue
             new THREE.Color(0x60a5fa),  // cornflower blue
-            new THREE.Color(0xf472b6),  // hot cotton pink
-            new THREE.Color(0xec4899),  // sweet magenta
+            new THREE.Color(0xff66cc),  // hot cotton pink
+            new THREE.Color(0xf43f5e),  // sweet magenta
             new THREE.Color(0xc084fc),  // bright lilac
-            new THREE.Color(0xfb923c),  // peach glaze
-            new THREE.Color(0xfde047),  // lemon sugar
+            new THREE.Color(0xffaa00),  // peach glaze
+            new THREE.Color(0xffea00),  // lemon sugar
         ],
         trunkColors: [
             new THREE.Color(0xffffff),  // pure sugar white
@@ -64,30 +64,30 @@ export const COLOR_PRESETS: Record<PresetKey, ColorPreset> = {
     lollipop: {
         name: 'Lollipop',
         canopyColors: [
-            new THREE.Color(0xef4444),  // bright cherry red
-            new THREE.Color(0xf97316),  // neon orange
-            new THREE.Color(0x84cc16),  // sour apple lime
-            new THREE.Color(0x06b6d4),  // electric cyan
-            new THREE.Color(0x9333ea),  // grape purple
-            new THREE.Color(0xf43f5e),  // ruby strawberry
-            new THREE.Color(0xeab308),  // bright lemon
+            new THREE.Color(0xff0033),  // electric cherry red
+            new THREE.Color(0xff6600),  // neon orange
+            new THREE.Color(0x39ff14),  // sour apple lime
+            new THREE.Color(0x00f0ff),  // electric cyan
+            new THREE.Color(0x9900ff),  // grape purple
+            new THREE.Color(0xff007f),  // ruby strawberry
+            new THREE.Color(0xffd700),  // bright golden lemon
         ],
         trunkColors: [
             new THREE.Color(0xffffff),  // white sugar stick
             new THREE.Color(0xffedd5),  // toasted sugar
             new THREE.Color(0xffd1dc),  // candy cane pink
-            new THREE.Color(0x78350f),  // dark chocolate
+            new THREE.Color(0x935116),  // caramel stick
         ],
     },
     mints: {
         name: 'Mints',
         canopyColors: [
-            new THREE.Color(0x10b981),  // rich spearmint
-            new THREE.Color(0x34d399),  // vibrant mint
-            new THREE.Color(0x2dd4bf),  // electric turquoise
-            new THREE.Color(0x06b6d4),  // bright cyan
+            new THREE.Color(0x00ff88),  // rich spearmint
+            new THREE.Color(0x10ff9e),  // vibrant mint
+            new THREE.Color(0x00f5d4),  // electric turquoise
+            new THREE.Color(0x00c8ff),  // bright cyan
             new THREE.Color(0x38bdf8),  // cool ice blue
-            new THREE.Color(0x059669),  // deep peppermint
+            new THREE.Color(0x00e676),  // deep peppermint
         ],
         trunkColors: [
             new THREE.Color(0xffffff),  // frosted white
@@ -98,18 +98,17 @@ export const COLOR_PRESETS: Record<PresetKey, ColorPreset> = {
     berry: {
         name: 'Berry',
         canopyColors: [
-            new THREE.Color(0xe11d48),  // wild raspberry
-            new THREE.Color(0xbe185d),  // dark strawberry
-            new THREE.Color(0x9333ea),  // wild berry violet
-            new THREE.Color(0x4f46e5),  // blueberry indigo
-            new THREE.Color(0xc026d3),  // sweet plum
-            new THREE.Color(0xf43f5e),  // candied cranberry
+            new THREE.Color(0xff0066),  // wild raspberry
+            new THREE.Color(0xd90429),  // dark strawberry
+            new THREE.Color(0x9d4edd),  // wild berry violet
+            new THREE.Color(0x3a0ca3),  // blueberry indigo
+            new THREE.Color(0xd00000),  // candied cranberry
+            new THREE.Color(0xf72585),  // neon berry magenta
         ],
         trunkColors: [
             new THREE.Color(0xffffff),  // cream white
             new THREE.Color(0xfce7f3),  // berry milk
-            new THREE.Color(0x581c87),  // blackberry wood
-            new THREE.Color(0x451a03),  // rich chocolate
+            new THREE.Color(0x6a0dad),  // blackberry wood
         ],
     },
 };
@@ -237,7 +236,6 @@ async function loadTreeGeometries(
     rootToTraverse.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
-            // Ignore stray unnamed meshes directly parented to scene root
             if (mesh.parent === gltf.scene && !mesh.name) return;
 
             const geo = mesh.geometry.clone();
@@ -307,10 +305,10 @@ export class TreeSystem {
     private canopyMat!: THREE.MeshToonMaterial;
     private bushMat!: THREE.MeshToonMaterial;
 
-    // Emissive Glow Uniforms (Dynamic Vibrant Self-Illumination at Night)
-    private canopyGlowUniform = { value: 0.2 };
-    private trunkGlowUniform = { value: 0.1 };
-    private bushGlowUniform = { value: 0.2 };
+    // Emissive Glow Uniforms
+    private canopyGlowUniform = { value: 0.35 };
+    private trunkGlowUniform = { value: 0.75 };
+    private bushGlowUniform = { value: 0.35 };
 
     // Public settings (defaults: scale 600%, density 800, bush scale 100%, bush density 250)
     public treeScale = 6.0;
@@ -325,7 +323,8 @@ export class TreeSystem {
     private lastZ = -99999;
     private dirty = true;
     private ready = false;
-    private currentGlow = 0.2;
+    private currentCanopyGlow = 0.35;
+    private currentTrunkGlow = 0.75;
     private scene: THREE.Scene;
     private dummy = new THREE.Object3D();
 
@@ -354,9 +353,9 @@ export class TreeSystem {
         const stripeTex = createCandyStripeTexture();
         const sugarTex = createSugarSparkleTexture();
 
-        // ── Materials with Instance Color Glow Shaders ─────────────────────────
+        // ── Materials with Normalized Radiance Glow Shaders ────────────────────
 
-        // Tree Trunk Material
+        // Tree Trunk Material (Maintains rich bright sugar glow across Day, Dusk, and Night)
         this.trunkMat = new THREE.MeshToonMaterial({
             color: 0xffffff,
             map: stripeTex,
@@ -364,22 +363,22 @@ export class TreeSystem {
             dithering: true,
         });
         this.trunkMat.onBeforeCompile = (shader) => {
-            shader.uniforms.uGlowIntensity = this.trunkGlowUniform;
-            shader.fragmentShader = `uniform float uGlowIntensity;\n` + shader.fragmentShader;
+            shader.uniforms.uTrunkGlow = this.trunkGlowUniform;
+            shader.fragmentShader = `uniform float uTrunkGlow;\n` + shader.fragmentShader;
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <emissivemap_fragment>',
                 `
                 #include <emissivemap_fragment>
                 #ifdef USE_INSTANCING_COLOR
-                    totalEmissiveRadiance += vInstanceColor.rgb * (uGlowIntensity * 0.4);
+                    totalEmissiveRadiance += vInstanceColor.rgb * uTrunkGlow;
                 #else
-                    totalEmissiveRadiance += diffuseColor.rgb * (uGlowIntensity * 0.4);
+                    totalEmissiveRadiance += diffuseColor.rgb * uTrunkGlow;
                 #endif
                 `
             );
         };
 
-        // Tree Canopy Material
+        // Tree Canopy Material (Normalized multi-color radiance so all colors glow vividly)
         this.canopyMat = new THREE.MeshToonMaterial({
             color: 0xffffff,
             map: swirlTex,
@@ -394,9 +393,12 @@ export class TreeSystem {
                 `
                 #include <emissivemap_fragment>
                 #ifdef USE_INSTANCING_COLOR
-                    totalEmissiveRadiance += vInstanceColor.rgb * uGlowIntensity;
+                    vec3 col = vInstanceColor.rgb;
+                    float maxC = max(col.r, max(col.g, col.b));
+                    vec3 normCol = maxC > 0.01 ? (col / maxC) : col;
+                    totalEmissiveRadiance += normCol * (uGlowIntensity * 1.5);
                 #else
-                    totalEmissiveRadiance += diffuseColor.rgb * uGlowIntensity;
+                    totalEmissiveRadiance += diffuseColor.rgb * (uGlowIntensity * 1.5);
                 #endif
                 `
             );
@@ -417,9 +419,12 @@ export class TreeSystem {
                 `
                 #include <emissivemap_fragment>
                 #ifdef USE_INSTANCING_COLOR
-                    totalEmissiveRadiance += vInstanceColor.rgb * uGlowIntensity;
+                    vec3 col = vInstanceColor.rgb;
+                    float maxC = max(col.r, max(col.g, col.b));
+                    vec3 normCol = maxC > 0.01 ? (col / maxC) : col;
+                    totalEmissiveRadiance += normCol * (uGlowIntensity * 1.3);
                 #else
-                    totalEmissiveRadiance += diffuseColor.rgb * uGlowIntensity;
+                    totalEmissiveRadiance += diffuseColor.rgb * (uGlowIntensity * 1.3);
                 #endif
                 `
             );
@@ -448,7 +453,6 @@ export class TreeSystem {
 
         // ── Bush Geometries ────────────────────────────────────────────────────
 
-        // Round bush: flattened icosahedron with billow
         const bushRoundGeo = new THREE.IcosahedronGeometry(1.4, 2);
         const brp = bushRoundGeo.attributes.position as THREE.BufferAttribute;
         for (let i = 0; i < brp.count; i++) {
@@ -463,7 +467,6 @@ export class TreeSystem {
         bushRoundGeo.computeVertexNormals();
         bushRoundGeo.translate(0, 0.4, 0);
 
-        // Flat/wide bush: heavily squashed
         const bushFlatGeo = new THREE.IcosahedronGeometry(1.8, 2);
         const bfp = bushFlatGeo.attributes.position as THREE.BufferAttribute;
         for (let i = 0; i < bfp.count; i++) {
@@ -502,20 +505,25 @@ export class TreeSystem {
         this.dirty = false;
     }
 
-    // ── Twilight & Night Glow (Glow stick radiance at night) ─────────────────
+    // ── Day, Dusk & Night Glow ─────────────────────────────────────────────────
 
     updateGlow(dt: number, timePhase: number): void {
         if (!this.ready) return;
-        // Day (0): 0.15 (crisp daytime candy luminescence)
-        // Dusk (1): 0.50 (warm twilight glow)
-        // Twilight / Night (2): 1.25 (vibrant neon glow stick radiance)
-        const baseTarget = [0.15, 0.50, 1.25][timePhase] ?? 0.15;
-        const target = baseTarget * this.glowMultiplier;
-        this.currentGlow += (target - this.currentGlow) * Math.min(1, dt * 2.5);
 
-        this.canopyGlowUniform.value = this.currentGlow;
-        this.trunkGlowUniform.value = this.currentGlow * 0.65;
-        this.bushGlowUniform.value = this.currentGlow;
+        // Trunk maintains its beautiful radiant base glow across Day, Dusk, and Night
+        const trunkTarget = 0.75 * this.glowMultiplier;
+        this.currentTrunkGlow += (trunkTarget - this.currentTrunkGlow) * Math.min(1, dt * 2.5);
+        this.trunkGlowUniform.value = this.currentTrunkGlow;
+
+        // Canopy glowstick effect: ONLY at dusk and night (0.0 during day)
+        // Day (0): 0.0 (no glowstick during the day)
+        // Dusk (1): 0.65 (glowstick activation at dusk)
+        // Twilight / Night (2): 1.35 (vibrant glowstick radiance across all colors at night)
+        const canopyTarget = ([0.0, 0.65, 1.35][timePhase] ?? 0.0) * this.glowMultiplier;
+        this.currentCanopyGlow += (canopyTarget - this.currentCanopyGlow) * Math.min(1, dt * 2.5);
+
+        this.canopyGlowUniform.value = this.currentCanopyGlow;
+        this.bushGlowUniform.value = this.currentCanopyGlow;
     }
 
     // ── Rebuild Instance Matrices and Colors ───────────────────────────────────
@@ -525,7 +533,7 @@ export class TreeSystem {
         const canopyColors = preset.canopyColors;
         const trunkColors = preset.trunkColors;
 
-        // ── 1. Rebuild Trees (Only the 3 Cartoon Trees) ─────────────────────────
+        // ── 1. Rebuild Trees (Randomized all-color glow distribution) ──────────
 
         const glbCounts = [0, 0, 0];
 
@@ -555,6 +563,8 @@ export class TreeSystem {
 
                     const rotation = rng() * Math.PI * 2;
                     const scaleVar = this.treeScale * (0.85 + rng() * 0.3);
+
+                    // Random canopy color from the active preset (all colors glow!)
                     const canopyColor = canopyColors[Math.floor(rng() * canopyColors.length)];
                     const trunkColor = trunkColors[Math.floor(rng() * trunkColors.length)];
 

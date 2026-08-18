@@ -331,9 +331,8 @@ export class UIManager {
                 photoUi.style.display = 'none';
 
                 this.pipeline.camera.fov = 60;
-                this.pipeline.camera.position.set(0, 2.8, 12);
-                const pitchOffset = Math.atan(0.18 * Math.tan(Math.PI / 6));
-                this.pipeline.camera.rotation.set(-Math.atan2(2.8, 12) + pitchOffset, 0, 0);
+                this.pipeline.camera.position.set(0, 3.6, 12);
+                this.pipeline.camera.rotation.set(-Math.atan2(3.6, 12) * 0.5, 0, 0);
                 this.player.cameraPivot.rotation.set(0, 0, 0);
                 this.pipeline.camera.updateProjectionMatrix();
 

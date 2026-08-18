@@ -40,9 +40,9 @@ export class RenderPipeline {
 
         this.bloomPass = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            0.36,
-            0.45,
-            0.72
+            0.42,
+            0.50,
+            0.55
         );
         this.composer.addPass(this.bloomPass);
 
