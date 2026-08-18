@@ -7,11 +7,11 @@ import { gradientMap } from './terrain';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const SPAWN_RADIUS = 650;
+const SPAWN_RADIUS = 700;
 const REBUILD_THRESHOLD = 20;
 const MAX_CAPACITY = 800;
-const MIN_TREE_HEIGHT = 5.0;
-const MAX_TREE_HEIGHT = 30.0;
+const MIN_TREE_HEIGHT = 4.5;
+const MAX_TREE_HEIGHT = 24.0;
 
 // ── Candy Color Presets ────────────────────────────────────────────────────────
 
@@ -27,90 +27,89 @@ export const COLOR_PRESETS: Record<PresetKey, ColorPreset> = {
     candy: {
         name: 'Candy Mix',
         canopyColors: [
-            new THREE.Color(0xff77a9),  // bubblegum pink
-            new THREE.Color(0xff9ec6),  // pastel pink
-            new THREE.Color(0xc77dff),  // bright purple
-            new THREE.Color(0xa855f7),  // violet
-            new THREE.Color(0xd8b4fe),  // lavender
-            new THREE.Color(0x6ee7b7),  // mint
-            new THREE.Color(0x38bdf8),  // sky blue
-            new THREE.Color(0xfde68a),  // lemon candy
-            new THREE.Color(0xfb7185),  // coral sweet
-            new THREE.Color(0xfda4af),  // salmon taffy
+            new THREE.Color(0xff3388),  // vibrant candy pink
+            new THREE.Color(0xff66bb),  // bright bubblegum
+            new THREE.Color(0xb537f2),  // vivid purple
+            new THREE.Color(0x8b22ff),  // electric violet
+            new THREE.Color(0x38bdf8),  // electric sky blue
+            new THREE.Color(0x10b981),  // vibrant mint green
+            new THREE.Color(0xfacc15),  // lemon drop
+            new THREE.Color(0xf97316),  // orange taffy
+            new THREE.Color(0xf43f5e),  // cherry candy
         ],
         trunkColors: [
-            new THREE.Color(0xffffff),  // sugar white
-            new THREE.Color(0xfff5ea),  // vanilla cream
-            new THREE.Color(0xffe8ec),  // marshmallow
-            new THREE.Color(0xd4a373),  // caramel
+            new THREE.Color(0xffffff),  // glowing sugar white
+            new THREE.Color(0xfff3e0),  // vanilla cream
+            new THREE.Color(0xffe4e6),  // marshmallow pink
+            new THREE.Color(0xe2e8f0),  // frosted silver
         ],
     },
     cotton: {
         name: 'Cotton Candy',
         canopyColors: [
-            new THREE.Color(0x93c5fd),  // baby blue
-            new THREE.Color(0xbfdbfe),  // soft ice blue
-            new THREE.Color(0xfbcfe8),  // soft candy pink
-            new THREE.Color(0xf472b6),  // fluffy magenta
-            new THREE.Color(0xe9d5ff),  // soft lilac
-            new THREE.Color(0xfed7aa),  // peach whip
-            new THREE.Color(0xfef08a),  // buttercream
+            new THREE.Color(0x38bdf8),  // vibrant sky blue
+            new THREE.Color(0x60a5fa),  // cornflower blue
+            new THREE.Color(0xf472b6),  // hot cotton pink
+            new THREE.Color(0xec4899),  // sweet magenta
+            new THREE.Color(0xc084fc),  // bright lilac
+            new THREE.Color(0xfb923c),  // peach glaze
+            new THREE.Color(0xfde047),  // lemon sugar
         ],
         trunkColors: [
             new THREE.Color(0xffffff),  // pure sugar white
-            new THREE.Color(0xfff0f5),  // lavender white
-            new THREE.Color(0xf0f9ff),  // ice white
+            new THREE.Color(0xffeef5),  // lavender white
+            new THREE.Color(0xe0f2fe),  // ice blue white
         ],
     },
     lollipop: {
         name: 'Lollipop',
         canopyColors: [
-            new THREE.Color(0xef4444),  // cherry red
-            new THREE.Color(0xf97316),  // orange soda
-            new THREE.Color(0x84cc16),  // sour lime
-            new THREE.Color(0x06b6d4),  // electric blue
-            new THREE.Color(0x8b5cf6),  // grape purple
-            new THREE.Color(0xec4899),  // hot pink
-            new THREE.Color(0xeab308),  // sunny lemon
+            new THREE.Color(0xef4444),  // bright cherry red
+            new THREE.Color(0xf97316),  // neon orange
+            new THREE.Color(0x84cc16),  // sour apple lime
+            new THREE.Color(0x06b6d4),  // electric cyan
+            new THREE.Color(0x9333ea),  // grape purple
+            new THREE.Color(0xf43f5e),  // ruby strawberry
+            new THREE.Color(0xeab308),  // bright lemon
         ],
         trunkColors: [
-            new THREE.Color(0xffffff),  // white stick
+            new THREE.Color(0xffffff),  // white sugar stick
             new THREE.Color(0xffedd5),  // toasted sugar
-            new THREE.Color(0x6b4226),  // chocolate stick
             new THREE.Color(0xffd1dc),  // candy cane pink
+            new THREE.Color(0x78350f),  // dark chocolate
         ],
     },
     mints: {
         name: 'Mints',
         canopyColors: [
-            new THREE.Color(0x34d399),  // spearmint
-            new THREE.Color(0x6ee7b7),  // light mint
-            new THREE.Color(0xa7f3d0),  // frosted green
-            new THREE.Color(0x2dd4bf),  // turquoise
-            new THREE.Color(0x38bdf8),  // peppermint ice
-            new THREE.Color(0x0284c7),  // deep cool blue
-            new THREE.Color(0xccfbf1),  // icy seafoam
+            new THREE.Color(0x10b981),  // rich spearmint
+            new THREE.Color(0x34d399),  // vibrant mint
+            new THREE.Color(0x2dd4bf),  // electric turquoise
+            new THREE.Color(0x06b6d4),  // bright cyan
+            new THREE.Color(0x38bdf8),  // cool ice blue
+            new THREE.Color(0x059669),  // deep peppermint
         ],
         trunkColors: [
             new THREE.Color(0xffffff),  // frosted white
-            new THREE.Color(0xe0f2fe),  // cool ice
             new THREE.Color(0xd1fae5),  // mint cream
+            new THREE.Color(0xe0f2fe),  // icy white
         ],
     },
     berry: {
         name: 'Berry',
         canopyColors: [
-            new THREE.Color(0xdb2777),  // wild raspberry
+            new THREE.Color(0xe11d48),  // wild raspberry
             new THREE.Color(0xbe185d),  // dark strawberry
-            new THREE.Color(0x7c3aed),  // blackberry violet
+            new THREE.Color(0x9333ea),  // wild berry violet
             new THREE.Color(0x4f46e5),  // blueberry indigo
             new THREE.Color(0xc026d3),  // sweet plum
             new THREE.Color(0xf43f5e),  // candied cranberry
         ],
         trunkColors: [
             new THREE.Color(0xffffff),  // cream white
-            new THREE.Color(0x5c3d2e),  // dark chocolate
             new THREE.Color(0xfce7f3),  // berry milk
+            new THREE.Color(0x581c87),  // blackberry wood
+            new THREE.Color(0x451a03),  // rich chocolate
         ],
     },
 };
@@ -134,7 +133,7 @@ function createCandySwirlTexture(): THREE.CanvasTexture {
             if (val > 0.1) {
                 const x = cx + Math.cos(a) * r;
                 const y = cy + Math.sin(a) * r;
-                ctx.fillStyle = 'rgba(255, 235, 245, 0.65)';
+                ctx.fillStyle = 'rgba(255, 230, 245, 0.65)';
                 ctx.fillRect(x, y, 2, 2);
             }
         }
@@ -156,7 +155,7 @@ function createCandyStripeTexture(): THREE.CanvasTexture {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 128, 128);
 
-    ctx.strokeStyle = 'rgba(255, 220, 235, 0.55)';
+    ctx.strokeStyle = 'rgba(255, 215, 230, 0.55)';
     ctx.lineWidth = 12;
     for (let x = -128; x < 256; x += 28) {
         ctx.beginPath();
@@ -249,7 +248,6 @@ async function loadTreeGeometries(
     const mergedTrunk = trunkGeos.length > 0 ? (trunkGeos.length === 1 ? trunkGeos[0] : (mergeGeometries(trunkGeos, false) || trunkGeos[0])) : new THREE.BufferGeometry();
     const mergedCanopy = canopyGeos.length > 0 ? (canopyGeos.length === 1 ? canopyGeos[0] : (mergeGeometries(canopyGeos, false) || canopyGeos[0])) : new THREE.BufferGeometry();
 
-    // Compute combined bounding box for identical alignment
     const combinedGeos: THREE.BufferGeometry[] = [];
     if (trunkGeos.length > 0) combinedGeos.push(mergedTrunk);
     if (canopyGeos.length > 0) combinedGeos.push(mergedCanopy);
@@ -284,13 +282,9 @@ async function loadTreeGeometries(
 // ── TreeSystem ─────────────────────────────────────────────────────────────────
 
 export class TreeSystem {
-    // InstancedMeshes: 3 GLB Tree Types (separated trunk & canopy)
+    // 3 GLB Tree Types (Separated Trunk & Canopy)
     private glbTrunkInsts: THREE.InstancedMesh[] = [];
     private glbCanopyInsts: THREE.InstancedMesh[] = [];
-
-    // Lollipop Tree (separated trunk & canopy)
-    private lolliTrunkInst!: THREE.InstancedMesh;
-    private lolliCanopyInst!: THREE.InstancedMesh;
 
     // Bushes (2 varieties)
     private bushInsts: THREE.InstancedMesh[] = [];
@@ -298,14 +292,16 @@ export class TreeSystem {
     // Materials
     private trunkMat!: THREE.MeshToonMaterial;
     private canopyMat!: THREE.MeshToonMaterial;
-    private lolliTrunkMat!: THREE.MeshToonMaterial;
-    private lolliCanopyMat!: THREE.MeshToonMaterial;
     private bushMat!: THREE.MeshToonMaterial;
 
-    // Public settings
-    public treeScale = 1.5;
-    public treeDensity = 200;
-    public lollipopRatio = 0.25;
+    // Emissive Glow Uniforms (Dynamic Vibrant Self-Illumination at Night)
+    private canopyGlowUniform = { value: 0.2 };
+    private trunkGlowUniform = { value: 0.1 };
+    private bushGlowUniform = { value: 0.2 };
+
+    // Public settings (defaults: scale 600%, density 800, bush scale 100%, bush density 250)
+    public treeScale = 6.0;
+    public treeDensity = 800;
     public bushScale = 1.0;
     public bushDensity = 250;
     public activePresetKey: PresetKey = 'candy';
@@ -315,7 +311,7 @@ export class TreeSystem {
     private lastZ = -99999;
     private dirty = true;
     private ready = false;
-    private currentEmissive = 0;
+    private currentGlow = 0.2;
     private scene: THREE.Scene;
     private dummy = new THREE.Object3D();
 
@@ -331,7 +327,7 @@ export class TreeSystem {
         dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/gltf/');
         gltfLoader.setDRACOLoader(dracoLoader);
 
-        // Load 3 GLB tree models in parallel
+        // Strictly load only the 3 Cartoon tree GLB models
         const [t1, t2, t3] = await Promise.all([
             loadTreeGeometries('/Assets/Cartoon/Cartoon_Trees_Tree_1.glb', gltfLoader),
             loadTreeGeometries('/Assets/Cartoon/Cartoon_Trees_Tree_2.glb', gltfLoader),
@@ -344,59 +340,78 @@ export class TreeSystem {
         const stripeTex = createCandyStripeTexture();
         const sugarTex = createSugarSparkleTexture();
 
-        // ── Materials (Different for trunk vs canopy) ──────────────────────────
+        // ── Materials with Instance Color Glow Shaders ─────────────────────────
 
-        // Tree Trunk: candy-striped / smooth cream bark with subtle bloom
+        // Tree Trunk Material
         this.trunkMat = new THREE.MeshToonMaterial({
             color: 0xffffff,
             map: stripeTex,
             gradientMap,
-            emissive: new THREE.Color(0xfff0ea),
-            emissiveIntensity: 0.08,
             dithering: true,
         });
+        this.trunkMat.onBeforeCompile = (shader) => {
+            shader.uniforms.uGlowIntensity = this.trunkGlowUniform;
+            shader.fragmentShader = `uniform float uGlowIntensity;\n` + shader.fragmentShader;
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <emissivemap_fragment>',
+                `
+                #include <emissivemap_fragment>
+                #ifdef USE_INSTANCING_COLOR
+                    totalEmissiveRadiance += vInstanceColor.rgb * (uGlowIntensity * 0.4);
+                #else
+                    totalEmissiveRadiance += diffuseColor.rgb * (uGlowIntensity * 0.4);
+                #endif
+                `
+            );
+        };
 
-        // Tree Canopy: swirl-textured candy canopy
+        // Tree Canopy Material
         this.canopyMat = new THREE.MeshToonMaterial({
             color: 0xffffff,
             map: swirlTex,
             gradientMap,
-            emissive: new THREE.Color(0xffddee),
-            emissiveIntensity: 0.0,
             dithering: true,
         });
+        this.canopyMat.onBeforeCompile = (shader) => {
+            shader.uniforms.uGlowIntensity = this.canopyGlowUniform;
+            shader.fragmentShader = `uniform float uGlowIntensity;\n` + shader.fragmentShader;
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <emissivemap_fragment>',
+                `
+                #include <emissivemap_fragment>
+                #ifdef USE_INSTANCING_COLOR
+                    totalEmissiveRadiance += vInstanceColor.rgb * uGlowIntensity;
+                #else
+                    totalEmissiveRadiance += diffuseColor.rgb * uGlowIntensity;
+                #endif
+                `
+            );
+        };
 
-        // Lollipop Trunk: glowing white candy stick
-        this.lolliTrunkMat = new THREE.MeshToonMaterial({
-            color: 0xfffcf7,
-            map: stripeTex,
-            gradientMap,
-            emissive: new THREE.Color(0xffffff),
-            emissiveIntensity: 0.16,
-            dithering: true,
-        });
-
-        // Lollipop Canopy: vibrant candy top with swirl
-        this.lolliCanopyMat = new THREE.MeshToonMaterial({
-            color: 0xffffff,
-            map: swirlTex,
-            gradientMap,
-            emissive: new THREE.Color(0xffddee),
-            emissiveIntensity: 0.0,
-            dithering: true,
-        });
-
-        // Bush Material: sugar-crystal dithered sheen
+        // Bush Material
         this.bushMat = new THREE.MeshToonMaterial({
             color: 0xffffff,
             map: sugarTex,
             gradientMap,
-            emissive: new THREE.Color(0xffddee),
-            emissiveIntensity: 0.0,
             dithering: true,
         });
+        this.bushMat.onBeforeCompile = (shader) => {
+            shader.uniforms.uGlowIntensity = this.bushGlowUniform;
+            shader.fragmentShader = `uniform float uGlowIntensity;\n` + shader.fragmentShader;
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <emissivemap_fragment>',
+                `
+                #include <emissivemap_fragment>
+                #ifdef USE_INSTANCING_COLOR
+                    totalEmissiveRadiance += vInstanceColor.rgb * uGlowIntensity;
+                #else
+                    totalEmissiveRadiance += diffuseColor.rgb * uGlowIntensity;
+                #endif
+                `
+            );
+        };
 
-        // Helper to setup InstancedMesh with pre-allocated color attribute
+        // Helper to setup InstancedMesh with pre-allocated instanceColor attribute
         const setupInstMesh = (geo: THREE.BufferGeometry, mat: THREE.Material, capacity: number, castShadow: boolean = true) => {
             const inst = new THREE.InstancedMesh(geo, mat, capacity);
             inst.count = 0;
@@ -416,27 +431,6 @@ export class TreeSystem {
             this.glbTrunkInsts.push(trunkInst);
             this.glbCanopyInsts.push(canopyInst);
         }
-
-        // ── Lollipop Geometry ──────────────────────────────────────────────────
-
-        const trunkGeo = new THREE.CylinderGeometry(0.14, 0.22, 3.5, 8);
-        trunkGeo.translate(0, 1.75, 0);
-        trunkGeo.computeVertexNormals();
-
-        const canopyGeo = new THREE.IcosahedronGeometry(1.8, 2);
-        const cp = canopyGeo.attributes.position as THREE.BufferAttribute;
-        for (let i = 0; i < cp.count; i++) {
-            const x = cp.getX(i);
-            let y = cp.getY(i);
-            const z = cp.getZ(i);
-            y += Math.sin(x * 2.2) * Math.cos(z * 2.2) * 0.2;
-            cp.setXYZ(i, x, y, z);
-        }
-        canopyGeo.computeVertexNormals();
-        canopyGeo.translate(0, 4.5, 0);
-
-        this.lolliTrunkInst = setupInstMesh(trunkGeo, this.lolliTrunkMat, MAX_CAPACITY, true);
-        this.lolliCanopyInst = setupInstMesh(canopyGeo, this.lolliCanopyMat, MAX_CAPACITY, true);
 
         // ── Bush Geometries ────────────────────────────────────────────────────
 
@@ -494,18 +488,19 @@ export class TreeSystem {
         this.dirty = false;
     }
 
-    // ── Twilight Glow ──────────────────────────────────────────────────────────
+    // ── Twilight & Night Glow (Keeps colors vibrant and luminous at night) ─────
 
     updateGlow(dt: number, timePhase: number): void {
         if (!this.ready) return;
-        const target = [0.0, 0.08, 0.35][timePhase] ?? 0.0;
-        this.currentEmissive += (target - this.currentEmissive) * Math.min(1, dt * 2);
+        // Day (0): 0.18 (crisp candy luminescence)
+        // Dusk (1): 0.38 (warm twilight glow)
+        // Twilight / Night (2): 0.70 (vibrant neon candy fairy tale radiance)
+        const target = [0.18, 0.38, 0.70][timePhase] ?? 0.18;
+        this.currentGlow += (target - this.currentGlow) * Math.min(1, dt * 2.5);
 
-        this.trunkMat.emissiveIntensity = 0.08 + this.currentEmissive * 0.5;
-        this.canopyMat.emissiveIntensity = this.currentEmissive;
-        this.lolliTrunkMat.emissiveIntensity = 0.16 + this.currentEmissive;
-        this.lolliCanopyMat.emissiveIntensity = this.currentEmissive;
-        this.bushMat.emissiveIntensity = this.currentEmissive;
+        this.canopyGlowUniform.value = this.currentGlow;
+        this.trunkGlowUniform.value = this.currentGlow * 0.5;
+        this.bushGlowUniform.value = this.currentGlow;
     }
 
     // ── Rebuild Instance Matrices and Colors ───────────────────────────────────
@@ -515,14 +510,13 @@ export class TreeSystem {
         const canopyColors = preset.canopyColors;
         const trunkColors = preset.trunkColors;
 
-        // ── 1. Rebuild Trees ───────────────────────────────────────────────────
+        // ── 1. Rebuild Trees (Only the 3 Cartoon Trees) ─────────────────────────
 
         const glbCounts = [0, 0, 0];
-        let lolliCount = 0;
 
         if (this.treeDensity > 0) {
             const area = Math.PI * SPAWN_RADIUS * SPAWN_RADIUS;
-            const treeGridSpacing = Math.max(12, Math.sqrt(area / this.treeDensity));
+            const treeGridSpacing = Math.max(14, Math.sqrt(area / this.treeDensity));
 
             const minCX = Math.floor((px - SPAWN_RADIUS) / treeGridSpacing);
             const maxCX = Math.ceil((px + SPAWN_RADIUS) / treeGridSpacing);
@@ -540,7 +534,7 @@ export class TreeSystem {
                     const ddz = z - pz;
                     if (ddx * ddx + ddz * ddz > SPAWN_RADIUS * SPAWN_RADIUS) continue;
 
-                    // Strictly green lowland terrain (height 5.0 to 30.0)
+                    // Strictly green lowland valleys and plains (height 4.5 to 24.0)
                     const h = terrainHeightJS(x, z);
                     if (h < MIN_TREE_HEIGHT || h > MAX_TREE_HEIGHT) continue;
 
@@ -548,39 +542,27 @@ export class TreeSystem {
                     const scaleVar = this.treeScale * (0.85 + rng() * 0.3);
                     const canopyColor = canopyColors[Math.floor(rng() * canopyColors.length)];
                     const trunkColor = trunkColors[Math.floor(rng() * trunkColors.length)];
-                    const isLolli = rng() < this.lollipopRatio;
 
                     this.dummy.position.set(x, h, z);
                     this.dummy.rotation.set(0, rotation, 0);
                     this.dummy.scale.set(scaleVar, scaleVar, scaleVar);
                     this.dummy.updateMatrix();
 
-                    if (isLolli) {
-                        if (lolliCount < MAX_CAPACITY) {
-                            this.lolliTrunkInst.setMatrixAt(lolliCount, this.dummy.matrix);
-                            this.lolliTrunkInst.setColorAt(lolliCount, trunkColor);
+                    const typeIdx = Math.floor(rng() * 3);
+                    if (glbCounts[typeIdx] < MAX_CAPACITY) {
+                        const idx = glbCounts[typeIdx];
+                        this.glbTrunkInsts[typeIdx].setMatrixAt(idx, this.dummy.matrix);
+                        this.glbTrunkInsts[typeIdx].setColorAt(idx, trunkColor);
 
-                            this.lolliCanopyInst.setMatrixAt(lolliCount, this.dummy.matrix);
-                            this.lolliCanopyInst.setColorAt(lolliCount, canopyColor);
-                            lolliCount++;
-                        }
-                    } else {
-                        const typeIdx = Math.floor(rng() * 3);
-                        if (glbCounts[typeIdx] < MAX_CAPACITY) {
-                            const idx = glbCounts[typeIdx];
-                            this.glbTrunkInsts[typeIdx].setMatrixAt(idx, this.dummy.matrix);
-                            this.glbTrunkInsts[typeIdx].setColorAt(idx, trunkColor);
-
-                            this.glbCanopyInsts[typeIdx].setMatrixAt(idx, this.dummy.matrix);
-                            this.glbCanopyInsts[typeIdx].setColorAt(idx, canopyColor);
-                            glbCounts[typeIdx]++;
-                        }
+                        this.glbCanopyInsts[typeIdx].setMatrixAt(idx, this.dummy.matrix);
+                        this.glbCanopyInsts[typeIdx].setColorAt(idx, canopyColor);
+                        glbCounts[typeIdx]++;
                     }
                 }
             }
         }
 
-        // Commit tree counts and update buffers
+        // Commit tree counts and update GPU buffers
         for (let i = 0; i < 3; i++) {
             this.glbTrunkInsts[i].count = glbCounts[i];
             this.glbTrunkInsts[i].instanceMatrix.needsUpdate = true;
@@ -590,14 +572,6 @@ export class TreeSystem {
             this.glbCanopyInsts[i].instanceMatrix.needsUpdate = true;
             if (this.glbCanopyInsts[i].instanceColor) this.glbCanopyInsts[i].instanceColor.needsUpdate = true;
         }
-
-        this.lolliTrunkInst.count = lolliCount;
-        this.lolliTrunkInst.instanceMatrix.needsUpdate = true;
-        if (this.lolliTrunkInst.instanceColor) this.lolliTrunkInst.instanceColor.needsUpdate = true;
-
-        this.lolliCanopyInst.count = lolliCount;
-        this.lolliCanopyInst.instanceMatrix.needsUpdate = true;
-        if (this.lolliCanopyInst.instanceColor) this.lolliCanopyInst.instanceColor.needsUpdate = true;
 
         // ── 2. Rebuild Independent Bushes ──────────────────────────────────────
 
@@ -662,11 +636,6 @@ export class TreeSystem {
 
     setDensity(n: number): void {
         this.treeDensity = Math.max(0, Math.min(800, Math.round(n)));
-        this.dirty = true;
-    }
-
-    setLollipopRatio(r: number): void {
-        this.lollipopRatio = Math.max(0, Math.min(1, r));
         this.dirty = true;
     }
 

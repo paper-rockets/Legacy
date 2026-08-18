@@ -13,11 +13,11 @@ export class PropsSystem {
     private currentFrame = 0;
 
     constructor(scene: THREE.Scene) {
-        // Emissive cloud material
+        // Cloud material with minimal bloom
         const matCloud = new THREE.MeshToonMaterial({
             color: 0xffffff,
             emissive: new THREE.Color(0xfff6ea),
-            emissiveIntensity: 0.45,
+            emissiveIntensity: 0.0001,
             gradientMap,
             fog: true,
             dithering: true

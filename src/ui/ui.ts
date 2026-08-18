@@ -251,17 +251,6 @@ export class UIManager {
             });
         }
 
-        if (lolliSlider && this.trees) {
-            lolliSlider.value = Math.round(this.trees.lollipopRatio * 100).toString();
-            if (lolliVal) lolliVal.innerText = `${Math.round(this.trees.lollipopRatio * 100)}%`;
-
-            lolliSlider.addEventListener('input', (e) => {
-                const val = parseInt((e.target as HTMLInputElement).value, 10);
-                this.trees?.setLollipopRatio(val / 100);
-                if (lolliVal) lolliVal.innerText = `${val}%`;
-            });
-        }
-
         // Vegetation Editor Sliders: Bushes (Independent)
         const bushScaleSlider = document.getElementById('bush-scale-slider') as HTMLInputElement | null;
         const bushScaleVal = document.getElementById('bush-scale-val');
