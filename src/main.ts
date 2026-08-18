@@ -22,7 +22,9 @@ async function bootstrap() {
     const terrain = new TerrainSystem(pipeline.scene);
     const water = new WaterSystem(pipeline.scene);
     const props = new PropsSystem(pipeline.scene);
-    const trees = new TreeSystem(pipeline.scene, props);
+    const trees = new TreeSystem(pipeline.scene);
+    await trees.init();
+
     const player = new PlayerSystem(pipeline.scene, pipeline.camera);
     const controls = new ControlsManager();
     const audio = new AmbientAudioEngine();
@@ -46,12 +48,13 @@ async function bootstrap() {
         const groundY = terrainHeightJS(playerPos.x, playerPos.z);
 
         lighting.update(dt, pipeline.scene, playerPos, groundY);
+        trees.updateGlow(dt, lighting.timePhase);
 
         if (!ui.isPhotoMode) {
             const inputState = controls.getInputState();
             player.update(dt, inputState);
             terrain.update(playerPos.x, playerPos.z);
-            water.update(playerPos.x, playerPos.z, dt, pipeline.scene);
+            water.update(playerPos.x, playerPos.z, dt);
             props.update(playerPos.x, playerPos.z, dt);
             trees.update(playerPos.x, playerPos.z);
         }

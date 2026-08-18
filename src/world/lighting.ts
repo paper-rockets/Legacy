@@ -22,7 +22,7 @@ export interface EnvConfig {
 export const envConfigs: EnvConfig[] = [
     {
         // 0: Day - High distant sun, natural golden daylight with soft atmospheric horizon fog
-        bg: 0x8cbce6, fog: 0x8cbce6, fogNear: 220, fogFar: 900,
+        bg: 0x8cbce6, fog: 0x8cbce6, fogNear: 200, fogFar: 720,
         amb: 0xdcf2ff, ambI: 0.75,
         dir: 0xfffaeb, dirI: 1.4,
         dirPos: { x: 250, y: 350, z: -200 },
@@ -34,7 +34,7 @@ export const envConfigs: EnvConfig[] = [
     },
     {
         // 1: Dusk - Sun directly on the distant horizon, casting water reflections
-        bg: 0xdd5e42, fog: 0xdd5e42, fogNear: 160, fogFar: 820,
+        bg: 0xdd5e42, fog: 0xdd5e42, fogNear: 180, fogFar: 680,
         amb: 0x6a4055, ambI: 0.65,
         dir: 0xff7722, dirI: 1.3,
         dirPos: { x: 0, y: 45, z: -600 },
@@ -46,7 +46,7 @@ export const envConfigs: EnvConfig[] = [
     },
     {
         // 2: Twilight - Strong global illumination, rich Ghibli night, high cosmic starfield
-        bg: 0x18182c, fog: 0x18182c, fogNear: 180, fogFar: 880,
+        bg: 0x18182c, fog: 0x18182c, fogNear: 180, fogFar: 700,
         amb: 0x444470, ambI: 0.95,
         dir: 0x6677aa, dirI: 0.85,
         dirPos: { x: 100, y: 250, z: -100 },
@@ -75,7 +75,7 @@ export class LightingSystem {
 
     constructor(scene: THREE.Scene) {
         scene.background = new THREE.Color(0x8cbce6);
-        scene.fog = new THREE.Fog(0x8cbce6, 220, 900);
+        scene.fog = new THREE.Fog(0x8cbce6, 200, 720);
 
         this.hemiLight = new THREE.HemisphereLight(0xff7d45, 0x24113a, 0.6);
         scene.add(this.hemiLight);

@@ -7,13 +7,13 @@ import { LightingSystem } from '../world/lighting';
 import { WaterSystem } from '../world/water';
 import { AmbientAudioEngine } from '../audio/audio';
 import { ControlsManager } from '../player/controls';
-import { TreeSystem, CANDY_PRESETS } from '../world/trees';
+import { TreeSystem } from '../world/trees';
+
 
 export class UIManager {
     public isPhotoMode = false;
     public isDebugOpen = false;
     public isSettingsOpen = false;
-    public isTreeEditorOpen = false;
 
     private photoControls: OrbitControls | null = null;
     private fpsFrames = 0;
@@ -29,13 +29,12 @@ export class UIManager {
         private water: WaterSystem,
         private audio: AmbientAudioEngine,
         private controls: ControlsManager,
-        private trees: TreeSystem
+        private trees?: TreeSystem
     ) {
         this.fpsDisplay = document.getElementById('fps-counter');
         this.setupButtons();
         this.setupPhotoMode();
         this.setupDebugPanel();
-        this.setupTreeEditor();
     }
 
     private setupButtons() {
@@ -207,6 +206,47 @@ export class UIManager {
                 trackBtn.innerText = 'Track: ' + trackName;
             });
         }
+
+        // Vegetation Editor Sliders
+        const scaleSlider = document.getElementById('tree-scale-slider') as HTMLInputElement | null;
+        const scaleVal = document.getElementById('tree-scale-val');
+        const densitySlider = document.getElementById('tree-density-slider') as HTMLInputElement | null;
+        const densityVal = document.getElementById('tree-density-val');
+        const lolliSlider = document.getElementById('tree-lollipop-slider') as HTMLInputElement | null;
+        const lolliVal = document.getElementById('tree-lollipop-val');
+
+        if (scaleSlider && this.trees) {
+            scaleSlider.value = this.trees.treeScale.toString();
+            if (scaleVal) scaleVal.innerText = `${Math.round(this.trees.treeScale * 100)}%`;
+
+            scaleSlider.addEventListener('input', (e) => {
+                const val = parseFloat((e.target as HTMLInputElement).value);
+                this.trees?.setScale(val);
+                if (scaleVal) scaleVal.innerText = `${Math.round(val * 100)}%`;
+            });
+        }
+
+        if (densitySlider && this.trees) {
+            densitySlider.value = this.trees.treeDensity.toString();
+            if (densityVal) densityVal.innerText = this.trees.treeDensity.toString();
+
+            densitySlider.addEventListener('input', (e) => {
+                const val = parseInt((e.target as HTMLInputElement).value, 10);
+                this.trees?.setDensity(val);
+                if (densityVal) densityVal.innerText = val.toString();
+            });
+        }
+
+        if (lolliSlider && this.trees) {
+            lolliSlider.value = Math.round(this.trees.lollipopRatio * 100).toString();
+            if (lolliVal) lolliVal.innerText = `${Math.round(this.trees.lollipopRatio * 100)}%`;
+
+            lolliSlider.addEventListener('input', (e) => {
+                const val = parseInt((e.target as HTMLInputElement).value, 10);
+                this.trees?.setLollipopRatio(val / 100);
+                if (lolliVal) lolliVal.innerText = `${val}%`;
+            });
+        }
     }
 
     private setupPhotoMode() {
@@ -218,7 +258,6 @@ export class UIManager {
         const topRightBar = document.getElementById('top-right-bar');
         const settingsMenu = document.getElementById('settings-menu');
         const debugPanel = document.getElementById('debug-panel');
-        const treeEditorPanel = document.getElementById('tree-editor-panel');
         const touch = document.getElementById('touch-controls');
 
         if (photoToggle && photoExit && photoCapture && photoUi) {
@@ -229,7 +268,6 @@ export class UIManager {
                 if (topBar) topBar.style.display = 'none';
                 if (topRightBar) topRightBar.style.display = 'none';
                 if (debugPanel) debugPanel.style.display = 'none';
-                if (treeEditorPanel) treeEditorPanel.style.display = 'none';
                 if (touch) touch.style.display = 'none';
                 photoUi.style.display = 'flex';
 
@@ -246,7 +284,6 @@ export class UIManager {
                 if (topBar) topBar.style.display = 'flex';
                 if (topRightBar) topRightBar.style.display = 'flex';
                 if (this.isDebugOpen && debugPanel) debugPanel.style.display = 'block';
-                if (this.isTreeEditorOpen && treeEditorPanel) treeEditorPanel.style.display = 'block';
                 if (touch) touch.style.display = '';
                 photoUi.style.display = 'none';
 
@@ -344,15 +381,15 @@ export class UIManager {
                 btnShadows.innerText = isShadowsFast ? '1024 Tight (Fast)' : '2048 Wide';
             }
             if (btnWater) {
-                btnWater.className = 'debug-btn on';
-                btnWater.innerText = this.water.getStyleDisplayName();
+                btnWater.className = 'debug-btn ' + (isWaterFast ? 'on' : 'off');
+                btnWater.innerText = isWaterFast ? 'MeshToon (Fast)' : 'MeshPhysical';
             }
             if (bloomSlider) {
                 bloomSlider.value = this.pipeline.bloomPass.strength.toString();
                 if (bloomVal) bloomVal.textContent = Number(this.pipeline.bloomPass.strength).toFixed(2);
             }
             if (btnMaster) {
-                const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast;
+                const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast && isWaterFast;
                 btnMaster.innerText = allOn ? 'RESET ALL TO DEFAULTS' : 'ENABLE ALL (60 FPS MODE)';
                 btnMaster.style.background = allOn ? 'rgba(211, 47, 47, 0.8)' : 'rgba(255, 255, 255, 0.12)';
             }
@@ -399,19 +436,21 @@ export class UIManager {
 
         if (btnWater) {
             btnWater.addEventListener('click', () => {
-                this.water.cycleWaterStyle();
+                isWaterFast = !isWaterFast;
+                this.water.setToonMode(isWaterFast);
                 updateDebugUI();
             });
         }
 
         if (btnMaster) {
             btnMaster.addEventListener('click', () => {
-                const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast;
+                const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast && isWaterFast;
                 const target = !allOn;
                 isTerrainFast = target;
                 isPropsFast = target;
                 isDpiFast = target;
                 isShadowsFast = target;
+                isWaterFast = target;
 
                 if (isTerrainFast) {
                     this.terrain.setResolution(128, 12.5, this.player.playerGrp.position.x, this.player.playerGrp.position.z);
@@ -425,151 +464,13 @@ export class UIManager {
                 this.pipeline.bloomPass.radius = isDpiFast ? 0.35 : 0.45;
                 this.lighting.shadowTuned = isShadowsFast;
                 this.lighting.setShadowResolution(isShadowsFast ? 1024 : 2048);
+                this.water.setToonMode(isWaterFast);
 
                 updateDebugUI();
             });
         }
     }
 
-    private setupTreeEditor() {
-        const toggleBtn = document.getElementById('tree-editor-toggle');
-        const panel = document.getElementById('tree-editor-panel');
-        const closeBtn = document.getElementById('tree-editor-close-btn');
-        const settingsMenu = document.getElementById('settings-menu');
-
-        const scaleSlider = document.getElementById('tree-scale-slider') as HTMLInputElement | null;
-        const scaleVal = document.getElementById('tree-scale-val');
-        const bushScaleSlider = document.getElementById('bush-scale-slider') as HTMLInputElement | null;
-        const bushScaleVal = document.getElementById('bush-scale-val');
-        const spreadSlider = document.getElementById('tree-spread-slider') as HTMLInputElement | null;
-        const spreadVal = document.getElementById('tree-spread-val');
-        const densitySlider = document.getElementById('tree-density-slider') as HTMLInputElement | null;
-        const densityVal = document.getElementById('tree-density-val');
-        const presetButtons = document.querySelectorAll<HTMLButtonElement>('.preset-btn');
-        const trunkPicker = document.getElementById('tree-trunk-picker') as HTMLInputElement | null;
-        const canopyPicker = document.getElementById('tree-canopy-picker') as HTMLInputElement | null;
-        const swatchButtons = document.querySelectorAll<HTMLButtonElement>('.swatch-btn');
-        const randomizeBtn = document.getElementById('tree-randomize-btn');
-
-        const updatePanelVisibility = () => {
-            if (panel) {
-                panel.style.display = this.isTreeEditorOpen ? 'block' : 'none';
-            }
-        };
-
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                this.isTreeEditorOpen = !this.isTreeEditorOpen;
-                this.isSettingsOpen = false;
-                if (settingsMenu) settingsMenu.style.display = 'none';
-                updatePanelVisibility();
-            });
-        }
-
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                this.isTreeEditorOpen = false;
-                updatePanelVisibility();
-            });
-        }
-
-        // Scale slider (Trees)
-        if (scaleSlider && scaleVal) {
-            scaleSlider.addEventListener('input', () => {
-                const val = parseFloat(scaleSlider.value);
-                scaleVal.textContent = val.toFixed(2) + 'x';
-                this.trees.setScaleMultiplier(val);
-            });
-        }
-
-        // Bush Scale slider (Candy Bushes)
-        if (bushScaleSlider && bushScaleVal) {
-            bushScaleSlider.value = this.props.bushScaleMultiplier.toString();
-            bushScaleVal.textContent = this.props.bushScaleMultiplier.toFixed(2) + 'x';
-            bushScaleSlider.addEventListener('input', () => {
-                const val = parseFloat(bushScaleSlider.value);
-                bushScaleVal.textContent = val.toFixed(2) + 'x';
-                this.props.setBushScaleMultiplier(val);
-            });
-        }
-
-        // Cluster spread / separation slider
-        if (spreadSlider && spreadVal) {
-            spreadSlider.addEventListener('input', () => {
-                const val = parseFloat(spreadSlider.value);
-                spreadVal.textContent = `${val}m`;
-                this.trees.setClusterSpread(val);
-            });
-        }
-
-        // Density slider
-        if (densitySlider && densityVal) {
-            densitySlider.addEventListener('input', () => {
-                const val = parseInt(densitySlider.value, 10);
-                densityVal.textContent = `${val} per type (${val * 3} total)`;
-                this.trees.setDensity(val);
-            });
-        }
-
-        // Preset buttons
-        presetButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const presetKey = btn.getAttribute('data-preset');
-                if (!presetKey) return;
-
-                presetButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                this.trees.applyPreset(presetKey);
-
-                const preset = CANDY_PRESETS[presetKey];
-                if (preset) {
-                    if (trunkPicker) {
-                        trunkPicker.value = '#' + preset.trunkColor.toString(16).padStart(6, '0');
-                    }
-                    if (canopyPicker && preset.palette.length > 0) {
-                        canopyPicker.value = '#' + preset.palette[0].toString(16).padStart(6, '0');
-                    }
-                }
-            });
-        });
-
-        // Trunk Color Picker
-        if (trunkPicker) {
-            trunkPicker.addEventListener('input', () => {
-                const hex = parseInt(trunkPicker.value.replace('#', ''), 16);
-                this.trees.setTrunkColor(hex);
-            });
-        }
-
-        // Swatch buttons
-        swatchButtons.forEach(swatch => {
-            swatch.addEventListener('click', () => {
-                const color = swatch.getAttribute('data-color');
-                if (color) {
-                    if (trunkPicker) trunkPicker.value = color;
-                    const hex = parseInt(color.replace('#', ''), 16);
-                    this.trees.setTrunkColor(hex);
-                }
-            });
-        });
-
-        // Canopy Solid Color Picker
-        if (canopyPicker) {
-            canopyPicker.addEventListener('input', () => {
-                const hex = parseInt(canopyPicker.value.replace('#', ''), 16);
-                presetButtons.forEach(b => b.classList.remove('active'));
-                this.trees.setCanopyPalette([hex]);
-            });
-        }
-
-        // Randomize Candy Variations Button
-        if (randomizeBtn) {
-            randomizeBtn.addEventListener('click', () => {
-                this.trees.randomizeColors();
-            });
-        }
-    }
 
     public updateFPS() {
         this.fpsFrames++;

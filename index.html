@@ -258,7 +258,7 @@
     #settings-menu {
       top: 46px;
       right: 0;
-      min-width: 170px;
+      min-width: 195px;
     }
 
     #model-dropdown {
@@ -322,6 +322,55 @@
 
     .menu-item-btn:active {
       background: rgba(255, 255, 255, 0.18);
+    }
+
+    .menu-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.12);
+      margin: 4px 6px;
+      border: none;
+    }
+
+    .menu-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: rgba(255, 255, 255, 0.45);
+      text-transform: uppercase;
+      padding: 6px 10px 2px;
+    }
+
+    .menu-slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 4px 10px;
+    }
+
+    .menu-slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .menu-slider-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10px;
+      font-weight: 600;
+      color: #ff9ec6;
+    }
+
+    .menu-slider {
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.14);
+      outline: none;
+      accent-color: #ff77a9;
+      cursor: pointer;
     }
 
     /* Touch Controls: Dynamic Left Joystick & See-Through Boost */
@@ -513,37 +562,6 @@
 
     .debug-btn-master:hover {
       background: rgba(255, 255, 255, 0.2);
-    }
-
-    /* Tree Editor Panel */
-    #tree-editor-panel {
-      position: fixed;
-      right: max(14px, env(safe-area-inset-right));
-      top: max(56px, env(safe-area-inset-top));
-      z-index: 100;
-      background: rgba(18, 22, 32, 0.94);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 14px;
-      padding: 14px;
-      color: #ffffff;
-      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
-      width: min(300px, calc(100vw - 28px));
-      max-height: calc(100vh - 70px);
-      overflow-y: auto;
-      pointer-events: auto;
-    }
-
-    #tree-editor-panel::-webkit-scrollbar {
-      width: 4px;
-    }
-    #tree-editor-panel::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    #tree-editor-panel::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 2px;
     }
 
     .editor-section {
@@ -773,98 +791,37 @@
 
       <!-- Settings Dropdown containing Music, Debug, and Tree Editor -->
       <div id="settings-menu">
-        <button id="tree-editor-toggle" class="menu-item-btn">Tree Editor (Candy)</button>
         <button id="music-toggle" class="menu-item-btn">Music</button>
         <button id="track-toggle" class="menu-item-btn" style="display: none;">Track: Spirited Winds</button>
         <button id="debug-toggle" class="menu-item-btn">Debug: OFF</button>
         <button id="photo-toggle" class="menu-item-btn">Photo Mode</button>
+        <hr class="menu-divider" />
+        <div class="menu-section-title">Vegetation</div>
+        <div class="menu-slider-row">
+          <div class="menu-slider-header">
+            <span>Scale</span>
+            <span id="tree-scale-val" class="menu-slider-val">150%</span>
+          </div>
+          <input type="range" id="tree-scale-slider" class="menu-slider" min="0.5" max="6.0" step="0.1" value="1.5" />
+        </div>
+        <div class="menu-slider-row">
+          <div class="menu-slider-header">
+            <span>Density</span>
+            <span id="tree-density-val" class="menu-slider-val">200</span>
+          </div>
+          <input type="range" id="tree-density-slider" class="menu-slider" min="0" max="600" step="10" value="200" />
+        </div>
+        <div class="menu-slider-row">
+          <div class="menu-slider-header">
+            <span>Lollipop Mix</span>
+            <span id="tree-lollipop-val" class="menu-slider-val">25%</span>
+          </div>
+          <input type="range" id="tree-lollipop-slider" class="menu-slider" min="0" max="100" step="5" value="25" />
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Tree & Candy Editor Panel -->
-  <div id="tree-editor-panel" style="display: none;">
-    <div class="debug-header-row">
-      <div class="debug-header">Candy Tree Editor</div>
-      <button id="tree-editor-close-btn" class="debug-close-btn" aria-label="Close Tree Editor">Close</button>
-    </div>
-
-    <!-- Tree Scale Control -->
-    <div class="editor-section">
-      <div class="editor-label-row">
-        <span>Tree Scale</span>
-        <span id="tree-scale-val" class="editor-val">6.00x</span>
-      </div>
-      <input type="range" id="tree-scale-slider" min="0.5" max="12.0" step="0.1" value="6.0" class="editor-slider" />
-    </div>
-
-    <!-- Candy Bush Size Control -->
-    <div class="editor-section">
-      <div class="editor-label-row">
-        <span>Candy Bush Size</span>
-        <span id="bush-scale-val" class="editor-val">1.00x</span>
-      </div>
-      <input type="range" id="bush-scale-slider" min="0.2" max="4.0" step="0.05" value="1.0" class="editor-slider" />
-    </div>
-
-    <!-- Cluster Separation / Spread Control -->
-    <div class="editor-section">
-      <div class="editor-label-row">
-        <span>Cluster Separation</span>
-        <span id="tree-spread-val" class="editor-val">26m</span>
-      </div>
-      <input type="range" id="tree-spread-slider" min="8" max="70" step="2" value="26" class="editor-slider" />
-    </div>
-
-    <!-- Density Control -->
-    <div class="editor-section">
-      <div class="editor-label-row">
-        <span>Tree Density</span>
-        <span id="tree-density-val" class="editor-val">220 per type (660 total)</span>
-      </div>
-      <input type="range" id="tree-density-slider" min="30" max="350" step="10" value="220" class="editor-slider" />
-    </div>
-
-    <!-- Candy Themes / Presets -->
-    <div class="editor-section">
-      <div class="editor-section-title">Candy Themes</div>
-      <div class="preset-grid">
-        <button class="preset-btn active" data-preset="cotton-candy">Cotton Candy</button>
-        <button class="preset-btn" data-preset="lollipop">Lollipop</button>
-        <button class="preset-btn" data-preset="marshmallow">Marshmallow</button>
-        <button class="preset-btn" data-preset="gummy">Gummy Jelly</button>
-        <button class="preset-btn" data-preset="choco-mint">Choco Mint</button>
-        <button class="preset-btn" data-preset="classic">Classic Ghibli</button>
-      </div>
-    </div>
-
-    <!-- Trunk Color Customization -->
-    <div class="editor-section">
-      <div class="editor-label-row">
-        <span>Trunk Color</span>
-        <input type="color" id="tree-trunk-picker" value="#e5c29f" class="color-picker-input" />
-      </div>
-      <div class="swatch-row">
-        <button class="swatch-btn" data-color="#e5c29f" style="background: #e5c29f;" title="Waffle Cone"></button>
-        <button class="swatch-btn" data-color="#ffffff" style="background: #ffffff;" title="Lollipop Stick"></button>
-        <button class="swatch-btn" data-color="#3d2314" style="background: #3d2314;" title="Dark Chocolate"></button>
-        <button class="swatch-btn" data-color="#d4a373" style="background: #d4a373;" title="Caramel"></button>
-        <button class="swatch-btn" data-color="#4a154b" style="background: #4a154b;" title="Licorice"></button>
-        <button class="swatch-btn" data-color="#5a3d28" style="background: #5a3d28;" title="Natural Bark"></button>
-      </div>
-    </div>
-
-    <!-- Canopy Solid Color -->
-    <div class="editor-section">
-      <div class="editor-label-row">
-        <span>Canopy Solid Tint</span>
-        <input type="color" id="tree-canopy-picker" value="#ff77a9" class="color-picker-input" />
-      </div>
-    </div>
-
-    <hr class="debug-divider"/>
-    <button id="tree-randomize-btn" class="debug-btn-master">Re-roll Candy Variations</button>
-  </div>
 
   <!-- Performance Debug Panel -->
   <div id="debug-panel" style="display: none;">

@@ -108,103 +108,98 @@ export class PlayerSystem {
         this.currentModelIndex = targetIndex;
         const modelDef = FLIGHT_MODELS[targetIndex];
 
-        // Try primary path and alternate path if needed
-        const loadPath = modelDef.file;
+        const filename = modelDef.file.split('/').pop() || modelDef.file;
+        const candidatePaths = [
+            modelDef.file,
+            './' + modelDef.file.replace(/^\.?\//, ''),
+            '/' + modelDef.file.replace(/^\.?\//, ''),
+            'Assets/Flight/' + filename,
+            './Assets/Flight/' + filename,
+            '/Assets/Flight/' + filename,
+            'assets/Flight/' + filename,
+            './assets/Flight/' + filename,
+            '/assets/Flight/' + filename
+        ];
 
-        this.gltfLoader.load(
-            loadPath,
-            (gltf) => {
-                if (this.activeModel) {
-                    this.playerVisuals.remove(this.activeModel);
-                    this.activeModel = null;
-                }
-                if (this.activeMixer) {
-                    this.activeMixer.stopAllAction();
-                    this.activeMixer = null;
-                }
-
-                const model = gltf.scene;
-                this.activeModel = model;
-
-                model.traverse((child) => {
-                    if ((child as THREE.Mesh).isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                    }
-                });
-
-                // Model is baked with exact forward flight orientation (-Z forward, +Y up, +X right)
-                model.rotation.set(0, 0, 0);
-
-                const baseScale = modelDef.scale || 1.0;
-                model.scale.set(baseScale, baseScale, baseScale);
-
-                if (modelDef.offsetY) {
-                    model.position.y = modelDef.offsetY;
-                } else {
-                    model.position.set(0, 0, 0);
-                }
-
-                // Setup animation mixer
-                if (gltf.animations && gltf.animations.length > 0) {
-                    this.activeMixer = new THREE.AnimationMixer(model);
-                    let targetClip: THREE.AnimationClip | null = null;
-
-                    if (modelDef.preferredAnim) {
-                        targetClip = gltf.animations.find(a => 
-                            a.name.toLowerCase().includes(modelDef.preferredAnim!.toLowerCase())
-                        ) || null;
-                    }
-
-                    if (!targetClip) {
-                        targetClip = gltf.animations[0];
-                    }
-
-                    if (targetClip) {
-                        const action = this.activeMixer.clipAction(targetClip);
-                        action.play();
-                    }
-                }
-
-                this.proxyMesh.visible = false;
-                this.playerVisuals.add(model);
-
-                if (this.onModelChanged) {
-                    this.onModelChanged(modelDef);
-                }
-
-                if (onComplete) onComplete();
-            },
-            undefined,
-            (error) => {
-                console.warn(`Failed to load flight model "${modelDef.name}" from ${loadPath}:`, error);
-                // Try fallback with lowercase assets path
-                const fallbackPath = loadPath.replace('Assets/', 'assets/');
-                if (fallbackPath !== loadPath) {
-                    this.gltfLoader.load(
-                        fallbackPath,
-                        (gltf) => {
-                            if (this.activeModel) {
-                                this.playerVisuals.remove(this.activeModel);
-                                this.activeModel = null;
-                            }
-                            const model = gltf.scene;
-                            this.activeModel = model;
-                            model.traverse((child) => {
-                                if ((child as THREE.Mesh).isMesh) {
-                                    child.castShadow = true;
-                                    child.receiveShadow = true;
-                                }
-                            });
-                            model.rotation.set(0, 0, 0);
-                            this.proxyMesh.visible = false;
-                            this.playerVisuals.add(model);
-                            if (onComplete) onComplete();
-                        }
-                    );
-                }
+        let pathIdx = 0;
+        const tryLoadNext = () => {
+            if (pathIdx >= candidatePaths.length) {
+                console.error(`Failed to load flight model "${modelDef.name}" from all candidate paths.`);
+                return;
             }
-        );
+            const currentPath = candidatePaths[pathIdx++];
+            this.gltfLoader.load(
+                currentPath,
+                (gltf) => {
+                    if (this.activeModel) {
+                        this.playerVisuals.remove(this.activeModel);
+                        this.activeModel = null;
+                    }
+                    if (this.activeMixer) {
+                        this.activeMixer.stopAllAction();
+                        this.activeMixer = null;
+                    }
+
+                    const model = gltf.scene;
+                    this.activeModel = model;
+
+                    model.traverse((child) => {
+                        if ((child as THREE.Mesh).isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+
+                    // Model is baked with exact forward flight orientation (-Z forward, +Y up, +X right)
+                    model.rotation.set(0, 0, 0);
+
+                    const baseScale = modelDef.scale || 1.0;
+                    model.scale.set(baseScale, baseScale, baseScale);
+
+                    if (modelDef.offsetY) {
+                        model.position.y = modelDef.offsetY;
+                    } else {
+                        model.position.set(0, 0, 0);
+                    }
+
+                    // Setup animation mixer
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        this.activeMixer = new THREE.AnimationMixer(model);
+                        let targetClip: THREE.AnimationClip | null = null;
+
+                        if (modelDef.preferredAnim) {
+                            targetClip = gltf.animations.find(a => 
+                                a.name.toLowerCase().includes(modelDef.preferredAnim!.toLowerCase())
+                            ) || null;
+                        }
+
+                        if (!targetClip) {
+                            targetClip = gltf.animations[0];
+                        }
+
+                        if (targetClip) {
+                            const action = this.activeMixer.clipAction(targetClip);
+                            action.play();
+                        }
+                    }
+
+                    this.proxyMesh.visible = false;
+                    this.playerVisuals.add(model);
+
+                    if (this.onModelChanged) {
+                        this.onModelChanged(modelDef);
+                    }
+
+                    if (onComplete) onComplete();
+                },
+                undefined,
+                () => {
+                    tryLoadNext();
+                }
+            );
+        };
+
+        tryLoadNext();
     }
 
     private setupOrbitPointerEvents() {
