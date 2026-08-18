@@ -221,13 +221,25 @@ export class UIManager {
             });
         });
 
+        // Glow Stick Aura Slider
+        const glowSlider = document.getElementById('glow-intensity-slider') as HTMLInputElement | null;
+        const glowVal = document.getElementById('glow-intensity-val');
+        if (glowSlider && this.trees) {
+            glowSlider.value = Math.round(this.trees.glowMultiplier * 100).toString();
+            if (glowVal) glowVal.innerText = `${Math.round(this.trees.glowMultiplier * 100)}%`;
+
+            glowSlider.addEventListener('input', (e) => {
+                const val = parseInt((e.target as HTMLInputElement).value, 10);
+                this.trees?.setGlowMultiplier(val / 100);
+                if (glowVal) glowVal.innerText = `${val}%`;
+            });
+        }
+
         // Vegetation Editor Sliders: Trees
         const scaleSlider = document.getElementById('tree-scale-slider') as HTMLInputElement | null;
         const scaleVal = document.getElementById('tree-scale-val');
         const densitySlider = document.getElementById('tree-density-slider') as HTMLInputElement | null;
         const densityVal = document.getElementById('tree-density-val');
-        const lolliSlider = document.getElementById('tree-lollipop-slider') as HTMLInputElement | null;
-        const lolliVal = document.getElementById('tree-lollipop-val');
 
         if (scaleSlider && this.trees) {
             scaleSlider.value = this.trees.treeScale.toString();

@@ -227,6 +227,13 @@ async function loadTreeGeometries(
     gltf.scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
+            const name = (mesh.name || (mesh.parent ? mesh.parent.name : '')).toLowerCase();
+
+            // Filter out glitch base blobs and terrain discs (crone, spheres, unnamed)
+            if (name.includes('crone') || name.startsWith('spheres') || !mesh.name || mesh.name.trim() === '') {
+                return;
+            }
+
             const geo = mesh.geometry.clone();
             geo.applyMatrix4(mesh.matrixWorld);
             if (!geo.getAttribute('normal')) geo.computeVertexNormals();
@@ -236,10 +243,9 @@ async function loadTreeGeometries(
             clean.setAttribute('normal', geo.getAttribute('normal'));
             if (geo.index) clean.setIndex(geo.index);
 
-            const name = (mesh.name || (mesh.parent ? mesh.parent.name : '')).toLowerCase();
             if (name.includes('wood') || name.includes('stick') || name.includes('trunk') || name.includes('branch')) {
                 trunkGeos.push(clean);
-            } else {
+            } else if (name.includes('sphere') || name.includes('leaf') || name.includes('leaves') || name.includes('canopy')) {
                 canopyGeos.push(clean);
             }
         }
@@ -304,6 +310,7 @@ export class TreeSystem {
     public treeDensity = 800;
     public bushScale = 1.0;
     public bushDensity = 250;
+    public glowMultiplier = 1.0;
     public activePresetKey: PresetKey = 'candy';
 
     // Internal state
@@ -488,18 +495,19 @@ export class TreeSystem {
         this.dirty = false;
     }
 
-    // ── Twilight & Night Glow (Keeps colors vibrant and luminous at night) ─────
+    // ── Twilight & Night Glow (Glow stick radiance at night) ─────────────────
 
     updateGlow(dt: number, timePhase: number): void {
         if (!this.ready) return;
-        // Day (0): 0.18 (crisp candy luminescence)
-        // Dusk (1): 0.38 (warm twilight glow)
-        // Twilight / Night (2): 0.70 (vibrant neon candy fairy tale radiance)
-        const target = [0.18, 0.38, 0.70][timePhase] ?? 0.18;
+        // Day (0): 0.15 (crisp daytime candy luminescence)
+        // Dusk (1): 0.50 (warm twilight glow)
+        // Twilight / Night (2): 1.25 (vibrant neon glow stick radiance)
+        const baseTarget = [0.15, 0.50, 1.25][timePhase] ?? 0.15;
+        const target = baseTarget * this.glowMultiplier;
         this.currentGlow += (target - this.currentGlow) * Math.min(1, dt * 2.5);
 
         this.canopyGlowUniform.value = this.currentGlow;
-        this.trunkGlowUniform.value = this.currentGlow * 0.5;
+        this.trunkGlowUniform.value = this.currentGlow * 0.65;
         this.bushGlowUniform.value = this.currentGlow;
     }
 
@@ -647,6 +655,10 @@ export class TreeSystem {
     setBushDensity(n: number): void {
         this.bushDensity = Math.max(0, Math.min(800, Math.round(n)));
         this.dirty = true;
+    }
+
+    setGlowMultiplier(m: number): void {
+        this.glowMultiplier = Math.max(0.0, Math.min(2.5, m));
     }
 
     setPreset(key: PresetKey): void {
