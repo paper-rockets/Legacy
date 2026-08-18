@@ -68,7 +68,9 @@ export class PlayerSystem {
         this.cameraBase.add(this.cameraPivot);
 
         this.camera.rotation.order = 'YXZ';
-        this.camera.position.set(0, 4, 12);
+        const initialCamY = 2.8;
+        this.camera.position.set(0, initialCamY, 12);
+        this.camera.rotation.set(-Math.atan2(initialCamY, 12), 0, 0);
         this.cameraPivot.add(this.camera);
 
         // Setup loader with Draco support
@@ -156,11 +158,15 @@ export class PlayerSystem {
                     const baseScale = modelDef.scale || 1.0;
                     model.scale.set(baseScale, baseScale, baseScale);
 
-                    if (modelDef.offsetY) {
-                        model.position.y = modelDef.offsetY;
-                    } else {
-                        model.position.set(0, 0, 0);
-                    }
+                    model.updateMatrixWorld(true);
+                    const modelBox = new THREE.Box3().setFromObject(model);
+                    const modelCenter = new THREE.Vector3();
+                    modelBox.getCenter(modelCenter);
+                    model.position.set(
+                        -modelCenter.x,
+                        -modelCenter.y + (modelDef.offsetY || 0),
+                        -modelCenter.z
+                    );
 
                     // Setup animation mixer
                     if (gltf.animations && gltf.animations.length > 0) {
@@ -356,7 +362,9 @@ export class PlayerSystem {
             dt * 8.0
         );
         const heightScale = Math.sqrt(this.currentCameraDistance / 12.0);
-        this.camera.position.set(0, 4.0 * heightScale, this.currentCameraDistance);
+        const cameraY = 2.8 * heightScale;
+        this.camera.position.set(0, cameraY, this.currentCameraDistance);
+        this.camera.rotation.set(-Math.atan2(cameraY, this.currentCameraDistance), 0, 0);
 
         if (inputState.boost) {
             this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 74, dt * 3.5);
