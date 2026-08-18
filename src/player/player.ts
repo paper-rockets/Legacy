@@ -70,7 +70,8 @@ export class PlayerSystem {
         this.camera.rotation.order = 'YXZ';
         const initialCamY = 2.8;
         this.camera.position.set(0, initialCamY, 12);
-        this.camera.rotation.set(-Math.atan2(initialCamY, 12), 0, 0);
+        const initPitchOffset = Math.atan(0.18 * Math.tan(THREE.MathUtils.degToRad(30)));
+        this.camera.rotation.set(-Math.atan2(initialCamY, 12) + initPitchOffset, 0, 0);
         this.cameraPivot.add(this.camera);
 
         // Setup loader with Draco support
@@ -364,7 +365,8 @@ export class PlayerSystem {
         const heightScale = Math.sqrt(this.currentCameraDistance / 12.0);
         const cameraY = 2.8 * heightScale;
         this.camera.position.set(0, cameraY, this.currentCameraDistance);
-        this.camera.rotation.set(-Math.atan2(cameraY, this.currentCameraDistance), 0, 0);
+        const pitchOffset = Math.atan(0.18 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5)));
+        this.camera.rotation.set(-Math.atan2(cameraY, this.currentCameraDistance) + pitchOffset, 0, 0);
 
         if (inputState.boost) {
             this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 74, dt * 3.5);

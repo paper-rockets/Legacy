@@ -224,15 +224,21 @@ async function loadTreeGeometries(
     const canopyGeos: THREE.BufferGeometry[] = [];
     gltf.scene.updateMatrixWorld(true);
 
-    gltf.scene.traverse((child) => {
+    // Locate actual tree root group (Tree_2, Tree_3, Tree_5), ignoring orphan root meshes
+    let treeRoot: THREE.Object3D | null = null;
+    for (const child of gltf.scene.children) {
+        if (child.name.startsWith('Tree_') || child.children.length > 0) {
+            treeRoot = child;
+            break;
+        }
+    }
+    const rootToTraverse = treeRoot || gltf.scene;
+
+    rootToTraverse.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
-            const name = (mesh.name || (mesh.parent ? mesh.parent.name : '')).toLowerCase();
-
-            // Filter out glitch base blobs and terrain discs (crone, spheres, unnamed)
-            if (name.includes('crone') || name.startsWith('spheres') || !mesh.name || mesh.name.trim() === '') {
-                return;
-            }
+            // Ignore stray unnamed meshes directly parented to scene root
+            if (mesh.parent === gltf.scene && !mesh.name) return;
 
             const geo = mesh.geometry.clone();
             geo.applyMatrix4(mesh.matrixWorld);
@@ -243,9 +249,10 @@ async function loadTreeGeometries(
             clean.setAttribute('normal', geo.getAttribute('normal'));
             if (geo.index) clean.setIndex(geo.index);
 
+            const name = (mesh.name || (mesh.parent ? mesh.parent.name : '')).toLowerCase();
             if (name.includes('wood') || name.includes('stick') || name.includes('trunk') || name.includes('branch')) {
                 trunkGeos.push(clean);
-            } else if (name.includes('sphere') || name.includes('leaf') || name.includes('leaves') || name.includes('canopy')) {
+            } else {
                 canopyGeos.push(clean);
             }
         }
