@@ -258,7 +258,9 @@
     #settings-menu {
       top: 46px;
       right: 0;
-      min-width: 195px;
+      min-width: 220px;
+      max-height: 500px;
+      overflow-y: auto;
     }
 
     #model-dropdown {
@@ -338,6 +340,40 @@
       color: rgba(255, 255, 255, 0.45);
       text-transform: uppercase;
       padding: 6px 10px 2px;
+    }
+
+    .menu-presets-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      padding: 3px 10px 5px;
+    }
+
+    .menu-preset-btn {
+      padding: 5px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.85);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .menu-preset-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+    }
+
+    .menu-preset-btn.active {
+      background: rgba(255, 119, 169, 0.35);
+      border-color: rgba(255, 119, 169, 0.7);
+      color: #ffffff;
+      font-weight: 700;
     }
 
     .menu-slider-row {
@@ -796,20 +832,29 @@
         <button id="debug-toggle" class="menu-item-btn">Debug: OFF</button>
         <button id="photo-toggle" class="menu-item-btn">Photo Mode</button>
         <hr class="menu-divider" />
-        <div class="menu-section-title">Vegetation</div>
+        <div class="menu-section-title">Color Palette</div>
+        <div class="menu-presets-grid">
+          <button id="preset-candy" class="menu-preset-btn active" data-preset="candy">Candy Mix</button>
+          <button id="preset-cotton" class="menu-preset-btn" data-preset="cotton">Cotton Candy</button>
+          <button id="preset-lollipop" class="menu-preset-btn" data-preset="lollipop">Lollipop</button>
+          <button id="preset-mints" class="menu-preset-btn" data-preset="mints">Mints</button>
+          <button id="preset-berry" class="menu-preset-btn" data-preset="berry" style="grid-column: span 2;">Berry</button>
+        </div>
+        <hr class="menu-divider" />
+        <div class="menu-section-title">Trees</div>
         <div class="menu-slider-row">
           <div class="menu-slider-header">
-            <span>Scale</span>
+            <span>Tree Scale</span>
             <span id="tree-scale-val" class="menu-slider-val">150%</span>
           </div>
           <input type="range" id="tree-scale-slider" class="menu-slider" min="0.5" max="6.0" step="0.1" value="1.5" />
         </div>
         <div class="menu-slider-row">
           <div class="menu-slider-header">
-            <span>Density</span>
+            <span>Tree Density</span>
             <span id="tree-density-val" class="menu-slider-val">200</span>
           </div>
-          <input type="range" id="tree-density-slider" class="menu-slider" min="0" max="600" step="10" value="200" />
+          <input type="range" id="tree-density-slider" class="menu-slider" min="0" max="800" step="10" value="200" />
         </div>
         <div class="menu-slider-row">
           <div class="menu-slider-header">
@@ -817,6 +862,22 @@
             <span id="tree-lollipop-val" class="menu-slider-val">25%</span>
           </div>
           <input type="range" id="tree-lollipop-slider" class="menu-slider" min="0" max="100" step="5" value="25" />
+        </div>
+        <hr class="menu-divider" />
+        <div class="menu-section-title">Bushes</div>
+        <div class="menu-slider-row">
+          <div class="menu-slider-header">
+            <span>Bush Scale</span>
+            <span id="bush-scale-val" class="menu-slider-val">100%</span>
+          </div>
+          <input type="range" id="bush-scale-slider" class="menu-slider" min="0.5" max="4.0" step="0.1" value="1.0" />
+        </div>
+        <div class="menu-slider-row">
+          <div class="menu-slider-header">
+            <span>Bush Density</span>
+            <span id="bush-density-val" class="menu-slider-val">250</span>
+          </div>
+          <input type="range" id="bush-density-slider" class="menu-slider" min="0" max="800" step="10" value="250" />
         </div>
       </div>
     </div>

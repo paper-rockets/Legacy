@@ -207,7 +207,21 @@ export class UIManager {
             });
         }
 
-        // Vegetation Editor Sliders
+        // Vegetation Preset Buttons
+        const presetBtns = document.querySelectorAll('.menu-preset-btn');
+        presetBtns.forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget as HTMLElement;
+                const presetKey = target.getAttribute('data-preset') as any;
+                if (presetKey && this.trees) {
+                    this.trees.setPreset(presetKey);
+                    presetBtns.forEach((b) => b.classList.remove('active'));
+                    target.classList.add('active');
+                }
+            });
+        });
+
+        // Vegetation Editor Sliders: Trees
         const scaleSlider = document.getElementById('tree-scale-slider') as HTMLInputElement | null;
         const scaleVal = document.getElementById('tree-scale-val');
         const densitySlider = document.getElementById('tree-density-slider') as HTMLInputElement | null;
@@ -245,6 +259,34 @@ export class UIManager {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
                 this.trees?.setLollipopRatio(val / 100);
                 if (lolliVal) lolliVal.innerText = `${val}%`;
+            });
+        }
+
+        // Vegetation Editor Sliders: Bushes (Independent)
+        const bushScaleSlider = document.getElementById('bush-scale-slider') as HTMLInputElement | null;
+        const bushScaleVal = document.getElementById('bush-scale-val');
+        const bushDensitySlider = document.getElementById('bush-density-slider') as HTMLInputElement | null;
+        const bushDensityVal = document.getElementById('bush-density-val');
+
+        if (bushScaleSlider && this.trees) {
+            bushScaleSlider.value = this.trees.bushScale.toString();
+            if (bushScaleVal) bushScaleVal.innerText = `${Math.round(this.trees.bushScale * 100)}%`;
+
+            bushScaleSlider.addEventListener('input', (e) => {
+                const val = parseFloat((e.target as HTMLInputElement).value);
+                this.trees?.setBushScale(val);
+                if (bushScaleVal) bushScaleVal.innerText = `${Math.round(val * 100)}%`;
+            });
+        }
+
+        if (bushDensitySlider && this.trees) {
+            bushDensitySlider.value = this.trees.bushDensity.toString();
+            if (bushDensityVal) bushDensityVal.innerText = this.trees.bushDensity.toString();
+
+            bushDensitySlider.addEventListener('input', (e) => {
+                const val = parseInt((e.target as HTMLInputElement).value, 10);
+                this.trees?.setBushDensity(val);
+                if (bushDensityVal) bushDensityVal.innerText = val.toString();
             });
         }
     }
