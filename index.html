@@ -518,8 +518,8 @@
     /* Tree Editor Panel */
     #tree-editor-panel {
       position: fixed;
-      left: max(14px, env(safe-area-inset-left));
-      top: max(14px, env(safe-area-inset-top));
+      right: max(14px, env(safe-area-inset-right));
+      top: max(56px, env(safe-area-inset-top));
       z-index: 100;
       background: rgba(18, 22, 32, 0.94);
       border: 1px solid rgba(255, 255, 255, 0.16);
@@ -529,10 +529,21 @@
       padding: 14px;
       color: #ffffff;
       box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
-      width: min(320px, calc(100vw - 28px));
-      max-height: calc(100vh - 28px);
+      width: min(300px, calc(100vw - 28px));
+      max-height: calc(100vh - 70px);
       overflow-y: auto;
       pointer-events: auto;
+    }
+
+    #tree-editor-panel::-webkit-scrollbar {
+      width: 4px;
+    }
+    #tree-editor-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #tree-editor-panel::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
     }
 
     .editor-section {
@@ -778,13 +789,22 @@
       <button id="tree-editor-close-btn" class="debug-close-btn" aria-label="Close Tree Editor">Close</button>
     </div>
 
-    <!-- Scale Control -->
+    <!-- Tree Scale Control -->
     <div class="editor-section">
       <div class="editor-label-row">
         <span>Tree Scale</span>
         <span id="tree-scale-val" class="editor-val">6.00x</span>
       </div>
       <input type="range" id="tree-scale-slider" min="0.5" max="12.0" step="0.1" value="6.0" class="editor-slider" />
+    </div>
+
+    <!-- Candy Bush Size Control -->
+    <div class="editor-section">
+      <div class="editor-label-row">
+        <span>Candy Bush Size</span>
+        <span id="bush-scale-val" class="editor-val">1.00x</span>
+      </div>
+      <input type="range" id="bush-scale-slider" min="0.2" max="4.0" step="0.05" value="1.0" class="editor-slider" />
     </div>
 
     <!-- Cluster Separation / Spread Control -->

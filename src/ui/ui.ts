@@ -344,15 +344,15 @@ export class UIManager {
                 btnShadows.innerText = isShadowsFast ? '1024 Tight (Fast)' : '2048 Wide';
             }
             if (btnWater) {
-                btnWater.className = 'debug-btn ' + (isWaterFast ? 'on' : 'off');
-                btnWater.innerText = isWaterFast ? 'MeshToon (Fast)' : 'MeshPhysical';
+                btnWater.className = 'debug-btn on';
+                btnWater.innerText = this.water.getStyleDisplayName();
             }
             if (bloomSlider) {
                 bloomSlider.value = this.pipeline.bloomPass.strength.toString();
                 if (bloomVal) bloomVal.textContent = Number(this.pipeline.bloomPass.strength).toFixed(2);
             }
             if (btnMaster) {
-                const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast && isWaterFast;
+                const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast;
                 btnMaster.innerText = allOn ? 'RESET ALL TO DEFAULTS' : 'ENABLE ALL (60 FPS MODE)';
                 btnMaster.style.background = allOn ? 'rgba(211, 47, 47, 0.8)' : 'rgba(255, 255, 255, 0.12)';
             }
@@ -399,21 +399,19 @@ export class UIManager {
 
         if (btnWater) {
             btnWater.addEventListener('click', () => {
-                isWaterFast = !isWaterFast;
-                this.water.setToonMode(isWaterFast);
+                this.water.cycleWaterStyle();
                 updateDebugUI();
             });
         }
 
         if (btnMaster) {
             btnMaster.addEventListener('click', () => {
-                const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast && isWaterFast;
+                const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast;
                 const target = !allOn;
                 isTerrainFast = target;
                 isPropsFast = target;
                 isDpiFast = target;
                 isShadowsFast = target;
-                isWaterFast = target;
 
                 if (isTerrainFast) {
                     this.terrain.setResolution(128, 12.5, this.player.playerGrp.position.x, this.player.playerGrp.position.z);
@@ -427,7 +425,6 @@ export class UIManager {
                 this.pipeline.bloomPass.radius = isDpiFast ? 0.35 : 0.45;
                 this.lighting.shadowTuned = isShadowsFast;
                 this.lighting.setShadowResolution(isShadowsFast ? 1024 : 2048);
-                this.water.setToonMode(isWaterFast);
 
                 updateDebugUI();
             });
@@ -442,6 +439,8 @@ export class UIManager {
 
         const scaleSlider = document.getElementById('tree-scale-slider') as HTMLInputElement | null;
         const scaleVal = document.getElementById('tree-scale-val');
+        const bushScaleSlider = document.getElementById('bush-scale-slider') as HTMLInputElement | null;
+        const bushScaleVal = document.getElementById('bush-scale-val');
         const spreadSlider = document.getElementById('tree-spread-slider') as HTMLInputElement | null;
         const spreadVal = document.getElementById('tree-spread-val');
         const densitySlider = document.getElementById('tree-density-slider') as HTMLInputElement | null;
@@ -474,12 +473,23 @@ export class UIManager {
             });
         }
 
-        // Scale slider
+        // Scale slider (Trees)
         if (scaleSlider && scaleVal) {
             scaleSlider.addEventListener('input', () => {
                 const val = parseFloat(scaleSlider.value);
                 scaleVal.textContent = val.toFixed(2) + 'x';
                 this.trees.setScaleMultiplier(val);
+            });
+        }
+
+        // Bush Scale slider (Candy Bushes)
+        if (bushScaleSlider && bushScaleVal) {
+            bushScaleSlider.value = this.props.bushScaleMultiplier.toString();
+            bushScaleVal.textContent = this.props.bushScaleMultiplier.toFixed(2) + 'x';
+            bushScaleSlider.addEventListener('input', () => {
+                const val = parseFloat(bushScaleSlider.value);
+                bushScaleVal.textContent = val.toFixed(2) + 'x';
+                this.props.setBushScaleMultiplier(val);
             });
         }
 

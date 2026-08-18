@@ -51,7 +51,7 @@ async function bootstrap() {
             const inputState = controls.getInputState();
             player.update(dt, inputState);
             terrain.update(playerPos.x, playerPos.z);
-            water.update(playerPos.x, playerPos.z, dt);
+            water.update(playerPos.x, playerPos.z, dt, pipeline.scene);
             props.update(playerPos.x, playerPos.z, dt);
             trees.update(playerPos.x, playerPos.z);
         }
