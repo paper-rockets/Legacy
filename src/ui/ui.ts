@@ -221,17 +221,30 @@ export class UIManager {
             });
         });
 
-        // Glow Stick Aura Slider
-        const glowSlider = document.getElementById('glow-intensity-slider') as HTMLInputElement | null;
-        const glowVal = document.getElementById('glow-intensity-val');
-        if (glowSlider && this.trees) {
-            glowSlider.value = Math.round(this.trees.glowMultiplier * 100).toString();
-            if (glowVal) glowVal.innerText = `${Math.round(this.trees.glowMultiplier * 100)}%`;
+        // Glow Editor Sliders
+        const canopyGlowSlider = document.getElementById('canopy-glow-slider') as HTMLInputElement | null;
+        const canopyGlowVal = document.getElementById('canopy-glow-val');
+        if (canopyGlowSlider && this.trees) {
+            canopyGlowSlider.value = Math.round(this.trees.canopyGlowMultiplier * 100).toString();
+            if (canopyGlowVal) canopyGlowVal.innerText = `${Math.round(this.trees.canopyGlowMultiplier * 100)}%`;
 
-            glowSlider.addEventListener('input', (e) => {
+            canopyGlowSlider.addEventListener('input', (e) => {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
-                this.trees?.setGlowMultiplier(val / 100);
-                if (glowVal) glowVal.innerText = `${val}%`;
+                this.trees?.setCanopyGlowMultiplier(val / 100);
+                if (canopyGlowVal) canopyGlowVal.innerText = `${val}%`;
+            });
+        }
+
+        const trunkGlowSlider = document.getElementById('trunk-glow-slider') as HTMLInputElement | null;
+        const trunkGlowVal = document.getElementById('trunk-glow-val');
+        if (trunkGlowSlider && this.trees) {
+            trunkGlowSlider.value = Math.round(this.trees.trunkGlowMultiplier * 100).toString();
+            if (trunkGlowVal) trunkGlowVal.innerText = `${Math.round(this.trees.trunkGlowMultiplier * 100)}%`;
+
+            trunkGlowSlider.addEventListener('input', (e) => {
+                const val = parseInt((e.target as HTMLInputElement).value, 10);
+                this.trees?.setTrunkGlowMultiplier(val / 100);
+                if (trunkGlowVal) trunkGlowVal.innerText = `${val}%`;
             });
         }
 
@@ -331,8 +344,8 @@ export class UIManager {
                 photoUi.style.display = 'none';
 
                 this.pipeline.camera.fov = 60;
-                this.pipeline.camera.position.set(0, 3.6, 12);
-                this.pipeline.camera.rotation.set(-Math.atan2(3.6, 12) * 0.5, 0, 0);
+                this.pipeline.camera.position.set(0, 4.0, 12);
+                this.pipeline.camera.rotation.set(-Math.atan2(4.0, 12) * 0.38, 0, 0);
                 this.player.cameraPivot.rotation.set(0, 0, 0);
                 this.pipeline.camera.updateProjectionMatrix();
 

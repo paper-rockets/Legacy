@@ -32,13 +32,7 @@ export const FLIGHT_MODELS: FlightModelDef[] = [
         preferredAnim: 'Wings Flapping',
         scale: 1.0
     },
-    {
-        id: 'quetzal',
-        name: 'Resplendent Quetzal',
-        file: 'Assets/Flight/quetzal_animation__texture_test.glb',
-        preferredAnim: 'Take 001',
-        scale: 1.0
-    },
+
     {
         id: 'blue_butterfly',
         name: 'Blue Morpho Butterfly',

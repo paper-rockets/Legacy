@@ -315,7 +315,8 @@ export class TreeSystem {
     public treeDensity = 800;
     public bushScale = 1.0;
     public bushDensity = 250;
-    public glowMultiplier = 1.0;
+    public canopyGlowMultiplier = 1.0;
+    public trunkGlowMultiplier = 1.0;
     public activePresetKey: PresetKey = 'candy';
 
     // Internal state
@@ -511,15 +512,14 @@ export class TreeSystem {
         if (!this.ready) return;
 
         // Trunk maintains its beautiful radiant base glow across Day, Dusk, and Night
-        const trunkTarget = 0.75 * this.glowMultiplier;
+        const trunkTarget = 0.75 * this.trunkGlowMultiplier;
         this.currentTrunkGlow += (trunkTarget - this.currentTrunkGlow) * Math.min(1, dt * 2.5);
         this.trunkGlowUniform.value = this.currentTrunkGlow;
 
-        // Canopy glowstick effect: ONLY at dusk and night (0.0 during day)
-        // Day (0): 0.0 (no glowstick during the day)
-        // Dusk (1): 0.65 (glowstick activation at dusk)
-        // Twilight / Night (2): 1.35 (vibrant glowstick radiance across all colors at night)
-        const canopyTarget = ([0.0, 0.65, 1.35][timePhase] ?? 0.0) * this.glowMultiplier;
+        // Canopy glowstick effect: Day = 0%, Dusk = 50% of night max, Night = 100% max glow
+        const NIGHT_MAX = 1.35;
+        const DUSK_50 = NIGHT_MAX * 0.50; // exactly 50% at dusk
+        const canopyTarget = ([0.0, DUSK_50, NIGHT_MAX][timePhase] ?? 0.0) * this.canopyGlowMultiplier;
         this.currentCanopyGlow += (canopyTarget - this.currentCanopyGlow) * Math.min(1, dt * 2.5);
 
         this.canopyGlowUniform.value = this.currentCanopyGlow;
@@ -674,8 +674,12 @@ export class TreeSystem {
         this.dirty = true;
     }
 
-    setGlowMultiplier(m: number): void {
-        this.glowMultiplier = Math.max(0.0, Math.min(2.5, m));
+    setCanopyGlowMultiplier(m: number): void {
+        this.canopyGlowMultiplier = Math.max(0.0, Math.min(2.5, m));
+    }
+
+    setTrunkGlowMultiplier(m: number): void {
+        this.trunkGlowMultiplier = Math.max(0.0, Math.min(2.5, m));
     }
 
     setPreset(key: PresetKey): void {
