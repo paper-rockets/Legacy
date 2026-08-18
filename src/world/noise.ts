@@ -54,18 +54,186 @@ export function snoise(x: number, z: number): number {
     return 70.0 * (n0 + n1 + n2);
 }
 
-export function terrainHeightJS(x: number, z: number): number {
-    let y = snoise(x * 0.003, z * 0.003) * 55.0;
-    y += snoise(x * 0.015, z * 0.015) * 10.0;
-    if (y < 12) {
-        y = (y - 12) * 0.2 + 12;
-    }
-    return y * 1.1;
+export type BiomeId = 'meadow' | 'archipelago' | 'geothermal' | 'estuary' | 'redwood';
+
+export interface BiomeWeights {
+    meadow: number;
+    archipelago: number;
+    geothermal: number;
+    estuary: number;
+    redwood: number;
 }
+
+export interface BiomeLocation {
+    id: BiomeId;
+    name: string;
+    description: string;
+    x: number;
+    z: number;
+}
+
+export const BIOME_LOCATIONS: BiomeLocation[] = [
+    {
+        id: 'meadow',
+        name: 'Lush Meadow',
+        description: 'Classic Ghibli rolling green hills and flower paths',
+        x: 0,
+        z: 0
+    },
+    {
+        id: 'archipelago',
+        name: 'Floating Archipelago',
+        description: 'High spires, plateaus and soaring updrafts',
+        x: 2000,
+        z: 2000
+    },
+    {
+        id: 'geothermal',
+        name: 'Geothermal Ridge',
+        description: 'Terraced volcanic cliffs and caldera basins',
+        x: 2000,
+        z: -2000
+    },
+    {
+        id: 'estuary',
+        name: 'Bioluminescent Estuary',
+        description: 'Shallow tidal waters and water-skimming speed channels',
+        x: -2000,
+        z: 2000
+    },
+    {
+        id: 'redwood',
+        name: 'Colossal Redwood',
+        description: 'Grand mountain slopes and giant ancient cedar canopies',
+        x: -2000,
+        z: -2000
+    }
+];
 
 export function smoothstep(edge0: number, edge1: number, x: number): number {
     const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
     return t * t * (3 - 2 * t);
+}
+
+export function getBiomeWeights(x: number, z: number): BiomeWeights {
+    const distOrigin = Math.hypot(x, z);
+    const originMeadow = smoothstep(1100, 750, distOrigin);
+
+    // Region weights based on coordinates with smooth 250m blend border around axes
+    const blendRange = 250;
+    const wxPositive = smoothstep(-blendRange, blendRange, x);
+    const wxNegative = 1.0 - wxPositive;
+    const wzPositive = smoothstep(-blendRange, blendRange, z);
+    const wzNegative = 1.0 - wzPositive;
+
+    let wArch = wxPositive * wzPositive * (1.0 - originMeadow);
+    let wGeoth = wxPositive * wzNegative * (1.0 - originMeadow);
+    let wEst = wxNegative * wzPositive * (1.0 - originMeadow);
+    let wRed = wxNegative * wzNegative * (1.0 - originMeadow);
+    let wMeadow = originMeadow;
+
+    const total = wMeadow + wArch + wGeoth + wEst + wRed + 0.00001;
+    return {
+        meadow: wMeadow / total,
+        archipelago: wArch / total,
+        geothermal: wGeoth / total,
+        estuary: wEst / total,
+        redwood: wRed / total
+    };
+}
+
+export function getDominantBiome(x: number, z: number): BiomeId {
+    const w = getBiomeWeights(x, z);
+    let maxW = w.meadow;
+    let dominant: BiomeId = 'meadow';
+    if (w.archipelago > maxW) { maxW = w.archipelago; dominant = 'archipelago'; }
+    if (w.geothermal > maxW) { maxW = w.geothermal; dominant = 'geothermal'; }
+    if (w.estuary > maxW) { maxW = w.estuary; dominant = 'estuary'; }
+    if (w.redwood > maxW) { maxW = w.redwood; dominant = 'redwood'; }
+    return dominant;
+}
+
+export function getDominantBiomeName(x: number, z: number): string {
+    const id = getDominantBiome(x, z);
+    switch (id) {
+        case 'meadow': return 'Lush Meadow';
+        case 'archipelago': return 'Floating Archipelago';
+        case 'geothermal': return 'Geothermal Ridge';
+        case 'estuary': return 'Bioluminescent Estuary';
+        case 'redwood': return 'Colossal Redwood';
+    }
+}
+
+// 1. Lush Meadow: Gentle rolling hills, soft valleys, flower paths
+function heightMeadow(x: number, z: number): number {
+    let y = snoise(x * 0.003, z * 0.003) * 26.0 + 16.0;
+    y += snoise(x * 0.012, z * 0.012) * 5.5;
+    return Math.max(3.5, y);
+}
+
+// 2. Floating Archipelago: Soaring needle rock spires (140m), flat mesa plateaus (90m), and deep canyon chasms (3m)
+function heightArchipelago(x: number, z: number): number {
+    const spireRaw = Math.max(0, snoise(x * 0.0055 + 250, z * 0.0055 - 250));
+    const spires = Math.pow(spireRaw, 3.0) * 145.0;
+
+    const mesaBase = snoise(x * 0.0022 + 500, z * 0.0022 + 500);
+    const mesaPlateau = smoothstep(0.12, 0.52, mesaBase) * 86.0;
+
+    const crag = snoise(x * 0.016, z * 0.016) * 8.0;
+    let y = 3.5 + spires + mesaPlateau + crag;
+    return Math.max(2.8, y);
+}
+
+// 3. Geothermal Ridge: Multi-tiered stepped basalt terraces, cliff edges, and sunken caldera pits
+function heightGeothermal(x: number, z: number): number {
+    const broad = snoise(x * 0.0025, z * 0.0025) * 44.0 + 36.0;
+    const stepHeight = 13.0;
+    const frac = ((broad % stepHeight) + stepHeight) % stepHeight / stepHeight;
+    const stepped = Math.floor(broad / stepHeight) * stepHeight + Math.pow(frac, 4.0) * stepHeight;
+
+    const calderaNoise = snoise(x * 0.0018 + 700, z * 0.0018 - 700);
+    let y = stepped;
+    if (calderaNoise < -0.22) {
+        const calderaDepth = smoothstep(-0.22, -0.65, calderaNoise) * 32.0;
+        y -= calderaDepth;
+    }
+    const microRidges = Math.abs(snoise(x * 0.014, z * 0.014)) * 5.0;
+    y += microRidges;
+    return Math.max(3.0, y);
+}
+
+// 4. Bioluminescent Estuary: Broad flat shallow water lagoon (70% water), sandbars, tide flats (max elevation 6.5m)
+function heightEstuary(x: number, z: number): number {
+    const lagoon = snoise(x * 0.0025, z * 0.0025) * 1.8 + 2.7;
+    const sandbarNoise = Math.abs(snoise(x * 0.006 + 300, z * 0.006 - 300));
+    const sandbars = smoothstep(0.22, 0.65, sandbarNoise) * 2.8;
+    const ripples = snoise(x * 0.018, z * 0.018) * 0.6;
+
+    let y = lagoon + sandbars + ripples;
+    return Math.min(6.5, Math.max(2.1, y));
+}
+
+// 5. Colossal Redwood: Towering grand mountain massifs (110m), deep valleys, monolithic slopes
+function heightRedwood(x: number, z: number): number {
+    const mountains = snoise(x * 0.0018, z * 0.0018) * 65.0 + 42.0;
+    const ridges = (1.0 - Math.abs(snoise(x * 0.005 + 100, z * 0.005 - 100))) * 28.0;
+    const detail = snoise(x * 0.014, z * 0.014) * 8.0;
+
+    let y = mountains + ridges + detail;
+    if (y < 12.0) {
+        y = (y - 12.0) * 0.3 + 12.0;
+    }
+    return Math.max(3.5, y);
+}
+
+export function terrainHeightJS(x: number, z: number): number {
+    const w = getBiomeWeights(x, z);
+    const h = heightMeadow(x, z) * w.meadow +
+              heightArchipelago(x, z) * w.archipelago +
+              heightGeothermal(x, z) * w.geothermal +
+              heightEstuary(x, z) * w.estuary +
+              heightRedwood(x, z) * w.redwood;
+    return h;
 }
 
 export function distToSegment(px: number, pz: number, ax: number, az: number, bx: number, bz: number): number {

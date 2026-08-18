@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { gradientMap } from '../world/terrain';
-import { terrainHeightJS } from '../world/noise';
+import { terrainHeightJS, getDominantBiome, getDominantBiomeName, BiomeId } from '../world/noise';
 import { InputState } from './controls';
 import { FLIGHT_MODELS, FlightModelDef } from './FlightModels';
 
@@ -24,6 +24,11 @@ export class PlayerSystem {
     public currentRoll = 0;
     public turnVelocity = 0;
     public velocity = 15.0;
+
+    public currentBiome: BiomeId = 'archipelago';
+    public currentBiomeName: string = 'Floating Archipelago';
+    public isSkimmingWater: boolean = false;
+    public isUpdraftLift: boolean = false;
 
     public targetCameraDistance = 12;
     public currentCameraDistance = 12;
@@ -68,15 +73,16 @@ export class PlayerSystem {
         this.cameraBase.add(this.cameraPivot);
 
         this.camera.rotation.order = 'YXZ';
-        const initialCamY = 4.0;
+        const initialCamY = 3.2;
+        const initialLookY = 0.5;
         this.camera.position.set(0, initialCamY, 12);
-        this.camera.rotation.set(-Math.atan2(initialCamY, 12) * 0.38, 0, 0);
+        this.camera.rotation.set(-Math.atan2(initialCamY - initialLookY, 12), 0, 0);
         this.cameraPivot.add(this.camera);
 
         // Setup loader with Draco support
         this.gltfLoader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/gltf/');
+        dracoLoader.setDecoderPath('/draco/gltf/');
         this.gltfLoader.setDRACOLoader(dracoLoader);
 
         this.setModel(0);
@@ -86,6 +92,19 @@ export class PlayerSystem {
 
     public getModelList(): FlightModelDef[] {
         return FLIGHT_MODELS;
+    }
+
+    public teleportTo(x: number, z: number, yOffset: number = 50) {
+        const groundY = terrainHeightJS(x, z);
+        this.playerGrp.position.set(x, Math.max(groundY + yOffset, 25), z);
+        this.cameraBase.position.copy(this.playerGrp.position);
+        this.currentYaw = 0;
+        this.currentPitch = 0;
+        this.currentRoll = 0;
+        this.turnVelocity = 0;
+        this.velocity = 18.0;
+        this.currentBiome = getDominantBiome(x, z);
+        this.currentBiomeName = getDominantBiomeName(x, z);
     }
 
     public getCurrentModelDef(): FlightModelDef {
@@ -152,12 +171,13 @@ export class PlayerSystem {
                         }
                     });
 
-                    // Model is baked with exact forward flight orientation (-Z forward, +Y up, +X right)
-                    model.rotation.set(0, 0, 0);
+                    // Model orientation and scale
+                    model.rotation.set(modelDef.rotX || 0, modelDef.rotY || 0, modelDef.rotZ || 0);
 
                     const baseScale = modelDef.scale || 1.0;
                     model.scale.set(baseScale, baseScale, baseScale);
 
+                    model.position.set(0, 0, 0);
                     model.updateMatrixWorld(true);
                     const modelBox = new THREE.Box3().setFromObject(model);
                     const modelCenter = new THREE.Vector3();
@@ -218,7 +238,8 @@ export class PlayerSystem {
             if (
                 targetEl.tagName === 'BUTTON' ||
                 targetEl.tagName === 'INPUT' ||
-                targetEl.closest('#top-bar, #top-right-bar, #settings-menu, #model-dropdown, #debug-panel, #photo-mode-ui, #boost-btn')
+                targetEl.tagName === 'TEXTAREA' ||
+                targetEl.closest('#top-bar, #top-right-bar, #settings-menu, #model-dropdown, #debug-panel, #dev-editor-panel, #photo-mode-ui, #boost-btn')
             ) {
                 return;
             }
@@ -254,7 +275,7 @@ export class PlayerSystem {
         // Mouse scroll wheel zoom
         window.addEventListener('wheel', (e) => {
             const targetEl = e.target as HTMLElement;
-            if (targetEl.closest('#model-dropdown, #debug-panel')) {
+            if (targetEl.closest('#model-dropdown, #debug-panel, #dev-editor-panel')) {
                 return;
             }
             const zoomDelta = e.deltaY * 0.02;
@@ -323,6 +344,10 @@ export class PlayerSystem {
         const targetRoll = (this.turnVelocity / this.maxTurnSpeed) * this.maxBankAngle;
         this.currentRoll = THREE.MathUtils.lerp(this.currentRoll, targetRoll, 2.5 * dt);
 
+        // Biome tracking & dynamic flight aerodynamics
+        this.currentBiome = getDominantBiome(this.playerGrp.position.x, this.playerGrp.position.z);
+        this.currentBiomeName = getDominantBiomeName(this.playerGrp.position.x, this.playerGrp.position.z);
+
         // Terrain lean sampling
         const lookAheadDist = 30.0;
         const aheadX = this.playerGrp.position.x - Math.sin(this.currentYaw) * lookAheadDist;
@@ -330,6 +355,13 @@ export class PlayerSystem {
         const currentGroundY = terrainHeightJS(this.playerGrp.position.x, this.playerGrp.position.z);
         const aheadGroundY = terrainHeightJS(aheadX, aheadZ);
         const terrainSlope = (aheadGroundY - currentGroundY) / lookAheadDist;
+        const altAboveGround = this.playerGrp.position.y - currentGroundY;
+
+        // Estuary ground-effect water skimming
+        this.isSkimmingWater = this.currentBiome === 'estuary' && altAboveGround < 18.0 && this.playerGrp.position.y < 28.0;
+
+        // Archipelago / Geothermal thermal updraft lift
+        this.isUpdraftLift = (this.currentBiome === 'archipelago' || this.currentBiome === 'geothermal') && currentGroundY > 52.0 && altAboveGround < 45.0;
 
         // Altitude & Pitch
         let targetPitch = 0.0;
@@ -351,9 +383,14 @@ export class PlayerSystem {
         const moveDir = new THREE.Vector3(0, 0, -1);
         moveDir.applyQuaternion(this.playerGrp.quaternion);
 
-        const targetSpeed = inputState.brake ? 2.0 : (inputState.boost ? 75.0 : this.moveSpeed);
+        const speedBonus = this.isSkimmingWater ? 6.0 : 0.0;
+        const targetSpeed = inputState.brake ? 2.0 : (inputState.boost ? 75.0 : (this.moveSpeed + speedBonus));
         this.velocity += (targetSpeed - this.velocity) * dt * (inputState.brake ? 4.0 : (inputState.boost ? 3.0 : 2.0));
         this.playerGrp.position.add(moveDir.multiplyScalar(this.velocity * dt));
+
+        if (this.isUpdraftLift) {
+            this.playerGrp.position.y += 3.5 * dt;
+        }
 
         // Smooth camera distance zoom interpolation
         this.currentCameraDistance = THREE.MathUtils.lerp(
@@ -362,9 +399,10 @@ export class PlayerSystem {
             dt * 8.0
         );
         const heightScale = Math.sqrt(this.currentCameraDistance / 12.0);
-        const cameraY = 4.0 * heightScale;
+        const cameraY = 3.2 * heightScale;
+        const targetLookY = 0.5 * heightScale;
         this.camera.position.set(0, cameraY, this.currentCameraDistance);
-        this.camera.rotation.set(-Math.atan2(cameraY, this.currentCameraDistance) * 0.38, 0, 0);
+        this.camera.rotation.set(-Math.atan2(cameraY - targetLookY, this.currentCameraDistance), 0, 0);
 
         if (inputState.boost) {
             this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 74, dt * 3.5);
@@ -385,7 +423,7 @@ export class PlayerSystem {
         this.playerGrp.position.y = Math.min(Math.max(this.playerGrp.position.y, 18), 300);
 
         // Sync camera base
-        this.cameraBase.position.lerp(this.playerGrp.position, dt * 7.0);
+        this.cameraBase.position.copy(this.playerGrp.position);
         this.eulerRotation.set(0, this.currentYaw, 0, 'YXZ');
         this.baseTargetQuat.setFromEuler(this.eulerRotation);
         this.cameraBase.quaternion.slerp(this.baseTargetQuat, 2.8 * dt);

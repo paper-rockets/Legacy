@@ -16,7 +16,8 @@ export const FLIGHT_MODELS: FlightModelDef[] = [
         name: 'Scarlet Macaw',
         file: 'Assets/Flight/animated_parrot.glb',
         preferredAnim: '02-flying',
-        scale: 1.0
+        scale: 1.0,
+        offsetY: -1.6
     },
     {
         id: 'american_robin',
@@ -41,31 +42,10 @@ export const FLIGHT_MODELS: FlightModelDef[] = [
         scale: 1.0
     },
     {
-        id: 'monarch_butterfly',
-        name: 'Monarch Butterfly',
-        file: 'Assets/Flight/idl_flight_on_spot.glb',
-        preferredAnim: 'Take 001',
-        scale: 1.0
-    },
-    {
-        id: 'seaplane',
-        name: 'Porco Rosso Seaplane',
-        file: 'Assets/Flight/porco_rosso_-_seaplane.glb',
-        preferredAnim: 'PropellerAction',
-        scale: 1.0
-    },
-    {
         id: 'birds_flock',
         name: 'Flock of Birds',
         file: 'Assets/Flight/birds.glb',
         preferredAnim: 'Scene',
-        scale: 1.0
-    },
-    {
-        id: 'parrot_classic',
-        name: 'Classic Parrot',
-        file: 'Assets/Flight/parrot.glb',
-        preferredAnim: 'Take 001',
         scale: 1.0
     },
     {
@@ -74,5 +54,13 @@ export const FLIGHT_MODELS: FlightModelDef[] = [
         file: 'Assets/Flight/parrot_ai.glb',
         preferredAnim: 'Object_0',
         scale: 1.0
+    },
+    {
+        id: 'mitsubishi_b2m2',
+        name: 'Mitsubishi B2M2',
+        file: 'Assets/Flight/mitsubishi_b2m2_-_game_art_1_stylized_plane.glb',
+        preferredAnim: 'Flying',
+        scale: 0.28,
+        offsetY: -0.15
     }
 ];

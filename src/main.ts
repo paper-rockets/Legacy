@@ -23,12 +23,13 @@ async function bootstrap() {
     const water = new WaterSystem(pipeline.scene);
     const props = new PropsSystem(pipeline.scene);
     const trees = new TreeSystem(pipeline.scene);
-    await trees.init();
+    trees.init().catch(console.error);
 
     const player = new PlayerSystem(pipeline.scene, pipeline.camera);
     const controls = new ControlsManager();
     const audio = new AmbientAudioEngine();
     const ui = new UIManager(pipeline, player, terrain, props, lighting, water, audio, controls, trees);
+    (window as any).__game = { pipeline, player, terrain, lighting, water, props, trees, ui };
 
     const clock = new THREE.Clock();
 
@@ -41,21 +42,21 @@ async function bootstrap() {
     function animate() {
         requestAnimationFrame(animate);
 
-        let dt = Math.min(clock.getDelta(), 0.1);
-        if (controls.isFlightPaused) dt = 0;
+        const realDt = Math.min(clock.getDelta(), 0.1);
+        const flightDt = controls.isFlightPaused ? 0 : realDt;
 
         const playerPos = player.playerGrp.position;
         const groundY = terrainHeightJS(playerPos.x, playerPos.z);
 
-        lighting.update(dt, pipeline.scene, playerPos, groundY);
-        trees.updateGlow(dt, lighting.timePhase);
+        lighting.update(realDt, pipeline.scene, playerPos, groundY);
+        trees.updateGlow(realDt, lighting.timePhase);
 
         if (!ui.isPhotoMode) {
             const inputState = controls.getInputState();
-            player.update(dt, inputState);
+            player.update(flightDt, inputState);
             terrain.update(playerPos.x, playerPos.z);
-            water.update(playerPos.x, playerPos.z, dt);
-            props.update(playerPos.x, playerPos.z, dt);
+            water.update(playerPos.x, playerPos.z, realDt);
+            props.update(playerPos.x, playerPos.z, realDt);
             trees.update(playerPos.x, playerPos.z);
         }
 

@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
+import { EnvPhaseConfig, globalConfigManager } from '../core/config';
+import { BiomeId } from './noise';
 
 export interface EnvConfig {
     bg: number;
@@ -19,44 +21,36 @@ export interface EnvConfig {
     starOp: number;
 }
 
-export const envConfigs: EnvConfig[] = [
-    {
-        // 0: Day - High distant sun, natural golden daylight with soft atmospheric horizon fog
-        bg: 0x8cbce6, fog: 0x8cbce6, fogNear: 200, fogFar: 720,
-        amb: 0xdcf2ff, ambI: 0.75,
-        dir: 0xfffaeb, dirI: 1.4,
-        dirPos: { x: 250, y: 350, z: -200 },
-        hemi: 0.6,
-        sunI: 1.8, sunC: 0xfffae0,
-        sunPos: { x: 350, y: 400, z: -850 },
-        sunScale: 1.3,
-        starOp: 0.0
-    },
-    {
-        // 1: Dusk - Sun directly on the distant horizon, casting water reflections
-        bg: 0xdd5e42, fog: 0xdd5e42, fogNear: 180, fogFar: 680,
-        amb: 0x6a4055, ambI: 0.65,
-        dir: 0xff7722, dirI: 1.3,
-        dirPos: { x: 0, y: 45, z: -600 },
-        hemi: 0.45,
-        sunI: 2.6, sunC: 0xff5511,
-        sunPos: { x: 0, y: 15, z: -700 },
-        sunScale: 2.4,
-        starOp: 0.1
-    },
-    {
-        // 2: Twilight - Strong global illumination, rich Ghibli night, high cosmic starfield
-        bg: 0x18182c, fog: 0x18182c, fogNear: 180, fogFar: 700,
-        amb: 0x444470, ambI: 0.95,
-        dir: 0x6677aa, dirI: 0.85,
-        dirPos: { x: 100, y: 250, z: -100 },
-        hemi: 0.55,
-        sunI: 0.0, sunC: 0x000000,
-        sunPos: { x: 0, y: -300, z: -800 },
-        sunScale: 0.1,
-        starOp: 0.95
-    }
-];
+export function hexStringToNumber(hex: string): number {
+    if (typeof hex === 'number') return hex;
+    const clean = hex.replace('#', '');
+    return parseInt(clean, 16) || 0;
+}
+
+export function numberToHexString(num: number): string {
+    const hex = num.toString(16).padStart(6, '0');
+    return `#${hex}`;
+}
+
+export function phaseConfigToEnvConfig(cfg: EnvPhaseConfig): EnvConfig {
+    return {
+        bg: hexStringToNumber(cfg.bg),
+        fog: hexStringToNumber(cfg.fog),
+        fogNear: cfg.fogNear,
+        fogFar: cfg.fogFar,
+        amb: hexStringToNumber(cfg.amb),
+        ambI: cfg.ambI,
+        dir: hexStringToNumber(cfg.dir),
+        dirI: cfg.dirI,
+        dirPos: { ...cfg.dirPos },
+        hemi: cfg.hemi,
+        sunI: cfg.sunI,
+        sunC: hexStringToNumber(cfg.sunC),
+        sunPos: { ...cfg.sunPos },
+        sunScale: cfg.sunScale,
+        starOp: cfg.starOp
+    };
+}
 
 export class LightingSystem {
     public hemiLight: THREE.HemisphereLight;
@@ -67,6 +61,9 @@ export class LightingSystem {
     public starField: THREE.Points;
     public starMaterial: THREE.PointsMaterial;
     public timePhase: number = 0;
+    public activeBiomeId: BiomeId = 'meadow';
+
+    public envConfigs: EnvConfig[] = [];
 
     private targetSunPos = new THREE.Vector3();
     private targetDirPos = new THREE.Vector3();
@@ -74,24 +71,29 @@ export class LightingSystem {
     public shadowTuned: boolean = false;
 
     constructor(scene: THREE.Scene) {
-        scene.background = new THREE.Color(0x8cbce6);
-        scene.fog = new THREE.Fog(0x8cbce6, 200, 720);
+        this.activeBiomeId = globalConfigManager.config.activeBiomeId || 'meadow';
+        this.reloadConfigFromManager();
 
-        this.hemiLight = new THREE.HemisphereLight(0xff7d45, 0x24113a, 0.6);
+        const initialTarget = this.envConfigs[0];
+
+        scene.background = new THREE.Color(initialTarget.bg);
+        scene.fog = new THREE.Fog(initialTarget.fog, initialTarget.fogNear, initialTarget.fogFar);
+
+        this.hemiLight = new THREE.HemisphereLight(0xff7d45, 0x24113a, initialTarget.hemi);
         scene.add(this.hemiLight);
 
-        this.ambientLight = new THREE.AmbientLight(0xdcf2ff, 0.7);
+        this.ambientLight = new THREE.AmbientLight(initialTarget.amb, initialTarget.ambI);
         scene.add(this.ambientLight);
 
         // Visible Sun
         const sunGeometry = new THREE.IcosahedronGeometry(15, 1);
-        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffd27f });
+        const sunMaterial = new THREE.MeshBasicMaterial({ color: initialTarget.sunC });
         this.sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
         this.sunMesh.position.set(0, 40, -300);
         scene.add(this.sunMesh);
 
         // Direct Sunburst Light with Lensflare
-        this.sunLight = new THREE.DirectionalLight(0xff5500, 2.5);
+        this.sunLight = new THREE.DirectionalLight(initialTarget.sunC, initialTarget.sunI);
         this.sunLight.position.copy(this.sunMesh.position);
         this.sunLight.castShadow = false;
         scene.add(this.sunLight);
@@ -107,8 +109,8 @@ export class LightingSystem {
         this.sunLight.add(lensflare);
 
         // Sunlight casting shadows
-        this.dirLight = new THREE.DirectionalLight(0xfffaeb, 1.4);
-        this.dirLight.position.set(150, 200, 50);
+        this.dirLight = new THREE.DirectionalLight(initialTarget.dir, initialTarget.dirI);
+        this.dirLight.position.set(initialTarget.dirPos.x, initialTarget.dirPos.y, initialTarget.dirPos.z);
         this.dirLight.castShadow = true;
         this.dirLight.shadow.camera.left = -120;
         this.dirLight.shadow.camera.right = 120;
@@ -142,10 +144,61 @@ export class LightingSystem {
             sizeAttenuation: false,
             fog: false,
             transparent: true,
-            opacity: 0.0
+            opacity: initialTarget.starOp
         });
         this.starField = new THREE.Points(starGeometry, this.starMaterial);
         scene.add(this.starField);
+    }
+
+    public reloadConfigFromManager(): void {
+        const biomeCfg = globalConfigManager.getBiomeConfig(this.activeBiomeId);
+        this.envConfigs = biomeCfg.phases.map(p => phaseConfigToEnvConfig(p));
+    }
+
+    public switchBiome(biomeId: BiomeId, scene?: THREE.Scene): void {
+        this.activeBiomeId = biomeId;
+        this.reloadConfigFromManager();
+        if (scene) {
+            this.setTimePhase(this.timePhase, scene);
+        }
+    }
+
+    public updateBiomePhaseConfig(biomeId: BiomeId, phase: number, partial: Partial<EnvPhaseConfig>, scene?: THREE.Scene): void {
+        const biome = globalConfigManager.getBiomeConfig(biomeId);
+        const current = biome.phases[phase];
+        biome.phases[phase] = { ...current, ...partial };
+
+        if (biomeId === this.activeBiomeId) {
+            this.envConfigs[phase] = phaseConfigToEnvConfig(biome.phases[phase]);
+            if (phase === this.timePhase && scene) {
+                const target = this.envConfigs[phase];
+                if (scene.background instanceof THREE.Color) scene.background.set(target.bg);
+                if (scene.fog) {
+                    scene.fog.color.set(target.fog);
+                    scene.fog.near = target.fogNear;
+                    scene.fog.far = target.fogFar;
+                }
+                this.ambientLight.color.set(target.amb);
+                this.ambientLight.intensity = target.ambI;
+                this.dirLight.color.set(target.dir);
+                this.dirLight.intensity = target.dirI;
+                this.hemiLight.intensity = target.hemi;
+                this.sunLight.intensity = target.sunI;
+                this.sunLight.color.set(target.sunC);
+                (this.sunMesh.material as THREE.MeshBasicMaterial).color.set(target.sunC);
+                this.sunMesh.visible = target.sunI > 0.05;
+                this.sunMesh.scale.set(target.sunScale, target.sunScale, target.sunScale);
+                this.starMaterial.opacity = target.starOp;
+            }
+        }
+    }
+
+    public updatePhaseConfig(phase: number, partial: Partial<EnvPhaseConfig>, scene?: THREE.Scene): void {
+        this.updateBiomePhaseConfig(this.activeBiomeId, phase, partial, scene);
+    }
+
+    public getPhaseConfig(phase: number): EnvPhaseConfig {
+        return globalConfigManager.getBiomeConfig(this.activeBiomeId).phases[phase];
     }
 
     public cycleTimePhase(): number {
@@ -153,8 +206,28 @@ export class LightingSystem {
         return this.timePhase;
     }
 
-    public setTimePhase(phase: number): number {
+    public setTimePhase(phase: number, scene?: THREE.Scene): number {
         this.timePhase = Math.max(0, Math.min(2, Math.floor(phase)));
+        if (scene && this.envConfigs[this.timePhase]) {
+            const target = this.envConfigs[this.timePhase];
+            if (scene.background instanceof THREE.Color) scene.background.set(target.bg);
+            if (scene.fog) {
+                scene.fog.color.set(target.fog);
+                scene.fog.near = target.fogNear;
+                scene.fog.far = target.fogFar;
+            }
+            this.ambientLight.color.set(target.amb);
+            this.ambientLight.intensity = target.ambI;
+            this.dirLight.color.set(target.dir);
+            this.dirLight.intensity = target.dirI;
+            this.hemiLight.intensity = target.hemi;
+            this.sunLight.intensity = target.sunI;
+            this.sunLight.color.set(target.sunC);
+            (this.sunMesh.material as THREE.MeshBasicMaterial).color.set(target.sunC);
+            this.sunMesh.visible = target.sunI > 0.05;
+            this.sunMesh.scale.set(target.sunScale, target.sunScale, target.sunScale);
+            this.starMaterial.opacity = target.starOp;
+        }
         return this.timePhase;
     }
 
@@ -168,30 +241,34 @@ export class LightingSystem {
     }
 
     public update(dt: number, scene: THREE.Scene, playerPos: THREE.Vector3, groundY: number) {
-        const target = envConfigs[this.timePhase];
+        const target = this.envConfigs[this.timePhase];
+        if (!target) return;
+
+        const lerpFactor = Math.min(1.0, dt * 4.0);
 
         if (scene.background instanceof THREE.Color) {
-            scene.background.lerp(new THREE.Color(target.bg), dt * 2);
+            scene.background.lerp(new THREE.Color(target.bg), lerpFactor);
         }
         if (scene.fog) {
-            scene.fog.color.lerp(new THREE.Color(target.fog), dt * 2);
-            scene.fog.near = THREE.MathUtils.lerp(scene.fog.near, target.fogNear, dt * 2);
-            scene.fog.far = THREE.MathUtils.lerp(scene.fog.far, target.fogFar, dt * 2);
+            scene.fog.color.lerp(new THREE.Color(target.fog), lerpFactor);
+            scene.fog.near = THREE.MathUtils.lerp(scene.fog.near, target.fogNear, lerpFactor);
+            scene.fog.far = THREE.MathUtils.lerp(scene.fog.far, target.fogFar, lerpFactor);
         }
 
-        this.ambientLight.color.lerp(new THREE.Color(target.amb), dt * 2);
-        this.ambientLight.intensity += (target.ambI - this.ambientLight.intensity) * dt * 2;
-        this.dirLight.color.lerp(new THREE.Color(target.dir), dt * 2);
-        this.dirLight.intensity += (target.dirI - this.dirLight.intensity) * dt * 2;
-        this.hemiLight.intensity += (target.hemi - this.hemiLight.intensity) * dt * 2;
+        this.ambientLight.color.lerp(new THREE.Color(target.amb), lerpFactor);
+        this.ambientLight.intensity += (target.ambI - this.ambientLight.intensity) * lerpFactor;
+        this.dirLight.color.lerp(new THREE.Color(target.dir), lerpFactor);
+        this.dirLight.intensity += (target.dirI - this.dirLight.intensity) * lerpFactor;
+        this.hemiLight.intensity += (target.hemi - this.hemiLight.intensity) * lerpFactor;
 
-        this.sunLight.intensity += (target.sunI - this.sunLight.intensity) * dt * 2;
-        (this.sunMesh.material as THREE.MeshBasicMaterial).color.lerp(new THREE.Color(target.sunC), dt * 2);
+        this.sunLight.intensity += (target.sunI - this.sunLight.intensity) * lerpFactor;
+        this.sunLight.color.lerp(new THREE.Color(target.sunC), lerpFactor);
+        (this.sunMesh.material as THREE.MeshBasicMaterial).color.lerp(new THREE.Color(target.sunC), lerpFactor);
         this.sunMesh.visible = target.sunI > 0.05;
 
         const targetScale = target.sunScale;
-        this.sunMesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), dt * 2);
-        this.starMaterial.opacity += (target.starOp - this.starMaterial.opacity) * dt * 2;
+        this.sunMesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), lerpFactor);
+        this.starMaterial.opacity += (target.starOp - this.starMaterial.opacity) * lerpFactor;
 
         // Follow player position
         this.targetSunPos.set(
@@ -213,7 +290,7 @@ export class LightingSystem {
 
         this.starField.position.set(playerPos.x, playerPos.y, playerPos.z);
 
-        // Shadow bounds
+        // Dynamic shadow bounding box
         const altitude = Math.max(0, playerPos.y - groundY);
         const shadowMin = this.shadowTuned ? 60 : 120;
         const shadowMax = this.shadowTuned ? 90 : 250;

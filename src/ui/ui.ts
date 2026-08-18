@@ -8,17 +8,21 @@ import { WaterSystem } from '../world/water';
 import { AmbientAudioEngine } from '../audio/audio';
 import { ControlsManager } from '../player/controls';
 import { TreeSystem } from '../world/trees';
-
+import { DevEditor } from './devEditor';
+import { BIOME_LOCATIONS } from '../world/noise';
+import { globalConfigManager } from '../core/config';
 
 export class UIManager {
     public isPhotoMode = false;
     public isDebugOpen = false;
     public isSettingsOpen = false;
+    public devEditor: DevEditor | null = null;
 
     private photoControls: OrbitControls | null = null;
     private fpsFrames = 0;
     private fpsPrevTime = performance.now();
     private fpsDisplay: HTMLElement | null;
+    private biomeDisplay: HTMLElement | null;
 
     constructor(
         private pipeline: RenderPipeline,
@@ -32,6 +36,18 @@ export class UIManager {
         private trees?: TreeSystem
     ) {
         this.fpsDisplay = document.getElementById('fps-counter');
+        this.biomeDisplay = document.getElementById('biome-select-btn');
+        if (this.trees) {
+            this.devEditor = new DevEditor(
+                this.pipeline,
+                this.lighting,
+                this.props,
+                this.trees,
+                this.water,
+                this.terrain,
+                this.player
+            );
+        }
         this.setupButtons();
         this.setupPhotoMode();
         this.setupDebugPanel();
@@ -94,6 +110,10 @@ export class UIManager {
                     }
                 }
             });
+            if (this.devEditor && this.devEditor.isOpen) {
+                this.devEditor.activeEnvPhase = phase;
+                this.devEditor.refreshUI();
+            }
         };
 
         timeButtons.forEach(item => {
@@ -112,7 +132,6 @@ export class UIManager {
         const models = this.player.getModelList();
 
         if (modelBtn && modelDropdown) {
-            // Populate dropdown options
             modelDropdown.innerHTML = '';
             models.forEach((m, idx) => {
                 const optBtn = document.createElement('button');
@@ -155,6 +174,44 @@ export class UIManager {
             });
 
             updateModelBtnUI();
+        }
+
+        // Biome Selector in Top Bar
+        const biomeBtn = document.getElementById('biome-select-btn');
+        const biomeDropdown = document.getElementById('biome-dropdown');
+
+        if (biomeBtn && biomeDropdown) {
+            biomeDropdown.innerHTML = '';
+            BIOME_LOCATIONS.forEach((loc) => {
+                const optBtn = document.createElement('button');
+                optBtn.className = 'biome-option-btn' + (loc.id === this.player.currentBiome ? ' active' : '');
+                optBtn.innerHTML = `
+                    <div style="font-weight: 700;">${loc.name}</div>
+                    <div class="biome-option-subtitle">${loc.description}</div>
+                `;
+                optBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.travelToBiome(loc.x, loc.z);
+                    biomeDropdown.style.display = 'none';
+                });
+                biomeDropdown.appendChild(optBtn);
+            });
+
+            biomeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = biomeDropdown.style.display === 'flex';
+                if (modelDropdown) modelDropdown.style.display = 'none';
+                const settingsMenu = document.getElementById('settings-menu');
+                if (settingsMenu) settingsMenu.style.display = 'none';
+
+                biomeDropdown.style.display = isOpen ? 'none' : 'flex';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (biomeDropdown.style.display === 'flex' && !biomeDropdown.contains(e.target as Node) && e.target !== biomeBtn) {
+                    biomeDropdown.style.display = 'none';
+                }
+            });
         }
 
         // Fullscreen toggle
@@ -207,6 +264,16 @@ export class UIManager {
             });
         }
 
+        // Dev Editor menu item in settings
+        const devMenuBtn = document.getElementById('dev-menu-toggle');
+        if (devMenuBtn) {
+            devMenuBtn.addEventListener('click', () => {
+                this.isSettingsOpen = false;
+                if (settingsMenu) settingsMenu.style.display = 'none';
+                this.devEditor?.open();
+            });
+        }
+
         // Vegetation Preset Buttons
         const presetBtns = document.querySelectorAll('.menu-preset-btn');
         presetBtns.forEach((btn) => {
@@ -221,12 +288,51 @@ export class UIManager {
             });
         });
 
-        // Glow Editor Sliders
+        // Glow & Bloom Editor Sliders
+        const treeBloomSlider = document.getElementById('tree-bloom-slider') as HTMLInputElement | null;
+        const treeBloomVal = document.getElementById('tree-bloom-val');
+        const treeBloomDebugSlider = document.getElementById('tree-bloom-debug-slider') as HTMLInputElement | null;
+        const treeBloomDebugVal = document.getElementById('tree-bloom-debug-val');
+
+        const syncTreeBloom = (intensity: number) => {
+            if (this.trees) {
+                this.trees.setTreeBloomIntensity(intensity);
+            }
+            if (treeBloomSlider) {
+                treeBloomSlider.value = Math.round(intensity * 100).toString();
+            }
+            if (treeBloomVal) {
+                treeBloomVal.innerText = `${Math.round(intensity * 100)}%`;
+            }
+            if (treeBloomDebugSlider) {
+                treeBloomDebugSlider.value = intensity.toFixed(2);
+            }
+            if (treeBloomDebugVal) {
+                treeBloomDebugVal.textContent = intensity.toFixed(2);
+            }
+        };
+
+        const activeBiome = globalConfigManager.getActiveBiomeConfig();
+        if (treeBloomSlider && this.trees) {
+            syncTreeBloom(activeBiome.bloom.treeBloom);
+            treeBloomSlider.addEventListener('input', (e) => {
+                const val = parseInt((e.target as HTMLInputElement).value, 10) / 100;
+                syncTreeBloom(val);
+            });
+        }
+
+        if (treeBloomDebugSlider && this.trees) {
+            treeBloomDebugSlider.addEventListener('input', (e) => {
+                const val = parseFloat((e.target as HTMLInputElement).value);
+                syncTreeBloom(val);
+            });
+        }
+
         const canopyGlowSlider = document.getElementById('canopy-glow-slider') as HTMLInputElement | null;
         const canopyGlowVal = document.getElementById('canopy-glow-val');
         if (canopyGlowSlider && this.trees) {
-            canopyGlowSlider.value = Math.round(this.trees.canopyGlowMultiplier * 100).toString();
-            if (canopyGlowVal) canopyGlowVal.innerText = `${Math.round(this.trees.canopyGlowMultiplier * 100)}%`;
+            canopyGlowSlider.value = Math.round(activeBiome.bloom.treeCanopyGlow * 100).toString();
+            if (canopyGlowVal) canopyGlowVal.innerText = `${Math.round(activeBiome.bloom.treeCanopyGlow * 100)}%`;
 
             canopyGlowSlider.addEventListener('input', (e) => {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
@@ -238,8 +344,8 @@ export class UIManager {
         const trunkGlowSlider = document.getElementById('trunk-glow-slider') as HTMLInputElement | null;
         const trunkGlowVal = document.getElementById('trunk-glow-val');
         if (trunkGlowSlider && this.trees) {
-            trunkGlowSlider.value = Math.round(this.trees.trunkGlowMultiplier * 100).toString();
-            if (trunkGlowVal) trunkGlowVal.innerText = `${Math.round(this.trees.trunkGlowMultiplier * 100)}%`;
+            trunkGlowSlider.value = Math.round(activeBiome.bloom.treeTrunkGlow * 100).toString();
+            if (trunkGlowVal) trunkGlowVal.innerText = `${Math.round(activeBiome.bloom.treeTrunkGlow * 100)}%`;
 
             trunkGlowSlider.addEventListener('input', (e) => {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
@@ -255,8 +361,8 @@ export class UIManager {
         const densityVal = document.getElementById('tree-density-val');
 
         if (scaleSlider && this.trees) {
-            scaleSlider.value = this.trees.treeScale.toString();
-            if (scaleVal) scaleVal.innerText = `${Math.round(this.trees.treeScale * 100)}%`;
+            scaleSlider.value = activeBiome.vegetation.treeScale.toString();
+            if (scaleVal) scaleVal.innerText = `${Math.round(activeBiome.vegetation.treeScale * 100)}%`;
 
             scaleSlider.addEventListener('input', (e) => {
                 const val = parseFloat((e.target as HTMLInputElement).value);
@@ -266,8 +372,8 @@ export class UIManager {
         }
 
         if (densitySlider && this.trees) {
-            densitySlider.value = this.trees.treeDensity.toString();
-            if (densityVal) densityVal.innerText = this.trees.treeDensity.toString();
+            densitySlider.value = activeBiome.vegetation.treeDensity.toString();
+            if (densityVal) densityVal.innerText = activeBiome.vegetation.treeDensity.toString();
 
             densitySlider.addEventListener('input', (e) => {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
@@ -283,8 +389,8 @@ export class UIManager {
         const bushDensityVal = document.getElementById('bush-density-val');
 
         if (bushScaleSlider && this.trees) {
-            bushScaleSlider.value = this.trees.bushScale.toString();
-            if (bushScaleVal) bushScaleVal.innerText = `${Math.round(this.trees.bushScale * 100)}%`;
+            bushScaleSlider.value = activeBiome.vegetation.bushScale.toString();
+            if (bushScaleVal) bushScaleVal.innerText = `${Math.round(activeBiome.vegetation.bushScale * 100)}%`;
 
             bushScaleSlider.addEventListener('input', (e) => {
                 const val = parseFloat((e.target as HTMLInputElement).value);
@@ -294,8 +400,8 @@ export class UIManager {
         }
 
         if (bushDensitySlider && this.trees) {
-            bushDensitySlider.value = this.trees.bushDensity.toString();
-            if (bushDensityVal) bushDensityVal.innerText = this.trees.bushDensity.toString();
+            bushDensitySlider.value = activeBiome.vegetation.bushDensity.toString();
+            if (bushDensityVal) bushDensityVal.innerText = activeBiome.vegetation.bushDensity.toString();
 
             bushDensitySlider.addEventListener('input', (e) => {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
@@ -314,6 +420,7 @@ export class UIManager {
         const topRightBar = document.getElementById('top-right-bar');
         const settingsMenu = document.getElementById('settings-menu');
         const debugPanel = document.getElementById('debug-panel');
+        const devPanel = document.getElementById('dev-editor-panel');
         const touch = document.getElementById('touch-controls');
 
         if (photoToggle && photoExit && photoCapture && photoUi) {
@@ -324,6 +431,7 @@ export class UIManager {
                 if (topBar) topBar.style.display = 'none';
                 if (topRightBar) topRightBar.style.display = 'none';
                 if (debugPanel) debugPanel.style.display = 'none';
+                if (devPanel) devPanel.style.display = 'none';
                 if (touch) touch.style.display = 'none';
                 photoUi.style.display = 'flex';
 
@@ -340,12 +448,13 @@ export class UIManager {
                 if (topBar) topBar.style.display = 'flex';
                 if (topRightBar) topRightBar.style.display = 'flex';
                 if (this.isDebugOpen && debugPanel) debugPanel.style.display = 'block';
+                if (this.devEditor && this.devEditor.isOpen && devPanel) devPanel.style.display = 'flex';
                 if (touch) touch.style.display = '';
                 photoUi.style.display = 'none';
 
                 this.pipeline.camera.fov = 60;
-                this.pipeline.camera.position.set(0, 4.0, 12);
-                this.pipeline.camera.rotation.set(-Math.atan2(4.0, 12) * 0.38, 0, 0);
+                this.pipeline.camera.position.set(0, 3.2, 12);
+                this.pipeline.camera.rotation.set(-Math.atan2(3.2 - 0.5, 12), 0, 0);
                 this.player.cameraPivot.rotation.set(0, 0, 0);
                 this.pipeline.camera.updateProjectionMatrix();
 
@@ -389,6 +498,25 @@ export class UIManager {
                 this.isDebugOpen = false;
                 if (debugToggle) debugToggle.innerText = 'Debug: OFF';
                 debugPanel.style.display = 'none';
+            });
+        }
+
+        const treeBloomDebugSlider = document.getElementById('tree-bloom-debug-slider') as HTMLInputElement | null;
+        const treeBloomDebugVal = document.getElementById('tree-bloom-debug-val');
+
+        if (treeBloomDebugSlider && this.trees) {
+            const currentTreeBloom = globalConfigManager.getActiveBiomeConfig().bloom.treeBloom;
+            treeBloomDebugSlider.value = currentTreeBloom.toFixed(2);
+            if (treeBloomDebugVal) treeBloomDebugVal.textContent = currentTreeBloom.toFixed(2);
+
+            treeBloomDebugSlider.addEventListener('input', (e) => {
+                const val = parseFloat((e.target as HTMLInputElement).value);
+                this.trees?.setTreeBloomIntensity(val);
+                if (treeBloomDebugVal) treeBloomDebugVal.textContent = val.toFixed(2);
+                const mainSlider = document.getElementById('tree-bloom-slider') as HTMLInputElement | null;
+                const mainVal = document.getElementById('tree-bloom-val');
+                if (mainSlider) mainSlider.value = Math.round(val * 100).toString();
+                if (mainVal) mainVal.innerText = `${Math.round(val * 100)}%`;
             });
         }
 
@@ -443,6 +571,11 @@ export class UIManager {
             if (bloomSlider) {
                 bloomSlider.value = this.pipeline.bloomPass.strength.toString();
                 if (bloomVal) bloomVal.textContent = Number(this.pipeline.bloomPass.strength).toFixed(2);
+            }
+            if (treeBloomDebugSlider && this.trees) {
+                const currentTreeBloom = globalConfigManager.getActiveBiomeConfig().bloom.treeBloom;
+                treeBloomDebugSlider.value = currentTreeBloom.toFixed(2);
+                if (treeBloomDebugVal) treeBloomDebugVal.textContent = currentTreeBloom.toFixed(2);
             }
             if (btnMaster) {
                 const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast && isWaterFast;
@@ -528,13 +661,46 @@ export class UIManager {
     }
 
 
+    public travelToBiome(x: number, z: number) {
+        this.player.teleportTo(x, z, 50);
+        const pos = this.player.playerGrp.position;
+        this.terrain.update(pos.x, pos.z);
+        if (this.trees) this.trees.update(pos.x, pos.z);
+        this.props.update(pos.x, pos.z, 0.016);
+        this.water.update(pos.x, pos.z, 0.016);
+    }
+
     public updateFPS() {
         this.fpsFrames++;
         const now = performance.now();
-        if (now >= this.fpsPrevTime + 500) {
+        if (now >= this.fpsPrevTime + 200) {
             const currentFps = Math.round((this.fpsFrames * 1000) / (now - this.fpsPrevTime));
             if (this.fpsDisplay) {
                 this.fpsDisplay.textContent = currentFps + ' FPS';
+            }
+            if (this.biomeDisplay) {
+                let status = this.player.currentBiomeName;
+                if (this.player.isSkimmingWater) {
+                    status += ' (Skimming)';
+                } else if (this.player.isUpdraftLift) {
+                    status += ' (Updraft)';
+                }
+                if (this.biomeDisplay.textContent !== status) {
+                    this.biomeDisplay.textContent = status;
+                }
+                const biomeDropdown = document.getElementById('biome-dropdown');
+                if (biomeDropdown) {
+                    const buttons = biomeDropdown.querySelectorAll('.biome-option-btn');
+                    BIOME_LOCATIONS.forEach((loc, idx) => {
+                        if (buttons[idx]) {
+                            if (loc.id === this.player.currentBiome) {
+                                buttons[idx].classList.add('active');
+                            } else {
+                                buttons[idx].classList.remove('active');
+                            }
+                        }
+                    });
+                }
             }
             this.fpsFrames = 0;
             this.fpsPrevTime = now;

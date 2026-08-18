@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { globalConfigManager } from './config';
 
 export class RenderPipeline {
     public renderer: THREE.WebGLRenderer;
@@ -38,11 +39,12 @@ export class RenderPipeline {
         this.renderPass = new RenderPass(this.scene, this.camera);
         this.composer.addPass(this.renderPass);
 
+        const blm = globalConfigManager.config.globalBloom;
         this.bloomPass = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            0.42,
-            0.50,
-            0.55
+            blm.strength,
+            blm.radius,
+            blm.threshold
         );
         this.composer.addPass(this.bloomPass);
 
@@ -51,6 +53,21 @@ export class RenderPipeline {
 
     public async init() {
         // Synchronous & ready immediately
+    }
+
+    public setBloomStrength(val: number) {
+        this.bloomPass.strength = Math.max(0, Math.min(3.0, val));
+        globalConfigManager.config.globalBloom.strength = this.bloomPass.strength;
+    }
+
+    public setBloomRadius(val: number) {
+        this.bloomPass.radius = Math.max(0, Math.min(2.0, val));
+        globalConfigManager.config.globalBloom.radius = this.bloomPass.radius;
+    }
+
+    public setBloomThreshold(val: number) {
+        this.bloomPass.threshold = Math.max(0, Math.min(1.0, val));
+        globalConfigManager.config.globalBloom.threshold = this.bloomPass.threshold;
     }
 
     public setPixelRatioCap(maxDpi: number) {
