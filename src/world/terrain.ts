@@ -3,15 +3,14 @@ import { terrainHeightJS, smoothstep, getPathStrength, getBiomeWeights, snoise, 
 import { TerrainColorsSettings, globalConfigManager } from '../core/config';
 
 const gradientColors = new Uint8Array([
-    130, 130, 130, 255, // Deep shadow
-    185, 185, 185, 255, // Midtone
-    230, 230, 230, 255, // Soft highlight
-    255, 255, 255, 255  // Full light
+    130, 130, 130, 255, // Shadow
+    195, 195, 195, 255, // Midtone
+    255, 255, 255, 255  // Highlight
 ]);
-export const gradientMap = new THREE.DataTexture(gradientColors, 4, 1, THREE.RGBAFormat);
+export const gradientMap = new THREE.DataTexture(gradientColors, 3, 1, THREE.RGBAFormat);
 gradientMap.needsUpdate = true;
-gradientMap.minFilter = THREE.LinearFilter;
-gradientMap.magFilter = THREE.LinearFilter;
+gradientMap.minFilter = THREE.NearestFilter;
+gradientMap.magFilter = THREE.NearestFilter;
 gradientMap.generateMipmaps = false;
 
 export const TERRAIN_PALETTES: Record<string, TerrainColorsSettings> = {
@@ -338,19 +337,6 @@ export class TerrainSystem {
             const h = terrainHeightJS(worldX, worldZ);
             pos.setY(i, h);
 
-            // Analytical normal via central difference (smooth, continuous curvature without low-poly faceting)
-            const hL = terrainHeightJS(worldX - delta, worldZ);
-            const hR = terrainHeightJS(worldX + delta, worldZ);
-            const hD = terrainHeightJS(worldX, worldZ - delta);
-            const hU = terrainHeightJS(worldX, worldZ + delta);
-
-            const nx = (hL - hR) / (2.0 * delta);
-            const nz = (hD - hU) / (2.0 * delta);
-            const ny = 1.0;
-            const invLen = 1.0 / Math.sqrt(nx * nx + ny * ny + nz * nz);
-
-            normals.setXYZ(i, nx * invLen, ny * invLen, nz * invLen);
-
             const w = getBiomeWeights(worldX, worldZ);
 
             let lowR = 0, lowG = 0, lowB = 0;
@@ -410,8 +396,11 @@ export class TerrainSystem {
             colors.setXYZ(i, r, g, b);
         }
 
+        this.geometry.computeVertexNormals();
         pos.needsUpdate = true;
-        normals.needsUpdate = true;
+        if (this.geometry.attributes.normal) {
+            (this.geometry.attributes.normal as THREE.BufferAttribute).needsUpdate = true;
+        }
         colors.needsUpdate = true;
 
         this.lastGridX = gridX;
