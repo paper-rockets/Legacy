@@ -247,6 +247,25 @@ export class LightingSystem {
         }
     }
 
+    public fogDisabledInEditor: boolean = false;
+
+    public setFogDisabled(disabled: boolean, scene?: THREE.Scene) {
+        this.fogDisabledInEditor = disabled;
+        if (scene && scene.fog) {
+            if (disabled) {
+                scene.fog.near = 99999;
+                scene.fog.far = 999999;
+            } else {
+                const target = this.envConfigs[this.timePhase];
+                if (target) {
+                    scene.fog.color.set(target.fog);
+                    scene.fog.near = target.fogNear;
+                    scene.fog.far = target.fogFar;
+                }
+            }
+        }
+    }
+
     public update(dt: number, scene: THREE.Scene, playerPos: THREE.Vector3, groundY: number) {
         const target = this.envConfigs[this.timePhase];
         if (!target) return;
@@ -257,9 +276,14 @@ export class LightingSystem {
             scene.background.lerp(new THREE.Color(target.bg), lerpFactor);
         }
         if (scene.fog) {
-            scene.fog.color.lerp(new THREE.Color(target.fog), lerpFactor);
-            scene.fog.near = THREE.MathUtils.lerp(scene.fog.near, target.fogNear, lerpFactor);
-            scene.fog.far = THREE.MathUtils.lerp(scene.fog.far, target.fogFar, lerpFactor);
+            if (this.fogDisabledInEditor) {
+                scene.fog.near = 99999;
+                scene.fog.far = 999999;
+            } else {
+                scene.fog.color.lerp(new THREE.Color(target.fog), lerpFactor);
+                scene.fog.near = THREE.MathUtils.lerp(scene.fog.near, target.fogNear, lerpFactor);
+                scene.fog.far = THREE.MathUtils.lerp(scene.fog.far, target.fogFar, lerpFactor);
+            }
         }
 
         this.ambientLight.color.lerp(new THREE.Color(target.amb), lerpFactor);

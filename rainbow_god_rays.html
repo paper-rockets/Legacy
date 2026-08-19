@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Magical Rainbow God Rays - Towering Cloud & Sky Studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      color: #f8fafc;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #app-container {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+
+    /* Top Navigation Bar */
+    #top-bar {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 9999px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      z-index: 50;
+      pointer-events: auto;
+      max-width: 95vw;
+      overflow-x: auto;
+    }
+
+    .bar-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #38bdf8;
+      padding: 0 8px;
+      white-space: nowrap;
+      border-right: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .biome-btn {
+      padding: 5px 11px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 9999px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s ease;
+    }
+    .biome-btn:hover {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .biome-btn.active {
+      color: #0f172a;
+      background: #38bdf8;
+      border-color: #38bdf8;
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+
+    /* Left Info Overlay */
+    #info-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      padding: 12px 16px;
+      z-index: 40;
+      max-width: 320px;
+      pointer-events: auto;
+    }
+    #info-panel h2 {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    #info-panel p {
+      margin: 0;
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+    .info-tag {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    /* Right Studio Control Drawer */
+    #control-panel {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      width: 330px;
+      max-height: calc(100vh - 90px);
+      overflow-y: auto;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 14px;
+      z-index: 50;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+    }
+    #control-panel::-webkit-scrollbar {
+      width: 4px;
+    }
+    #control-panel::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #f8fafc;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #38bdf8;
+      margin: 12px 0 8px 0;
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+    .control-label {
+      font-size: 11px;
+      color: #cbd5e1;
+      font-weight: 500;
+    }
+    .control-val {
+      font-size: 10px;
+      color: #94a3b8;
+      font-family: monospace;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 2px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+    }
+
+    select {
+      width: 100%;
+      background: rgba(30, 41, 59, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: #f8fafc;
+      padding: 6px 8px;
+      font-size: 11px;
+      outline: none;
+      margin-bottom: 8px;
+    }
+
+    .btn-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    .btn-group-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .mode-btn {
+      padding: 6px 6px;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      color: #cbd5e1;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      white-space: normal;
+      line-height: 1.2;
+    }
+    .mode-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+    }
+    .mode-btn.active {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .preset-btn {
+      padding: 7px 6px;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 6px;
+      color: #cbd5e1;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      line-height: 1.2;
+    }
+    .preset-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+    .preset-btn.active {
+      background: #7c3aed;
+      border-color: #a78bfa;
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+    }
+
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 32px;
+      height: 18px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      transition: 0.2s;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+    input:checked + .slider {
+      background-color: #38bdf8;
+    }
+    input:checked + .slider:before {
+      transform: translateX(14px);
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container"></div>
+
+  <!-- Top Biome Switcher -->
+  <div id="top-bar">
+    <div class="bar-title">Biome</div>
+    <button class="biome-btn active" data-biome="meadow">Lush Meadow</button>
+    <button class="biome-btn" data-biome="candyland">Candyland</button>
+    <button class="biome-btn" data-biome="geothermal">Geothermal Ridge</button>
+    <button class="biome-btn" data-biome="redwood">Colossal Redwood</button>
+    <button class="biome-btn" data-biome="archipelago">Floating Archipelago</button>
+    <button class="biome-btn" data-biome="estuary">Bioluminescent Estuary</button>
+    <button class="biome-btn" data-biome="sky_citadel">Cloud Citadel</button>
+    <button class="biome-btn" data-biome="prism_sanctum">Prism Sanctum</button>
+  </div>
+
+  <!-- Active Biome Information Card -->
+  <div id="info-panel">
+    <h2 id="biome-name-display">Lush Meadow</h2>
+    <p id="biome-desc-display">Vast emerald pasture stretching to the horizon under a towering rainbow storm cloud</p>
+    <div class="info-tag" id="palette-tag">Rainbow Cloud Rays</div>
+  </div>
+
+  <!-- Studio Settings Panel -->
+  <div id="control-panel">
+    <div class="panel-header">
+      <span class="panel-title">Rainbow Studio</span>
+      <span style="font-size: 10px; color: #38bdf8; font-weight: 700;">60 FPS</span>
+    </div>
+
+    <!-- Ray Mode Preset Picker -->
+    <div class="section-title">Rainbow Mode Preset</div>
+    <div class="btn-group-3" style="margin-bottom: 8px;">
+      <button class="preset-btn active" id="preset-photo">Crystal Cloud (Prism)</button>
+      <button class="preset-btn" id="preset-beacon">Celestial Beacon (Pillar)</button>
+      <button class="preset-btn" id="preset-hybrid">Hybrid Sky</button>
+    </div>
+
+    <!-- Camera Mode -->
+    <div class="section-title">Camera Perspective</div>
+    <div class="btn-group">
+      <button class="mode-btn active" id="cam-ground">Horizon Vista</button>
+      <button class="mode-btn" id="cam-orbit">Free Orbit</button>
+      <button class="mode-btn" id="cam-cinematic">Cinematic Tour</button>
+      <button class="mode-btn" id="cam-beacon">Biome Focus</button>
+    </div>
+
+    <!-- Translucent Glass Crystal Cloud Controls -->
+    <div class="section-title">3D Translucent Glass Crystal</div>
+    <div class="control-row">
+      <span class="control-label">Glass Transmission</span>
+      <span class="control-val" id="transmission-val">0.65</span>
+    </div>
+    <input type="range" id="transmission-slider" min="0.1" max="0.95" step="0.05" value="0.65" />
+
+    <div class="control-row" style="margin-top: 8px;">
+      <span class="control-label">Prismatic Iridescence</span>
+      <span class="control-val" id="iridescence-val">1.35</span>
+    </div>
+    <input type="range" id="iridescence-slider" min="0.0" max="3.0" step="0.05" value="1.35" />
+
+    <div class="control-row" style="margin-top: 8px;">
+      <span class="control-label">Diamond Specular Glint</span>
+      <span class="control-val" id="glint-val">2.20</span>
+    </div>
+    <input type="range" id="glint-slider" min="0.2" max="4.0" step="0.1" value="2.20" />
+
+    <div class="control-row" style="margin-top: 8px;">
+      <span class="control-label">Cut-Glass Bevel Gleam</span>
+      <span class="control-val" id="bevel-val">1.10</span>
+    </div>
+    <input type="range" id="bevel-slider" min="0.0" max="3.0" step="0.1" value="1.10" />
+
+    <!-- Color Spectrum Preset -->
+    <div class="section-title">Spectral Palette Preset</div>
+    <select id="palette-select">
+      <option value="Spectral Prismatic">Spectral Prismatic (Reference Photo)</option>
+      <option value="Atmospheric Horizon Rainbow">Atmospheric Horizon Rainbow</option>
+      <option value="Auroral Pastel">Auroral Pastel</option>
+      <option value="Cosmic Opal">Cosmic Opal</option>
+      <option value="Solar Prism">Solar Prism</option>
+      <option value="Neon Aurora">Neon Aurora</option>
+      <option value="Fairy Mist">Fairy Mist</option>
+    </select>
+
+    <!-- Rainbow Ray Controls -->
+    <div class="section-title">Rainbow Crepuscular Shafts</div>
+    <div class="control-row">
+      <span class="control-label">Ray Beam Intensity</span>
+      <span class="control-val" id="intensity-val">1.45</span>
+    </div>
+    <input type="range" id="intensity-slider" min="0.2" max="3.0" step="0.05" value="1.45" />
+
+    <div class="control-row" style="margin-top: 8px;">
+      <span class="control-label">Rainbow Saturation</span>
+      <span class="control-val" id="sat-val">1.0</span>
+    </div>
+    <input type="range" id="sat-slider" min="0.0" max="1.0" step="0.05" value="1.0" />
+
+    <div class="control-row" style="margin-top: 8px;">
+      <span class="control-label">Beam Shimmer Speed</span>
+      <span class="control-val" id="shimmer-val">0.35</span>
+    </div>
+    <input type="range" id="shimmer-slider" min="0.0" max="1.5" step="0.05" value="0.35" />
+
+    <!-- Celestial / Time of Day -->
+    <div class="section-title">Sun Elevation & Azimuth</div>
+    <div class="control-row">
+      <span class="control-label">Elevation Angle</span>
+      <span class="control-val" id="elevation-val">30 deg</span>
+    </div>
+    <input type="range" id="elevation-slider" min="10" max="75" step="1" value="30" />
+
+    <div class="control-row" style="margin-top: 8px;">
+      <span class="control-label">Azimuth Angle</span>
+      <span class="control-val" id="azimuth-val">180 deg</span>
+    </div>
+    <input type="range" id="azimuth-slider" min="0" max="360" step="1" value="180" />
+
+    <!-- Feature Toggles -->
+    <div class="section-title">Visual Layers</div>
+    <div class="toggle-row">
+      <span class="control-label">3D Cloud & Rainbow Rays</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-cloud-rays" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <span class="control-label">Screen Radial Flare</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-screen-rays" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <span class="control-label">3D Biome Ray Pillar</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-volumetric-pillar" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <span class="control-label">Ground Crystal Spires</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-ground-crystals" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <span class="control-label">Glittering Sparkle Motes</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-particles" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { RainbowGodRaysApp, BIOMES } from './src/rainbow_god_rays.ts';
+
+    const container = document.getElementById('app-container');
+    const app = new RainbowGodRaysApp(container);
+
+    // Biome buttons
+    const biomeButtons = document.querySelectorAll('.biome-btn');
+    const nameDisplay = document.getElementById('biome-name-display');
+    const descDisplay = document.getElementById('biome-desc-display');
+    const paletteTag = document.getElementById('palette-tag');
+
+    biomeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        biomeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const biomeId = btn.getAttribute('data-biome');
+        app.setBiome(biomeId);
+
+        const profile = BIOMES[biomeId];
+        nameDisplay.textContent = profile.name;
+        descDisplay.textContent = profile.description;
+        paletteTag.textContent = profile.palette + ' Rays';
+
+        // Update UI controls to match biome defaults
+        document.getElementById('palette-select').value = profile.palette;
+        document.getElementById('elevation-slider').value = profile.sunElevation;
+        document.getElementById('elevation-val').textContent = profile.sunElevation + ' deg';
+        document.getElementById('azimuth-slider').value = profile.sunAzimuth;
+        document.getElementById('azimuth-val').textContent = profile.sunAzimuth + ' deg';
+      });
+    });
+
+    // Preset Mode buttons
+    const presetButtons = {
+      photo_crepuscular: document.getElementById('preset-photo'),
+      celestial_beacon: document.getElementById('preset-beacon'),
+      hybrid: document.getElementById('preset-hybrid')
+    };
+
+    const syncTogglesToState = () => {
+      document.getElementById('toggle-cloud-rays').checked = app.isCloudAndRaysVisible;
+      document.getElementById('toggle-screen-rays').checked = app.isScreenRayVisible;
+      document.getElementById('toggle-volumetric-pillar').checked = app.isRayPillarVisible;
+      document.getElementById('toggle-ground-crystals').checked = app.groundCrystals.group.visible;
+      document.getElementById('toggle-particles').checked = app.isParticlesVisible;
+    };
+
+    Object.entries(presetButtons).forEach(([mode, btn]) => {
+      btn.addEventListener('click', () => {
+        Object.values(presetButtons).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        app.applyPresetMode(mode);
+        syncTogglesToState();
+      });
+    });
+
+    // Camera Mode buttons
+    const camButtons = {
+      ground: document.getElementById('cam-ground'),
+      orbit: document.getElementById('cam-orbit'),
+      cinematic: document.getElementById('cam-cinematic'),
+      beacon: document.getElementById('cam-beacon'),
+    };
+
+    Object.entries(camButtons).forEach(([mode, btn]) => {
+      btn.addEventListener('click', () => {
+        Object.values(camButtons).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        app.setCameraMode(mode);
+      });
+    });
+
+    // Palette dropdown
+    document.getElementById('palette-select').addEventListener('change', (e) => {
+      const pal = e.target.value;
+      app.setPalette(pal);
+      paletteTag.textContent = pal + ' Rays';
+    });
+
+    // Crystal Cloud Sliders
+    const setupSlider = (sliderId, valId, unit, callback) => {
+      const slider = document.getElementById(sliderId);
+      const val = document.getElementById(valId);
+      slider.addEventListener('input', () => {
+        val.textContent = slider.value + unit;
+        callback(parseFloat(slider.value));
+      });
+    };
+
+    setupSlider('transmission-slider', 'transmission-val', '', (v) => {
+      app.crystalCloud.params.glassTransmission = v;
+    });
+
+    setupSlider('iridescence-slider', 'iridescence-val', '', (v) => {
+      app.crystalCloud.params.iridescence = v;
+    });
+
+    setupSlider('glint-slider', 'glint-val', '', (v) => {
+      app.crystalCloud.params.specularGlint = v;
+    });
+
+    setupSlider('bevel-slider', 'bevel-val', '', (v) => {
+      app.crystalCloud.params.facetBevelGleam = v;
+    });
+
+    // Rainbow Ray Sliders
+    setupSlider('intensity-slider', 'intensity-val', '', (v) => {
+      app.cloudRainbowRays.params.intensity = v;
+      app.volumetricPillar.params.intensity = v;
+    });
+
+    setupSlider('sat-slider', 'sat-val', '', (v) => {
+      app.cloudRainbowRays.params.rainbowSat = v;
+      app.volumetricPillar.params.rainbowSat = v;
+      app.rainbowPass.params.rainbowSaturation = v;
+    });
+
+    setupSlider('shimmer-slider', 'shimmer-val', '', (v) => {
+      app.cloudRainbowRays.params.shimmerSpeed = v;
+      app.volumetricPillar.params.shimmerSpeed = v * 2.0;
+    });
+
+    // Sun Sliders
+    const elevationSlider = document.getElementById('elevation-slider');
+    const azimuthSlider = document.getElementById('azimuth-slider');
+    const elevationVal = document.getElementById('elevation-val');
+    const azimuthVal = document.getElementById('azimuth-val');
+
+    const updateSun = () => {
+      const el = parseFloat(elevationSlider.value);
+      const az = parseFloat(azimuthSlider.value);
+      elevationVal.textContent = el + ' deg';
+      azimuthVal.textContent = az + ' deg';
+      app.setSunPosition(el, az);
+    };
+
+    elevationSlider.addEventListener('input', updateSun);
+    azimuthSlider.addEventListener('input', updateSun);
+
+    // Layer Toggles
+    document.getElementById('toggle-cloud-rays').addEventListener('change', (e) => {
+      app.isCloudAndRaysVisible = e.target.checked;
+      app.crystalCloud.group.visible = e.target.checked;
+      app.cloudRainbowRays.group.visible = e.target.checked;
+    });
+
+    document.getElementById('toggle-screen-rays').addEventListener('change', (e) => {
+      app.isScreenRayVisible = e.target.checked;
+    });
+
+    document.getElementById('toggle-volumetric-pillar').addEventListener('change', (e) => {
+      app.isRayPillarVisible = e.target.checked;
+    });
+
+    document.getElementById('toggle-ground-crystals').addEventListener('change', (e) => {
+      app.groundCrystals.group.visible = e.target.checked;
+    });
+
+    document.getElementById('toggle-particles').addEventListener('change', (e) => {
+      app.isParticlesVisible = e.target.checked;
+    });
+  </script>
+</body>
+</html>

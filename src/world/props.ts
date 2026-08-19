@@ -1,11 +1,22 @@
 import * as THREE from 'three';
 import { gradientMap } from './terrain';
 import { globalConfigManager } from '../core/config';
+import { getDominantBiome } from './noise';
+import { GroundCrystalFormations } from './volumetricClouds';
+
+const COTTON_CANDY_COLORS = [
+    '#f472b6', '#ffb6c1', '#93c5fd', '#7dd3fc',
+    '#fef08a', '#fde047', '#d8b4fe', '#c084fc',
+    '#ffffff', '#fff0f5'
+];
 
 export class PropsSystem {
     public instClouds: THREE.InstancedMesh;
     public cloudCount = 50;
     public propSpawnDist = 550;
+
+    // Prism Sanctum Ground Formations
+    public groundCrystals: GroundCrystalFormations;
 
     private matCloud: THREE.MeshToonMaterial;
     private cloudBloomUniform = { value: 0.0 };
@@ -13,6 +24,7 @@ export class PropsSystem {
 
     private dummy = new THREE.Object3D();
     private dummyMatrix = new THREE.Matrix4();
+    private tempColor = new THREE.Color();
     private currentFrame = 0;
 
     constructor(scene: THREE.Scene) {
@@ -20,9 +32,14 @@ export class PropsSystem {
         this.cloudBloomUniform.value = cld.bloom;
         this.cloudEmissiveUniform.value.set(cld.emissive);
 
+        // ── Prism Sanctum Ground Crystals (No Sky Clouds) ─────────────────────────
+        this.groundCrystals = new GroundCrystalFormations();
+        this.groundCrystals.group.position.set(0, 0, -2560);
+        scene.add(this.groundCrystals.group);
+
         // Cloud material with customizable bloom & emissive radiance
         this.matCloud = new THREE.MeshToonMaterial({
-            color: new THREE.Color(cld.color),
+            color: new THREE.Color(0xffffff),
             emissive: new THREE.Color(cld.emissive),
             emissiveIntensity: 0.05,
             gradientMap,
@@ -38,7 +55,12 @@ export class PropsSystem {
                 '#include <emissivemap_fragment>',
                 `
                 #include <emissivemap_fragment>
-                totalEmissiveRadiance += uCloudEmissive * (uCloudBloom * 2.0);
+                #ifdef USE_INSTANCING_COLOR
+                    vec3 emiCol = vInstanceColor.rgb;
+                #else
+                    vec3 emiCol = uCloudEmissive;
+                #endif
+                totalEmissiveRadiance += emiCol * (uCloudBloom * 2.0);
                 `
             );
         };
@@ -61,6 +83,7 @@ export class PropsSystem {
         geoCloud.computeVertexNormals();
 
         this.instClouds = new THREE.InstancedMesh(geoCloud, this.matCloud, this.cloudCount);
+        this.instClouds.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(this.cloudCount * 3), 3);
 
         this.instClouds.castShadow = false;
         this.instClouds.receiveShadow = true;
@@ -71,8 +94,10 @@ export class PropsSystem {
 
         for (let i = 0; i < this.instClouds.count; i++) {
             this.instClouds.setMatrixAt(i, this.dummyMatrix);
+            this.instClouds.setColorAt(i, new THREE.Color(0xffffff));
         }
         this.instClouds.instanceMatrix.needsUpdate = true;
+        if (this.instClouds.instanceColor) this.instClouds.instanceColor.needsUpdate = true;
     }
 
     public applyBiomeCloud(cloudProps: { bloom?: number; color?: string; emissive?: string; cloudBloom?: number; cloudColor?: string; cloudEmissive?: string }) {
@@ -134,7 +159,17 @@ export class PropsSystem {
         }
     }
 
-    public update(playerX: number, playerZ: number, _dt: number) {
+    public update(playerX: number, playerZ: number, dt: number = 0.016) {
+        // Animate Prism Sanctum Ground Crystals
+        const distToPrism = Math.hypot(playerX, playerZ - (-2560));
+        if (distToPrism < 4480) {
+            const sunPos = new THREE.Vector3(playerX * 0.3, 150, -2820);
+            this.groundCrystals.update(dt, sunPos);
+            this.groundCrystals.group.visible = true;
+        } else {
+            this.groundCrystals.group.visible = false;
+        }
+
         this.currentFrame++;
         if (this.currentFrame % 3 !== 0) return;
 
@@ -155,6 +190,14 @@ export class PropsSystem {
                 if (rng > 0.65 && cloudIdx < this.cloudCount) {
                     const worldX = cx * stride + (rng * 60 - 30);
                     const worldZ = cz * stride + (((rng * 13) % 1) * 60 - 30);
+
+                    // Exclude all clouds from Prism Sanctum
+                    const cloudBiome = getDominantBiome(worldX, worldZ, 85);
+                    const distToPrismCenter = Math.hypot(worldX, worldZ - (-2560));
+                    if (cloudBiome === 'prism_sanctum' || distToPrismCenter < 1120) {
+                        continue;
+                    }
+
                     const distSq = (worldX - playerX) ** 2 + (worldZ - playerZ) ** 2;
 
                     if (distSq < radius * radius && distSq > 80 * 80) {
@@ -167,6 +210,15 @@ export class PropsSystem {
                         this.dummy.updateMatrix();
 
                         this.instClouds.setMatrixAt(cloudIdx, this.dummy.matrix);
+
+                        if (cloudBiome === 'candyland') {
+                            const cHex = COTTON_CANDY_COLORS[Math.floor(rng * COTTON_CANDY_COLORS.length) % COTTON_CANDY_COLORS.length];
+                            this.tempColor.set(cHex);
+                        } else {
+                            this.tempColor.set(this.matCloud.color);
+                        }
+                        this.instClouds.setColorAt(cloudIdx, this.tempColor);
+
                         cloudIdx++;
                     }
                 }
@@ -178,5 +230,6 @@ export class PropsSystem {
             this.instClouds.setMatrixAt(i, this.dummyMatrix);
         }
         this.instClouds.instanceMatrix.needsUpdate = true;
+        if (this.instClouds.instanceColor) this.instClouds.instanceColor.needsUpdate = true;
     }
 }

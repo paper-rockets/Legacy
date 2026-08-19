@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { terrainHeightJS, smoothstep, getPathStrength, getBiomeWeights, snoise, BiomeId } from './noise';
+import { terrainHeightJS, terrainHeightWithWeights, smoothstep, getPathStrength, getBiomeWeights, snoise, BiomeId } from './noise';
 import { TerrainColorsSettings, globalConfigManager } from '../core/config';
+import { setupFacetedBarycentricGeometry } from './volumetricClouds';
 
 const gradientColors = new Uint8Array([
     130, 130, 130, 255, // Shadow
@@ -14,6 +15,14 @@ gradientMap.magFilter = THREE.NearestFilter;
 gradientMap.generateMipmaps = false;
 
 export const TERRAIN_PALETTES: Record<string, TerrainColorsSettings> = {
+    'Marshmallow Pastel': {
+        colorLow: '#fffbf5',
+        colorHigh: '#fce7f3',
+        colorDirt: '#e9d5ff',
+        colorPath: '#fed7aa',
+        colorSand: '#ffffff',
+        presetName: 'Marshmallow Pastel'
+    },
     'Lush Green': {
         colorLow: '#76d149',
         colorHigh: '#89e05e',
@@ -69,7 +78,21 @@ export class TerrainSystem {
     public terrainMat: THREE.Material;
     public toonMat: THREE.MeshToonMaterial;
     public standardMat: THREE.MeshStandardMaterial;
+    public crystalMat: THREE.ShaderMaterial;
     public isToonMode: boolean = true;
+    public terrainStyle: 'toon' | 'standard' | 'crystal' = 'toon';
+
+    public crystalParams = {
+        glassTransmission: 0.65,
+        iridescence: 1.35,
+        specularGlint: 2.2,
+        bevelGleam: 1.1,
+        veinGlow: 1.0,
+        showGroundCrystals: true
+    };
+
+    public crystalUniforms: Record<string, { value: any }>;
+
     private geometry: THREE.PlaneGeometry;
     private lastGridX: number = -99999;
     private lastGridZ: number = -99999;
@@ -79,19 +102,15 @@ export class TerrainSystem {
     public currentRes: number = 128;
 
     private biomeColors: Record<BiomeId, BiomeColorSet> = {
+        candyland: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         meadow: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         archipelago: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         geothermal: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         estuary: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
-        redwood: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() }
+        redwood: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
+        sky_citadel: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
+        prism_sanctum: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() }
     };
-
-    private vLow = new THREE.Color();
-    private vHigh = new THREE.Color();
-    private vDirt = new THREE.Color();
-    private vPath = new THREE.Color();
-    private vSand = new THREE.Color();
-    private tempColor = new THREE.Color();
 
     private shoreBloomUniform = { value: 0.0 };
     private shoreColorUniform = { value: new THREE.Color(0xffffff) };
@@ -165,13 +184,175 @@ export class TerrainSystem {
         });
         attachShoreShader(this.standardMat);
 
+        // ── Translucent Prismatic Glass Crystal Terrain Shader ────────────────
+        this.crystalUniforms = {
+            uTime: { value: 0.0 },
+            uSunPos: { value: new THREE.Vector3(0, 150, -260) },
+            uSunColor: { value: new THREE.Color(0xfffdf7) },
+            uSkyTopColor: { value: new THREE.Color(0x1e3a8a) },
+            uSkyHorizonColor: { value: new THREE.Color(0x60a5fa) },
+            uGlassTransmission: { value: this.crystalParams.glassTransmission },
+            uIridescence: { value: this.crystalParams.iridescence },
+            uSpecularGlint: { value: this.crystalParams.specularGlint },
+            uFacetBevelGleam: { value: this.crystalParams.bevelGleam },
+            uCrystalVeinGlow: { value: this.crystalParams.veinGlow },
+            uShoreBloom: this.shoreBloomUniform,
+            uShoreColor: this.shoreColorUniform,
+            uShoreWaterY: this.shoreWaterYUniform,
+            uShoreWidth: this.shoreWidthUniform
+        };
+
+        const crystalVertShader = /* glsl */ `
+            attribute vec3 aBarycentric;
+            varying vec3 vWorldPos;
+            varying vec3 vViewDir;
+            varying vec3 vBarycentric;
+            varying vec3 vColor;
+            varying vec3 vNormal;
+
+            void main() {
+                vBarycentric = aBarycentric;
+                vColor = color;
+                vNormal = normal;
+                vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                vWorldPos = worldPos.xyz;
+                vViewDir = normalize(cameraPosition - worldPos.xyz);
+                gl_Position = projectionMatrix * viewMatrix * worldPos;
+            }
+        `;
+
+        const crystalFragShader = /* glsl */ `
+            uniform float uTime;
+            uniform vec3 uSunPos;
+            uniform vec3 uSunColor;
+            uniform vec3 uSkyTopColor;
+            uniform vec3 uSkyHorizonColor;
+            uniform float uGlassTransmission;
+            uniform float uIridescence;
+            uniform float uSpecularGlint;
+            uniform float uFacetBevelGleam;
+            uniform float uCrystalVeinGlow;
+            uniform float uShoreBloom;
+            uniform vec3 uShoreColor;
+            uniform float uShoreWaterY;
+            uniform float uShoreWidth;
+
+            varying vec3 vWorldPos;
+            varying vec3 vViewDir;
+            varying vec3 vBarycentric;
+            varying vec3 vColor;
+            varying vec3 vNormal;
+
+            vec3 evalSpectralPrism(float t) {
+                t = clamp(t, 0.0, 1.0);
+                vec3 a = vec3(0.5, 0.5, 0.5);
+                vec3 b = vec3(0.5, 0.5, 0.5);
+                vec3 c = vec3(1.0, 1.0, 1.0);
+                vec3 d = vec3(0.0, 0.33, 0.67);
+                return clamp(a + b * cos(6.2831853 * (c * t + d)), 0.0, 1.0);
+            }
+
+            void main() {
+                // True geometric flat facet face normal for crystal cloud & terrain facets
+                vec3 fdx = dFdx(vWorldPos);
+                vec3 fdy = dFdy(vWorldPos);
+                vec3 faceNormal = normalize(cross(fdx, fdy));
+
+                vec3 V = normalize(vViewDir);
+                vec3 sunDir = normalize(uSunPos - vWorldPos);
+                vec3 H = normalize(sunDir + V);
+
+                // 1. Crystal Glass Body Tint from Biome & Vertex Colors
+                vec3 glassBodyTint = vColor;
+
+                // 2. Optical Glass Refraction & Transmission
+                vec3 refractRay = refract(-V, faceNormal, 1.0 / 1.52);
+                float refractSkyH = clamp(refractRay.y * 0.5 + 0.5, 0.0, 1.0);
+                vec3 transmittedSky = mix(uSkyHorizonColor, uSkyTopColor, pow(refractSkyH, 0.7));
+
+                float backlight = max(0.0, dot(-faceNormal, sunDir));
+                float forwardWash = max(0.0, dot(-sunDir, -V));
+                vec3 transmittedSun = uSunColor * pow(backlight, 4.0) * 1.5 + uSunColor * pow(forwardWash, 2.0) * 0.85;
+
+                vec3 glassInterior = (transmittedSky * 0.75 + transmittedSun + vec3(0.12, 0.15, 0.22)) * glassBodyTint;
+
+                // 3. Glass Fresnel Reflection
+                float NdotV = max(0.0, dot(faceNormal, V));
+                float R0 = 0.04;
+                float fresnel = R0 + (1.0 - R0) * pow(1.0 - NdotV, 4.2);
+
+                // 4. Sharp Diamond Specular Reflection
+                float NdotH = max(0.0, dot(faceNormal, H));
+                float specular = pow(NdotH, 96.0) * uSpecularGlint * 2.5;
+
+                // 5. Chromatic Dispersion Glints
+                float dispersionAngle = dot(faceNormal, V) * 0.65 + dot(faceNormal, sunDir) * 0.35;
+                float prismT = clamp(dispersionAngle * 1.2, 0.0, 1.0);
+                vec3 spectralRainbow = evalSpectralPrism(prismT);
+                float chromaticFacetGlint = pow(NdotH, 24.0) * uIridescence * 1.8;
+                vec3 chromaticHighlights = spectralRainbow * chromaticFacetGlint;
+
+                // 6. Glowing Crystalline Barycentric Wireframe / Facet Edges
+                vec3 d = fwidth(vBarycentric);
+                vec3 a3 = smoothstep(vec3(0.0), d * 1.35, vBarycentric);
+                float edgeFactor = 1.0 - min(min(a3.x, a3.y), a3.z);
+                vec3 edgeBevel = (vec3(0.85, 0.95, 1.0) + spectralRainbow * 0.5) * edgeFactor * uFacetBevelGleam * 1.25;
+
+                // 7. Glowing Subsurface Crystal Veins & Strata
+                float veinNoise1 = sin(vWorldPos.x * 0.045 + vWorldPos.z * 0.035);
+                float veinNoise2 = cos(vWorldPos.x * 0.025 - vWorldPos.z * 0.055);
+                float veinPattern = abs(veinNoise1 + veinNoise2);
+                float veinMask = smoothstep(0.32, 0.0, veinPattern);
+                vec3 veinColor = mix(vec3(0.22, 0.74, 0.97), vec3(0.96, 0.45, 0.71), sin(vWorldPos.x * 0.015) * 0.5 + 0.5);
+                vec3 crystalVeins = veinColor * veinMask * uCrystalVeinGlow * 2.8;
+
+                // 8. Surface Reflections
+                vec3 reflectRay = reflect(-V, faceNormal);
+                float reflectSkyH = clamp(reflectRay.y * 0.5 + 0.5, 0.0, 1.0);
+                vec3 reflectedSky = mix(uSkyHorizonColor, uSkyTopColor, pow(reflectSkyH, 0.6));
+
+                vec3 finalColor = mix(glassInterior, reflectedSky, fresnel * 0.85);
+                finalColor += uSunColor * specular;
+                finalColor += chromaticHighlights;
+                finalColor += edgeBevel;
+                finalColor += crystalVeins;
+
+                // Shoreline Glow
+                if (uShoreBloom > 0.001) {
+                    float shoreDiff = abs(vWorldPos.y - uShoreWaterY);
+                    if (shoreDiff < uShoreWidth) {
+                        float shoreFactor = smoothstep(uShoreWidth, 0.0, shoreDiff);
+                        finalColor += uShoreColor * (uShoreBloom * shoreFactor * 2.0);
+                    }
+                }
+
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+
+        this.crystalMat = new THREE.ShaderMaterial({
+            uniforms: this.crystalUniforms,
+            vertexShader: crystalVertShader,
+            fragmentShader: crystalFragShader,
+            dithering: true
+        });
+
         this.reloadColorsFromConfig(false);
 
-        this.isToonMode = activeBiome.terrain.isToonMode ?? true;
-        this.terrainMat = this.isToonMode ? this.toonMat : this.standardMat;
+        const activeTerrainCfg = activeBiome.terrain;
+        if (activeTerrainCfg.terrainStyle) {
+            this.terrainStyle = activeTerrainCfg.terrainStyle;
+        } else if (activeTerrainCfg.isCrystalMode) {
+            this.terrainStyle = 'crystal';
+        } else {
+            this.terrainStyle = (activeTerrainCfg.isToonMode ?? true) ? 'toon' : 'standard';
+        }
 
-        this.geometry = new THREE.PlaneGeometry(1600, 1600, initialRes, initialRes);
-        this.geometry.rotateX(-Math.PI / 2);
+        this.updateActiveMaterial();
+
+        const baseGeo = new THREE.PlaneGeometry(1600, 1600, initialRes, initialRes);
+        baseGeo.rotateX(-Math.PI / 2);
+        this.geometry = setupFacetedBarycentricGeometry(baseGeo) as THREE.PlaneGeometry;
         this.mesh = new THREE.Mesh(this.geometry, this.terrainMat);
         this.mesh.receiveShadow = true;
         scene.add(this.mesh);
@@ -179,8 +360,21 @@ export class TerrainSystem {
         this.update(0, 0);
     }
 
+    private updateActiveMaterial(): void {
+        if (this.terrainStyle === 'crystal') {
+            this.terrainMat = this.crystalMat;
+        } else if (this.terrainStyle === 'standard') {
+            this.terrainMat = this.standardMat;
+        } else {
+            this.terrainMat = this.toonMat;
+        }
+        if (this.mesh) {
+            this.mesh.material = this.terrainMat;
+        }
+    }
+
     public reloadColorsFromConfig(redraw: boolean = true): void {
-        const biomes: BiomeId[] = ['meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
+        const biomes: BiomeId[] = ['candyland', 'meadow', 'prism_sanctum', 'archipelago', 'geothermal', 'estuary', 'redwood'];
         for (const b of biomes) {
             const cfg = globalConfigManager.getBiomeConfig(b).terrain;
             const set = this.biomeColors[b];
@@ -191,27 +385,67 @@ export class TerrainSystem {
             set.sand.set(cfg.colorSand);
         }
         const activeCfg = globalConfigManager.getActiveBiomeConfig().terrain;
-        if (activeCfg.isToonMode !== undefined) {
-            this.isToonMode = activeCfg.isToonMode;
-            this.terrainMat = this.isToonMode ? this.toonMat : this.standardMat;
-            if (this.mesh) this.mesh.material = this.terrainMat;
+        if (activeCfg.terrainStyle) {
+            this.terrainStyle = activeCfg.terrainStyle;
+        } else if (activeCfg.isCrystalMode) {
+            this.terrainStyle = 'crystal';
+        } else if (activeCfg.isToonMode !== undefined) {
+            this.terrainStyle = activeCfg.isToonMode ? 'toon' : 'standard';
         }
+
+        if (activeCfg.glassTransmission !== undefined) this.crystalParams.glassTransmission = activeCfg.glassTransmission;
+        if (activeCfg.iridescence !== undefined) this.crystalParams.iridescence = activeCfg.iridescence;
+        if (activeCfg.specularGlint !== undefined) this.crystalParams.specularGlint = activeCfg.specularGlint;
+        if (activeCfg.bevelGleam !== undefined) this.crystalParams.bevelGleam = activeCfg.bevelGleam;
+        if (activeCfg.veinGlow !== undefined) this.crystalParams.veinGlow = activeCfg.veinGlow;
+
+        this.syncCrystalUniforms();
+        this.updateActiveMaterial();
+
         if (redraw && this.mesh) {
             this.invalidateAndRedraw();
         }
     }
 
-    public setToonMode(isToon: boolean, biomeId?: BiomeId): void {
-        this.isToonMode = isToon;
+    public syncCrystalUniforms(): void {
+        if (!this.crystalUniforms) return;
+        this.crystalUniforms.uGlassTransmission.value = this.crystalParams.glassTransmission;
+        this.crystalUniforms.uIridescence.value = this.crystalParams.iridescence;
+        this.crystalUniforms.uSpecularGlint.value = this.crystalParams.specularGlint;
+        this.crystalUniforms.uFacetBevelGleam.value = this.crystalParams.bevelGleam;
+        this.crystalUniforms.uCrystalVeinGlow.value = this.crystalParams.veinGlow;
+    }
+
+    public setTerrainStyle(style: 'toon' | 'standard' | 'crystal', biomeId?: BiomeId): void {
+        this.terrainStyle = style;
+        this.isToonMode = style === 'toon';
         const bId = biomeId || globalConfigManager.config.activeBiomeId;
         const bCfg = globalConfigManager.getBiomeConfig(bId);
         if (bCfg) {
-            bCfg.terrain.isToonMode = isToon;
+            bCfg.terrain.terrainStyle = style;
+            bCfg.terrain.isToonMode = style === 'toon';
+            bCfg.terrain.isCrystalMode = style === 'crystal';
         }
-        this.terrainMat = this.isToonMode ? this.toonMat : this.standardMat;
-        if (this.mesh) {
-            this.mesh.material = this.terrainMat;
+        this.updateActiveMaterial();
+    }
+
+    public setCrystalParams(params: Partial<typeof this.crystalParams>, biomeId?: BiomeId): void {
+        Object.assign(this.crystalParams, params);
+        const bId = biomeId || globalConfigManager.config.activeBiomeId;
+        const bCfg = globalConfigManager.getBiomeConfig(bId);
+        if (bCfg) {
+            if (params.glassTransmission !== undefined) bCfg.terrain.glassTransmission = params.glassTransmission;
+            if (params.iridescence !== undefined) bCfg.terrain.iridescence = params.iridescence;
+            if (params.specularGlint !== undefined) bCfg.terrain.specularGlint = params.specularGlint;
+            if (params.bevelGleam !== undefined) bCfg.terrain.bevelGleam = params.bevelGleam;
+            if (params.veinGlow !== undefined) bCfg.terrain.veinGlow = params.veinGlow;
+            if (params.showGroundCrystals !== undefined) bCfg.terrain.showGroundCrystals = params.showGroundCrystals;
         }
+        this.syncCrystalUniforms();
+    }
+
+    public setToonMode(isToon: boolean, biomeId?: BiomeId): void {
+        this.setTerrainStyle(isToon ? 'toon' : 'standard', biomeId);
     }
 
     public setBiomeTerrainColors(biomeId: BiomeId, colors: Partial<TerrainColorsSettings>, playerX?: number, playerZ?: number): void {
@@ -239,13 +473,10 @@ export class TerrainSystem {
         if (colors.presetName) {
             cfg.presetName = colors.presetName;
         }
-        if (colors.isToonMode !== undefined) {
-            cfg.isToonMode = colors.isToonMode;
-            if (biomeId === globalConfigManager.config.activeBiomeId) {
-                this.isToonMode = colors.isToonMode;
-                this.terrainMat = this.isToonMode ? this.toonMat : this.standardMat;
-                if (this.mesh) this.mesh.material = this.terrainMat;
-            }
+        if (colors.terrainStyle) {
+            this.setTerrainStyle(colors.terrainStyle, biomeId);
+        } else if (colors.isToonMode !== undefined) {
+            this.setToonMode(colors.isToonMode, biomeId);
         }
 
         const px = playerX !== undefined ? playerX : this.lastPlayerX;
@@ -302,17 +533,28 @@ export class TerrainSystem {
         this.currentRes = res;
         this.gridStride = computedStride;
         this.geometry.dispose();
-        this.geometry = new THREE.PlaneGeometry(1600, 1600, res, res);
-        this.geometry.rotateX(-Math.PI / 2);
+        const baseGeo = new THREE.PlaneGeometry(1600, 1600, res, res);
+        baseGeo.rotateX(-Math.PI / 2);
+        this.geometry = setupFacetedBarycentricGeometry(baseGeo) as THREE.PlaneGeometry;
         this.mesh.geometry = this.geometry;
         this.lastGridX = -99999;
         this.lastGridZ = -99999;
         this.update(px, pz);
     }
 
-    public update(playerX: number, playerZ: number): void {
+    public update(playerX: number, playerZ: number, dt: number = 0.016): void {
         this.lastPlayerX = playerX;
         this.lastPlayerZ = playerZ;
+
+        if (this.crystalUniforms) {
+            this.crystalUniforms.uTime.value += dt;
+        }
+
+        const activeBiomeId = globalConfigManager.config.activeBiomeId;
+        if (activeBiomeId === 'prism_sanctum' && this.terrainStyle !== 'crystal') {
+            this.terrainStyle = 'crystal';
+            this.updateActiveMaterial();
+        }
 
         const gridX = Math.floor(playerX / this.gridStride) * this.gridStride;
         const gridZ = Math.floor(playerZ / this.gridStride) * this.gridStride;
@@ -326,18 +568,15 @@ export class TerrainSystem {
             this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(pos.count * 3), 3));
         }
         const colors = this.geometry.attributes.color as THREE.BufferAttribute;
-        const normals = this.geometry.attributes.normal as THREE.BufferAttribute;
 
-        const biomes: BiomeId[] = ['meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
-        const delta = 2.0;
+        const biomes: BiomeId[] = ['candyland', 'meadow', 'prism_sanctum', 'archipelago', 'geothermal', 'estuary', 'redwood'];
 
         for (let i = 0; i < pos.count; i++) {
             const worldX = pos.getX(i) + gridX;
             const worldZ = pos.getZ(i) + gridZ;
-            const h = terrainHeightJS(worldX, worldZ);
-            pos.setY(i, h);
-
             const w = getBiomeWeights(worldX, worldZ);
+            const h = terrainHeightWithWeights(worldX, worldZ, w);
+            pos.setY(i, h);
 
             let lowR = 0, lowG = 0, lowB = 0;
             let highR = 0, highG = 0, highB = 0;
@@ -356,16 +595,16 @@ export class TerrainSystem {
                 sandR += bc.sand.r * weight; sandG += bc.sand.g * weight; sandB += bc.sand.b * weight;
             }
 
-            // Smooth macro-variation (low frequency to prevent aliasing across grid cells)
-            const macroNoise = snoise(worldX * 0.008, worldZ * 0.008) * 3.5;
+            // Smooth macro-variation
+            const macroNoise = snoise(worldX * 0.005, worldZ * 0.005) * 3.5;
 
-            // 1. Smooth Lowland to Highland grass gradient (0m to 44m)
+            // 1. Smooth Lowland to Highland gradient
             const grassWeight = smoothstep(2.0, 44.0, h + macroNoise);
             let r = lowR * (1.0 - grassWeight) + highR * grassWeight;
             let g = lowG * (1.0 - grassWeight) + highG * grassWeight;
             let b = lowB * (1.0 - grassWeight) + highB * grassWeight;
 
-            // 2. Continuous mountain dirt/rock transition (smoothly blends from 36m up to 74m)
+            // 2. Continuous mountain dirt/rock transition
             const dirtWeight = smoothstep(36.0, 74.0, h + macroNoise * 0.5);
             if (dirtWeight > 0.0) {
                 r = r * (1.0 - dirtWeight) + dirtR * dirtWeight;
@@ -381,7 +620,7 @@ export class TerrainSystem {
                 b = b * (1.0 - sandWeight) + sandB * sandWeight;
             }
 
-            // 4. Village and exploration pathways
+            // 4. Exploration pathways
             const pStrength = getPathStrength(worldX, worldZ);
             if (pStrength > 0.0) {
                 const pathMask = smoothstep(3.0, 7.0, h);
@@ -391,6 +630,34 @@ export class TerrainSystem {
                     g = g * (1.0 - pathWeight) + pathG * pathWeight;
                     b = b * (1.0 - pathWeight) + pathB * pathWeight;
                 }
+            }
+
+            // 5. Rich Translucent Crystal Body Tint for Prism Sanctum
+            if (w.prism_sanctum > 0.0001) {
+                const pw = w.prism_sanctum;
+                const obsidian = new THREE.Color('#0b0f19');
+                const crystalVeinCyan = new THREE.Color('#38bdf8');
+                const crystalVeinMagenta = new THREE.Color('#f472b6');
+                const crystalAmethyst = new THREE.Color('#a855f7');
+                const diamondGleam = new THREE.Color('#ffffff');
+
+                const veinNoise = snoise(worldX * 0.015625, worldZ * 0.015625);
+                let prismCol = obsidian.clone();
+                if (Math.abs(veinNoise) < 0.16) {
+                    const vBlend = smoothstep(0.16, 0.0, Math.abs(veinNoise));
+                    const vCol = veinNoise > 0 ? crystalVeinCyan : crystalVeinMagenta;
+                    prismCol.lerp(vCol, vBlend * 0.95);
+                } else {
+                    const heightFactor = smoothstep(10.0, 75.0, h);
+                    prismCol.lerp(crystalAmethyst, heightFactor * 0.7);
+                    if (h > 45.0) {
+                        prismCol.lerp(diamondGleam, smoothstep(45.0, 95.0, h) * 0.5);
+                    }
+                }
+
+                r = r * (1.0 - pw) + prismCol.r * pw;
+                g = g * (1.0 - pw) + prismCol.g * pw;
+                b = b * (1.0 - pw) + prismCol.b * pw;
             }
 
             colors.setXYZ(i, r, g, b);

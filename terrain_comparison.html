@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Geothermal Ridge - Terrain & Water Comparison Viewer</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f172a;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+      font-size: 11px;
+      color: #f8fafc;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #main-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+
+    /* ── Top Floating Navigation & Action Bar ──────────────────────────── */
+    #top-bar {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 9999px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      z-index: 50;
+      pointer-events: auto;
+    }
+
+    .bar-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #38bdf8;
+      padding: 4px 8px;
+    }
+
+    .nav-group {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 9999px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: rgba(255, 255, 255, 0.72);
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      padding: 5px 10px;
+      border-radius: 9999px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+
+    .nav-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+    }
+
+    .action-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      outline: none;
+      color: rgba(255, 255, 255, 0.85);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 9999px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .action-btn.active {
+      background: #16a34a;
+      border-color: #22c55e;
+      color: #ffffff;
+    }
+
+    .divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ── Viewport HUD Cards Overlay ────────────────────────────────────── */
+    #overlay-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .grid-4way {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      width: 100%;
+      height: 100%;
+    }
+
+    .grid-single {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      justify-content: flex-start;
+      align-items: flex-end;
+    }
+
+    .hud-card {
+      padding: 14px;
+      margin: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      max-width: 380px;
+      pointer-events: auto;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-self: flex-start;
+    }
+
+    .hud-card.bottom-card {
+      align-self: flex-end;
+    }
+
+    .hud-card.hidden {
+      display: none !important;
+    }
+
+    .card-badge {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.18);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+    }
+
+    .card-desc {
+      font-size: 10px;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .card-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9.5px;
+    }
+
+    .stat-label {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .stat-value {
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    /* Crosshair Split Grid Border */
+    .crosshair-v {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.15);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .crosshair-h {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.15);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Back to game link */
+    #back-link {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      transition: background 0.15s ease;
+    }
+    #back-link:hover {
+      background: #0284c7;
+    }
+
+    @media (max-width: 900px) {
+      #top-bar {
+        max-width: 96vw;
+        flex-wrap: wrap;
+        border-radius: 12px;
+        top: 6px;
+      }
+      .hud-card {
+        max-width: 90vw;
+        padding: 8px 10px;
+        margin: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="main-canvas"></canvas>
+
+  <div class="crosshair-v"></div>
+  <div class="crosshair-h"></div>
+
+  <!-- Top Floating Controls -->
+  <div id="top-bar">
+    <div class="bar-title">GEOTHERMAL COMPARISON</div>
+    <div class="divider"></div>
+
+    <div class="nav-group">
+      <button class="nav-btn active" id="btn-view-split">4-WAY SPLIT</button>
+      <button class="nav-btn" id="btn-view-opt1">OPTION 1</button>
+      <button class="nav-btn" id="btn-view-opt2">OPTION 2</button>
+      <button class="nav-btn" id="btn-view-opt3">OPTION 3</button>
+      <button class="nav-btn" id="btn-view-opt4">OPTION 4</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="action-btn active" id="btn-toggle-water">WATER: STILL BLUE (ON)</button>
+    <button class="action-btn" id="btn-toggle-wireframe">WIREFRAME: OFF</button>
+    <button class="action-btn" id="btn-toggle-autofly">FLIGHT SIM: OFF</button>
+    <button class="action-btn" id="btn-reset-cam">RESET CAMERA</button>
+  </div>
+
+  <!-- HUD Cards Overlay for the 4 Viewports -->
+  <div id="overlay-grid" class="grid-4way">
+    <!-- Top-Left: Option 1 -->
+    <div id="card-opt1" class="hud-card">
+      <span class="card-badge">OPTION 1</span>
+      <div class="card-title">Softened Noise Frequencies</div>
+      <div class="card-desc">Lowers high-frequency noise multipliers and widens caldera step curves to match the 12.5m vertex grid. Removes triangular saw-teeth naturally.</div>
+      <div class="card-stats">
+        <div class="stat-row">
+          <span class="stat-label">Grid Resolution</span>
+          <span class="stat-value">128 x 128 (32,768 Tris)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Performance Cost</span>
+          <span class="stat-value">Zero Overhead (Fastest)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top-Right: Option 2 -->
+    <div id="card-opt2" class="hud-card">
+      <span class="card-badge">OPTION 2</span>
+      <div class="card-title">Fragment-Shader Pixel Colors</div>
+      <div class="card-desc">Evaluates grass, basalt dirt, and sand color transitions per pixel in GLSL rather than per vertex. Eliminates color facet stepping completely.</div>
+      <div class="card-stats">
+        <div class="stat-row">
+          <span class="stat-label">Grid Resolution</span>
+          <span class="stat-value">128 x 128 (32,768 Tris)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Performance Cost</span>
+          <span class="stat-value">Very Low (Frees CPU vertex loop)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom-Left: Option 3 -->
+    <div id="card-opt3" class="hud-card bottom-card">
+      <span class="card-badge">OPTION 3</span>
+      <div class="card-title">Shoreline Flattening Ease</div>
+      <div class="card-desc">Applies procedural S-curve easing near the water elevation (y = 2.5). Prevents water plane from slicing diagonally through steep polygons.</div>
+      <div class="card-stats">
+        <div class="stat-row">
+          <span class="stat-label">Grid Resolution</span>
+          <span class="stat-value">128 x 128 (32,768 Tris)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Performance Cost</span>
+          <span class="stat-value">Zero Overhead</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom-Right: Option 4 -->
+    <div id="card-opt4" class="hud-card bottom-card">
+      <span class="card-badge">OPTION 4</span>
+      <div class="card-title">Adaptive Concentric Dual-Ring Grid</div>
+      <div class="card-desc">Dense 4m inner grid around the camera with a sparser 25m outer horizon mesh. Sharp terrain up close with 18% fewer total polygons.</div>
+      <div class="card-stats">
+        <div class="stat-row">
+          <span class="stat-label">Grid Resolution</span>
+          <span class="stat-value">96x96 (Inner) + 64x64 (Outer)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Performance Cost</span>
+          <span class="stat-value">Very Low (26,624 Total Tris)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="./index.html" id="back-link">BACK TO GAME</a>
+
+  <script type="module" src="/src/terrain_comparison.ts"></script>
+</body>
+</html>

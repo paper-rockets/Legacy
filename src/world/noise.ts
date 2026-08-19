@@ -54,14 +54,17 @@ export function snoise(x: number, z: number): number {
     return 70.0 * (n0 + n1 + n2);
 }
 
-export type BiomeId = 'meadow' | 'archipelago' | 'geothermal' | 'estuary' | 'redwood';
+export type BiomeId = 'candyland' | 'meadow' | 'archipelago' | 'geothermal' | 'estuary' | 'redwood' | 'sky_citadel' | 'prism_sanctum';
 
 export interface BiomeWeights {
+    candyland: number;
     meadow: number;
+    prism_sanctum: number;
     archipelago: number;
     geothermal: number;
     estuary: number;
     redwood: number;
+    sky_citadel?: number;
 }
 
 export interface BiomeLocation {
@@ -70,43 +73,66 @@ export interface BiomeLocation {
     description: string;
     x: number;
     z: number;
+    y?: number;
 }
 
 export const BIOME_LOCATIONS: BiomeLocation[] = [
+    {
+        id: 'candyland',
+        name: 'Candyland',
+        description: 'Pastel marshmallow hills, lollipop trees, and the Candy Heart centerpiece',
+        x: 0,
+        z: 0
+    },
     {
         id: 'meadow',
         name: 'Lush Meadow',
         description: 'Classic Ghibli rolling green hills and flower paths',
         x: 0,
-        z: 0
+        z: 2560
+    },
+    {
+        id: 'prism_sanctum',
+        name: 'Prism Sanctum',
+        description: 'Luminous crystal terraces with glowing gemstone veins and crystal glass terrain',
+        x: 0,
+        z: -2560
     },
     {
         id: 'archipelago',
         name: 'Floating Archipelago',
         description: 'High spires, plateaus and soaring updrafts',
-        x: 2000,
-        z: 2000
+        x: 3200,
+        z: 3200
     },
     {
         id: 'geothermal',
         name: 'Geothermal Ridge',
         description: 'Terraced volcanic cliffs and caldera basins',
-        x: 2000,
-        z: -2000
+        x: 3200,
+        z: -3200
     },
     {
         id: 'estuary',
         name: 'Bioluminescent Estuary',
         description: 'Shallow tidal waters and water-skimming speed channels',
-        x: -2000,
-        z: 2000
+        x: -3200,
+        z: 3200
     },
     {
         id: 'redwood',
         name: 'Colossal Redwood',
         description: 'Grand mountain slopes and giant ancient cedar canopies',
-        x: -2000,
-        z: -2000
+        x: -3200,
+        z: -3200
+    },
+    {
+        id: 'sky_citadel',
+        name: 'Floating Cloud Citadel',
+        description: 'Celestial fairytale castles floating atop mystical cloud islands',
+        x: 0,
+        z: -160,
+        y: 510
     }
 ];
 
@@ -117,24 +143,38 @@ export function smoothstep(edge0: number, edge1: number, x: number): number {
 
 export function getBiomeWeights(x: number, z: number): BiomeWeights {
     const distOrigin = Math.hypot(x, z);
-    const originMeadow = smoothstep(1100, 750, distOrigin);
+    const originCandy = smoothstep(1520, 1040, distOrigin);
 
-    // Region weights based on coordinates with smooth 250m blend border around axes
-    const blendRange = 250;
+    // Meadow channel in the +Z direction
+    const distMeadow = Math.hypot(x, z - 2560);
+    const meadowWeight = smoothstep(1440, 880, distMeadow) * (1.0 - originCandy);
+
+    // Prism Sanctum channel in the -Z direction
+    const distPrism = Math.hypot(x, z + 2560);
+    const prismWeight = smoothstep(1440, 880, distPrism) * (1.0 - originCandy);
+
+    // Region weights based on coordinates with smooth 400m blend border around axes
+    const blendRange = 400;
     const wxPositive = smoothstep(-blendRange, blendRange, x);
     const wxNegative = 1.0 - wxPositive;
     const wzPositive = smoothstep(-blendRange, blendRange, z);
     const wzNegative = 1.0 - wzPositive;
 
-    let wArch = wxPositive * wzPositive * (1.0 - originMeadow);
-    let wGeoth = wxPositive * wzNegative * (1.0 - originMeadow);
-    let wEst = wxNegative * wzPositive * (1.0 - originMeadow);
-    let wRed = wxNegative * wzNegative * (1.0 - originMeadow);
-    let wMeadow = originMeadow;
+    const remainingOuter = (1.0 - originCandy) * (1.0 - meadowWeight) * (1.0 - prismWeight);
 
-    const total = wMeadow + wArch + wGeoth + wEst + wRed + 0.00001;
+    let wArch = wxPositive * wzPositive * remainingOuter;
+    let wGeoth = wxPositive * wzNegative * remainingOuter;
+    let wEst = wxNegative * wzPositive * remainingOuter;
+    let wRed = wxNegative * wzNegative * remainingOuter;
+    let wMeadow = meadowWeight;
+    let wPrism = prismWeight;
+    let wCandy = originCandy;
+
+    const total = wCandy + wMeadow + wPrism + wArch + wGeoth + wEst + wRed + 0.00001;
     return {
+        candyland: wCandy / total,
         meadow: wMeadow / total,
+        prism_sanctum: wPrism / total,
         archipelago: wArch / total,
         geothermal: wGeoth / total,
         estuary: wEst / total,
@@ -142,10 +182,15 @@ export function getBiomeWeights(x: number, z: number): BiomeWeights {
     };
 }
 
-export function getDominantBiome(x: number, z: number): BiomeId {
+export function getDominantBiome(x: number, z: number, y?: number): BiomeId {
+    if (y !== undefined && y >= 250) {
+        return 'sky_citadel';
+    }
     const w = getBiomeWeights(x, z);
-    let maxW = w.meadow;
-    let dominant: BiomeId = 'meadow';
+    let maxW = w.candyland;
+    let dominant: BiomeId = 'candyland';
+    if (w.meadow > maxW) { maxW = w.meadow; dominant = 'meadow'; }
+    if (w.prism_sanctum > maxW) { maxW = w.prism_sanctum; dominant = 'prism_sanctum'; }
     if (w.archipelago > maxW) { maxW = w.archipelago; dominant = 'archipelago'; }
     if (w.geothermal > maxW) { maxW = w.geothermal; dominant = 'geothermal'; }
     if (w.estuary > maxW) { maxW = w.estuary; dominant = 'estuary'; }
@@ -153,15 +198,28 @@ export function getDominantBiome(x: number, z: number): BiomeId {
     return dominant;
 }
 
-export function getDominantBiomeName(x: number, z: number): string {
-    const id = getDominantBiome(x, z);
+export function getDominantBiomeName(x: number, z: number, y?: number): string {
+    const id = getDominantBiome(x, z, y);
     switch (id) {
+        case 'candyland': return 'Candyland';
         case 'meadow': return 'Lush Meadow';
+        case 'prism_sanctum': return 'Prism Sanctum';
         case 'archipelago': return 'Floating Archipelago';
         case 'geothermal': return 'Geothermal Ridge';
         case 'estuary': return 'Bioluminescent Estuary';
         case 'redwood': return 'Colossal Redwood';
+        case 'sky_citadel': return 'Floating Cloud Citadel';
     }
+}
+
+// 0. Candyland: Pillowy marshmallow rolling hills, soft mounds, puffy sugar dunes
+function heightCandyland(x: number, z: number): number {
+    const broadPuff = snoise(x * 0.0035, z * 0.0035);
+    const moundShape = Math.sin(broadPuff * Math.PI) * 16.0 + 15.0;
+    const puff1 = Math.pow(Math.max(0, snoise(x * 0.008 + 100, z * 0.008 + 100)), 1.5) * 8.0;
+    const puff2 = Math.pow(Math.max(0, snoise(x * 0.015 - 50, z * 0.015 - 50)), 1.8) * 3.5;
+    let y = moundShape + puff1 + puff2;
+    return Math.max(3.8, y);
 }
 
 // 1. Lush Meadow: Gentle rolling hills, soft valleys, flower paths
@@ -224,14 +282,42 @@ function heightRedwood(x: number, z: number): number {
     return Math.max(3.5, y);
 }
 
+// 6. Prism Sanctum: Faceted crystal cloud terrain, stepped quartz terraces, crystalline ridges, and soaring crystal spires
+function heightPrismSanctum(x: number, z: number): number {
+    // Stepped geometric quartz terraces and plateaus
+    const terrace = Math.floor((snoise(x * 0.0025, z * 0.0025) * 34.0 + 28.0) / 4.5) * 4.5;
+
+    // Sharp crystalline ridge facets (octahedral / prism cuts)
+    const ridge1 = (1.0 - Math.abs(snoise(x * 0.0055 + 150, z * 0.0055 - 150))) * 40.0;
+    const ridge2 = (1.0 - Math.abs(snoise(x * 0.011 - 60, z * 0.011 + 180))) * 16.0;
+
+    // Soaring quartz obelisks and sharp crystal spires
+    const spires = Math.pow(Math.max(0, snoise(x * 0.0075 + 20, z * 0.0075 + 20)), 2.6) * 55.0;
+
+    // Geometric diamond / octahedral facet modulation
+    const facetMod = Math.abs(Math.sin(x * 0.014) * Math.cos(z * 0.014)) * 9.0;
+
+    // Crisp high-frequency crystal facet edges
+    const facetCrag = snoise(x * 0.022, z * 0.022) * 3.8;
+
+    return Math.max(3.5, terrace + ridge1 + ridge2 + spires + facetMod + facetCrag);
+}
+
+export function terrainHeightWithWeights(x: number, z: number, w: BiomeWeights): number {
+    const sx = x * 0.625;
+    const sz = z * 0.625;
+    return heightCandyland(sx, sz) * w.candyland +
+           heightMeadow(sx, sz) * w.meadow +
+           heightPrismSanctum(sx, sz) * w.prism_sanctum +
+           heightArchipelago(sx, sz) * w.archipelago +
+           heightGeothermal(sx, sz) * w.geothermal +
+           heightEstuary(sx, sz) * w.estuary +
+           heightRedwood(sx, sz) * w.redwood;
+}
+
 export function terrainHeightJS(x: number, z: number): number {
     const w = getBiomeWeights(x, z);
-    const h = heightMeadow(x, z) * w.meadow +
-              heightArchipelago(x, z) * w.archipelago +
-              heightGeothermal(x, z) * w.geothermal +
-              heightEstuary(x, z) * w.estuary +
-              heightRedwood(x, z) * w.redwood;
-    return h;
+    return terrainHeightWithWeights(x, z, w);
 }
 
 export function distToSegment(px: number, pz: number, ax: number, az: number, bx: number, bz: number): number {
@@ -245,19 +331,19 @@ export function distToSegment(px: number, pz: number, ax: number, az: number, bx
 export const villageHousePositions: { x: number; z: number }[] = [];
 
 export function getPathStrength(x: number, z: number): number {
-    const scale = 0.002;
+    const scale = 0.00125;
     const n1 = snoise(x * scale, z * scale);
     const n2 = snoise(x * scale * 2 + 1000, z * scale * 2 + 1000) * 0.3;
     const path = Math.abs(n1 + n2);
     const mask = smoothstep(0.15, 0.0, path);
 
     let vPath = 0;
-    if (Math.abs(x) < 200 && Math.abs(z) < 200) {
+    if (Math.abs(x) < 320 && Math.abs(z) < 320) {
         for (let i = 0; i < villageHousePositions.length; i++) {
             const p = villageHousePositions[i];
             const d = distToSegment(x, z, p.x, p.z, 0, 0);
-            if (d < 5) {
-                vPath = Math.max(vPath, smoothstep(5, 1.5, d));
+            if (d < 8) {
+                vPath = Math.max(vPath, smoothstep(8, 2.4, d));
             }
         }
     }

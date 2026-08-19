@@ -8,6 +8,7 @@ export interface FlightModelDef {
     rotY?: number;
     rotZ?: number;
     offsetY?: number;
+    isPlane?: boolean;
 }
 
 export const FLIGHT_MODELS: FlightModelDef[] = [
@@ -62,6 +63,32 @@ export const FLIGHT_MODELS: FlightModelDef[] = [
         preferredAnim: 'Flying',
         scale: 0.22,
         rotY: Math.PI,
-        offsetY: -0.15
+        offsetY: -0.15,
+        isPlane: true
+    },
+    {
+        id: 'porco_rosso',
+        name: 'Porco Rosso Seaplane',
+        file: 'Assets/Flight/porco_rosso_-_seaplane.glb',
+        scale: 0.18,
+        rotY: Math.PI,
+        offsetY: -0.15,
+        isPlane: true
+    },
+    {
+        id: 'princess',
+        name: 'Princess',
+        file: 'Assets/Flight/Princess.glb',
+        scale: 1.0,
+        rotY: Math.PI,
+        offsetY: -0.2
+    },
+    {
+        id: 'kiki',
+        name: 'Kiki (Low Poly)',
+        file: 'Assets/Flight/kiki-lowpoly.glb',
+        scale: 1.0,
+        rotY: Math.PI,
+        offsetY: -0.2
     }
 ];

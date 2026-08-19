@@ -8,6 +8,8 @@ import { WaterSystem } from '../world/water';
 import { AmbientAudioEngine } from '../audio/audio';
 import { ControlsManager } from '../player/controls';
 import { TreeSystem } from '../world/trees';
+import { WorldPropsSystem } from '../world/worldProps';
+import { SkyCastleSystem } from '../world/skyCastles';
 import { DevEditor } from './devEditor';
 import { BIOME_LOCATIONS } from '../world/noise';
 import { globalConfigManager } from '../core/config';
@@ -33,11 +35,13 @@ export class UIManager {
         private water: WaterSystem,
         private audio: AmbientAudioEngine,
         private controls: ControlsManager,
-        private trees?: TreeSystem
+        private trees?: TreeSystem,
+        private worldProps?: WorldPropsSystem,
+        private skyCastles?: SkyCastleSystem
     ) {
         this.fpsDisplay = document.getElementById('fps-counter');
         this.biomeDisplay = document.getElementById('biome-select-btn');
-        if (this.trees) {
+        if (this.trees && this.worldProps) {
             this.devEditor = new DevEditor(
                 this.pipeline,
                 this.lighting,
@@ -45,7 +49,9 @@ export class UIManager {
                 this.trees,
                 this.water,
                 this.terrain,
-                this.player
+                this.worldProps,
+                this.player,
+                this.skyCastles
             );
         }
         this.setupButtons();
@@ -54,26 +60,24 @@ export class UIManager {
     }
 
     private setupButtons() {
-        // Pause Flight button with Pause/Play Icon
+        // Pause Exploration button with Pause/Play Icon
         const pauseBtn = document.getElementById('pause-flight-btn');
         const pauseIcon = document.getElementById('pause-icon');
         const playIcon = document.getElementById('play-icon');
 
         const updatePauseUI = () => {
-            if (this.controls.isFlightPaused) {
-                if (pauseIcon) pauseIcon.style.display = 'none';
-                if (playIcon) playIcon.style.display = 'block';
-                if (pauseBtn) {
-                    pauseBtn.setAttribute('aria-label', 'Resume Flight');
-                    pauseBtn.setAttribute('title', 'Resume Flight');
+            if (pauseBtn) {
+                if (this.controls.isFlightPaused) {
+                    if (pauseIcon) pauseIcon.style.display = 'none';
+                    if (playIcon) playIcon.style.display = 'block';
+                    pauseBtn.setAttribute('aria-label', 'Resume Exploration');
+                    pauseBtn.setAttribute('title', 'Resume Exploration');
                     pauseBtn.classList.add('paused');
-                }
-            } else {
-                if (pauseIcon) pauseIcon.style.display = 'block';
-                if (playIcon) playIcon.style.display = 'none';
-                if (pauseBtn) {
-                    pauseBtn.setAttribute('aria-label', 'Pause Flight');
-                    pauseBtn.setAttribute('title', 'Pause Flight');
+                } else {
+                    if (pauseIcon) pauseIcon.style.display = 'block';
+                    if (playIcon) playIcon.style.display = 'none';
+                    pauseBtn.setAttribute('aria-label', 'Pause Exploration');
+                    pauseBtn.setAttribute('title', 'Pause Exploration');
                     pauseBtn.classList.remove('paused');
                 }
             }
@@ -164,6 +168,12 @@ export class UIManager {
             modelBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const isOpen = modelDropdown.style.display === 'flex';
+                if (biomeDropdown) biomeDropdown.style.display = 'none';
+                const settingsMenu = document.getElementById('settings-menu');
+                if (settingsMenu) {
+                    settingsMenu.style.display = 'none';
+                    this.isSettingsOpen = false;
+                }
                 modelDropdown.style.display = isOpen ? 'none' : 'flex';
             });
 
@@ -191,7 +201,7 @@ export class UIManager {
                 `;
                 optBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    this.travelToBiome(loc.x, loc.z);
+                    this.travelToBiome(loc.x, loc.z, loc.y);
                     biomeDropdown.style.display = 'none';
                 });
                 biomeDropdown.appendChild(optBtn);
@@ -202,7 +212,10 @@ export class UIManager {
                 const isOpen = biomeDropdown.style.display === 'flex';
                 if (modelDropdown) modelDropdown.style.display = 'none';
                 const settingsMenu = document.getElementById('settings-menu');
-                if (settingsMenu) settingsMenu.style.display = 'none';
+                if (settingsMenu) {
+                    settingsMenu.style.display = 'none';
+                    this.isSettingsOpen = false;
+                }
 
                 biomeDropdown.style.display = isOpen ? 'none' : 'flex';
             });
@@ -236,6 +249,8 @@ export class UIManager {
         if (settingsBtn && settingsMenu) {
             settingsBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (modelDropdown) modelDropdown.style.display = 'none';
+                if (biomeDropdown) biomeDropdown.style.display = 'none';
                 this.isSettingsOpen = !this.isSettingsOpen;
                 settingsMenu.style.display = this.isSettingsOpen ? 'flex' : 'none';
             });
@@ -256,6 +271,9 @@ export class UIManager {
                 const playing = this.audio.toggleMusic();
                 musicBtn.innerText = playing ? 'Pause Music' : 'Music';
                 trackBtn.style.display = playing ? 'block' : 'none';
+                if (playing) {
+                    trackBtn.innerText = 'Track: ' + this.audio.getCurrentTrackName();
+                }
             });
 
             trackBtn.addEventListener('click', () => {
@@ -307,69 +325,20 @@ export class UIManager {
             });
         });
 
-        // Glow & Bloom Editor Sliders
-        const treeBloomSlider = document.getElementById('tree-bloom-slider') as HTMLInputElement | null;
-        const treeBloomVal = document.getElementById('tree-bloom-val');
-        const treeBloomDebugSlider = document.getElementById('tree-bloom-debug-slider') as HTMLInputElement | null;
-        const treeBloomDebugVal = document.getElementById('tree-bloom-debug-val');
-
-        const syncTreeBloom = (intensity: number) => {
-            if (this.trees) {
-                this.trees.setTreeBloomIntensity(intensity);
-            }
-            if (treeBloomSlider) {
-                treeBloomSlider.value = Math.round(intensity * 100).toString();
-            }
-            if (treeBloomVal) {
-                treeBloomVal.innerText = `${Math.round(intensity * 100)}%`;
-            }
-            if (treeBloomDebugSlider) {
-                treeBloomDebugSlider.value = intensity.toFixed(2);
-            }
-            if (treeBloomDebugVal) {
-                treeBloomDebugVal.textContent = intensity.toFixed(2);
-            }
-        };
-
+        // Bioluminescence Slider
+        const bioluminescenceSlider = document.getElementById('bioluminescence-slider') as HTMLInputElement | null;
+        const bioluminescenceVal = document.getElementById('bioluminescence-val');
         const activeBiome = globalConfigManager.getActiveBiomeConfig();
-        if (treeBloomSlider && this.trees) {
-            syncTreeBloom(activeBiome.bloom.treeBloom);
-            treeBloomSlider.addEventListener('input', (e) => {
-                const val = parseInt((e.target as HTMLInputElement).value, 10) / 100;
-                syncTreeBloom(val);
-            });
-        }
 
-        if (treeBloomDebugSlider && this.trees) {
-            treeBloomDebugSlider.addEventListener('input', (e) => {
-                const val = parseFloat((e.target as HTMLInputElement).value);
-                syncTreeBloom(val);
-            });
-        }
+        if (bioluminescenceSlider && this.trees) {
+            const currentBio = activeBiome.vegetation.bioluminescence !== undefined ? Math.round(activeBiome.vegetation.bioluminescence * 100) : 80;
+            bioluminescenceSlider.value = currentBio.toString();
+            if (bioluminescenceVal) bioluminescenceVal.innerText = `${currentBio}%`;
 
-        const canopyGlowSlider = document.getElementById('canopy-glow-slider') as HTMLInputElement | null;
-        const canopyGlowVal = document.getElementById('canopy-glow-val');
-        if (canopyGlowSlider && this.trees) {
-            canopyGlowSlider.value = Math.round(activeBiome.bloom.treeCanopyGlow * 100).toString();
-            if (canopyGlowVal) canopyGlowVal.innerText = `${Math.round(activeBiome.bloom.treeCanopyGlow * 100)}%`;
-
-            canopyGlowSlider.addEventListener('input', (e) => {
+            bioluminescenceSlider.addEventListener('input', (e) => {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
-                this.trees?.setCanopyGlowMultiplier(val / 100);
-                if (canopyGlowVal) canopyGlowVal.innerText = `${val}%`;
-            });
-        }
-
-        const trunkGlowSlider = document.getElementById('trunk-glow-slider') as HTMLInputElement | null;
-        const trunkGlowVal = document.getElementById('trunk-glow-val');
-        if (trunkGlowSlider && this.trees) {
-            trunkGlowSlider.value = Math.round(activeBiome.bloom.treeTrunkGlow * 100).toString();
-            if (trunkGlowVal) trunkGlowVal.innerText = `${Math.round(activeBiome.bloom.treeTrunkGlow * 100)}%`;
-
-            trunkGlowSlider.addEventListener('input', (e) => {
-                const val = parseInt((e.target as HTMLInputElement).value, 10);
-                this.trees?.setTrunkGlowMultiplier(val / 100);
-                if (trunkGlowVal) trunkGlowVal.innerText = `${val}%`;
+                if (bioluminescenceVal) bioluminescenceVal.innerText = `${val}%`;
+                this.trees?.setBioluminescence(val / 100);
             });
         }
 
@@ -489,7 +458,7 @@ export class UIManager {
                         this.pipeline.render();
                         const dataURL = this.pipeline.renderer.domElement.toDataURL('image/png');
                         const link = document.createElement('a');
-                        link.download = 'GhibliFlight_Screenshot.png';
+                        link.download = 'Wanderlust_Screenshot.png';
                         link.href = dataURL;
                         link.click();
                         photoUi.style.display = 'flex';
@@ -520,36 +489,24 @@ export class UIManager {
             });
         }
 
-        const treeBloomDebugSlider = document.getElementById('tree-bloom-debug-slider') as HTMLInputElement | null;
-        const treeBloomDebugVal = document.getElementById('tree-bloom-debug-val');
+        const treeBiolumDebugSlider = document.getElementById('tree-biolum-debug-slider') as HTMLInputElement | null;
+        const treeBiolumDebugVal = document.getElementById('tree-biolum-debug-val');
 
-        if (treeBloomDebugSlider && this.trees) {
-            const currentTreeBloom = globalConfigManager.getActiveBiomeConfig().bloom.treeBloom;
-            treeBloomDebugSlider.value = currentTreeBloom.toFixed(2);
-            if (treeBloomDebugVal) treeBloomDebugVal.textContent = currentTreeBloom.toFixed(2);
+        if (treeBiolumDebugSlider && this.trees) {
+            const currentBiolum = globalConfigManager.getActiveBiomeConfig().vegetation.bioluminescence !== undefined
+                ? Math.round(globalConfigManager.getActiveBiomeConfig().vegetation.bioluminescence * 100)
+                : 80;
+            treeBiolumDebugSlider.value = currentBiolum.toString();
+            if (treeBiolumDebugVal) treeBiolumDebugVal.textContent = `${currentBiolum}%`;
 
-            treeBloomDebugSlider.addEventListener('input', (e) => {
-                const val = parseFloat((e.target as HTMLInputElement).value);
-                this.trees?.setTreeBloomIntensity(val);
-                if (treeBloomDebugVal) treeBloomDebugVal.textContent = val.toFixed(2);
-                const mainSlider = document.getElementById('tree-bloom-slider') as HTMLInputElement | null;
-                const mainVal = document.getElementById('tree-bloom-val');
-                if (mainSlider) mainSlider.value = Math.round(val * 100).toString();
-                if (mainVal) mainVal.innerText = `${Math.round(val * 100)}%`;
-            });
-        }
-
-        const bloomSlider = document.getElementById('bloom-slider') as HTMLInputElement | null;
-        const bloomVal = document.getElementById('bloom-val');
-
-        if (bloomSlider) {
-            bloomSlider.value = this.pipeline.bloomPass.strength.toString();
-            if (bloomVal) bloomVal.textContent = Number(this.pipeline.bloomPass.strength).toFixed(2);
-
-            bloomSlider.addEventListener('input', (e) => {
-                const val = parseFloat((e.target as HTMLInputElement).value);
-                this.pipeline.bloomPass.strength = val;
-                if (bloomVal) bloomVal.textContent = val.toFixed(2);
+            treeBiolumDebugSlider.addEventListener('input', (e) => {
+                const val = parseInt((e.target as HTMLInputElement).value, 10);
+                this.trees?.setBioluminescence(val / 100);
+                if (treeBiolumDebugVal) treeBiolumDebugVal.textContent = `${val}%`;
+                const mainSlider = document.getElementById('bioluminescence-slider') as HTMLInputElement | null;
+                const mainVal = document.getElementById('bioluminescence-val');
+                if (mainSlider) mainSlider.value = val.toString();
+                if (mainVal) mainVal.innerText = `${val}%`;
             });
         }
 
@@ -587,14 +544,12 @@ export class UIManager {
                 btnWater.className = 'debug-btn ' + (isWaterFast ? 'on' : 'off');
                 btnWater.innerText = isWaterFast ? 'MeshToon (Fast)' : 'MeshPhysical';
             }
-            if (bloomSlider) {
-                bloomSlider.value = this.pipeline.bloomPass.strength.toString();
-                if (bloomVal) bloomVal.textContent = Number(this.pipeline.bloomPass.strength).toFixed(2);
-            }
-            if (treeBloomDebugSlider && this.trees) {
-                const currentTreeBloom = globalConfigManager.getActiveBiomeConfig().bloom.treeBloom;
-                treeBloomDebugSlider.value = currentTreeBloom.toFixed(2);
-                if (treeBloomDebugVal) treeBloomDebugVal.textContent = currentTreeBloom.toFixed(2);
+            if (treeBiolumDebugSlider && this.trees) {
+                const currentBiolum = globalConfigManager.getActiveBiomeConfig().vegetation.bioluminescence !== undefined
+                    ? Math.round(globalConfigManager.getActiveBiomeConfig().vegetation.bioluminescence * 100)
+                    : 80;
+                treeBiolumDebugSlider.value = currentBiolum.toString();
+                if (treeBiolumDebugVal) treeBiolumDebugVal.textContent = `${currentBiolum}%`;
             }
             if (btnMaster) {
                 const allOn = isTerrainFast && isPropsFast && isDpiFast && isShadowsFast && isWaterFast;
@@ -627,8 +582,6 @@ export class UIManager {
             btnDpi.addEventListener('click', () => {
                 isDpiFast = !isDpiFast;
                 this.pipeline.setPixelRatioCap(isDpiFast ? 1.25 : 2.0);
-                this.pipeline.bloomPass.strength = isDpiFast ? 0.22 : 0.35;
-                this.pipeline.bloomPass.radius = isDpiFast ? 0.35 : 0.45;
                 updateDebugUI();
             });
         }
@@ -668,8 +621,6 @@ export class UIManager {
 
                 this.props.setOptimizedMode(isPropsFast);
                 this.pipeline.setPixelRatioCap(isDpiFast ? 1.25 : 2.0);
-                this.pipeline.bloomPass.strength = isDpiFast ? 0.22 : 0.35;
-                this.pipeline.bloomPass.radius = isDpiFast ? 0.35 : 0.45;
                 this.lighting.shadowTuned = isShadowsFast;
                 this.lighting.setShadowResolution(isShadowsFast ? 1024 : 2048);
                 this.water.setToonMode(isWaterFast);
@@ -677,16 +628,31 @@ export class UIManager {
                 updateDebugUI();
             });
         }
+
+        const debugTpBtns = document.querySelectorAll('.debug-btn.dev-biome-tp-btn');
+        debugTpBtns.forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget as HTMLElement;
+                const x = parseFloat(target.getAttribute('data-x') || '0');
+                const z = parseFloat(target.getAttribute('data-z') || '0');
+                const rawY = target.getAttribute('data-y');
+                const y = rawY ? parseFloat(rawY) : undefined;
+                this.travelToBiome(x, z, y);
+            });
+        });
     }
 
 
-    public travelToBiome(x: number, z: number) {
-        this.player.teleportTo(x, z, 50);
+    public travelToBiome(x: number, z: number, y?: number) {
+        this.player.teleportTo(x, z, 50, y);
         const pos = this.player.playerGrp.position;
         this.terrain.update(pos.x, pos.z);
         if (this.trees) this.trees.update(pos.x, pos.z);
         this.props.update(pos.x, pos.z, 0.016);
         this.water.update(pos.x, pos.z, 0.016);
+        if (this.skyCastles) {
+            this.skyCastles.update(pos, 0.016);
+        }
 
         const biomeId = this.player.currentBiome;
         globalConfigManager.config.activeBiomeId = biomeId;
@@ -694,6 +660,7 @@ export class UIManager {
         if (bCfg) {
             this.pipeline.applyBiomeBloom(bCfg.bloom);
             this.props.applyBiomeCloud(bCfg.bloom);
+            if (this.skyCastles) this.skyCastles.applyBiomeCloud(bCfg.bloom);
         }
         if (this.devEditor && this.devEditor.isOpen) {
             this.devEditor.selectBiome(biomeId);
@@ -706,7 +673,7 @@ export class UIManager {
         if (now >= this.fpsPrevTime + 200) {
             const currentFps = Math.round((this.fpsFrames * 1000) / (now - this.fpsPrevTime));
             if (this.fpsDisplay) {
-                this.fpsDisplay.textContent = currentFps + ' FPS';
+                this.fpsDisplay.textContent = `${currentFps} FPS`;
             }
             if (this.biomeDisplay) {
                 let status = this.player.currentBiomeName;

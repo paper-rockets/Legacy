@@ -18,7 +18,10 @@ export class RenderPipeline {
         this.container = container;
         this.scene = new THREE.Scene();
 
-        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1500);
+        const initialWidth = this.container.clientWidth || window.innerWidth;
+        const initialHeight = this.container.clientHeight || window.innerHeight;
+
+        this.camera = new THREE.PerspectiveCamera(60, initialWidth / initialHeight, 0.1, 1500);
         this.camera.position.set(0, 9, 26);
 
         this.renderer = new THREE.WebGLRenderer({
@@ -30,7 +33,7 @@ export class RenderPipeline {
             stencil: false
         });
 
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(initialWidth, initialHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.basePixelRatio));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -44,8 +47,9 @@ export class RenderPipeline {
         this.composer.addPass(this.renderPass);
 
         const blm = globalConfigManager.config.globalBloom;
+        const bloomRes = new THREE.Vector2(Math.floor(initialWidth * 0.5), Math.floor(initialHeight * 0.5));
         this.bloomPass = new UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            bloomRes,
             blm.strength,
             blm.radius,
             blm.threshold
@@ -57,6 +61,19 @@ export class RenderPipeline {
 
     public async init() {
         // Synchronous & ready immediately
+    }
+
+    public handleResize(customWidth?: number, customHeight?: number) {
+        const width = customWidth ?? (this.container.clientWidth || window.innerWidth);
+        const height = customHeight ?? (this.container.clientHeight || window.innerHeight);
+        if (width <= 0 || height <= 0) return;
+
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.basePixelRatio));
+        this.renderer.setSize(width, height);
+        this.composer.setSize(width, height);
+        this.bloomPass.setSize(Math.floor(width * 0.5), Math.floor(height * 0.5));
     }
 
     public applyBiomeBloom(bloom: { globalStrength?: number; globalRadius?: number; globalThreshold?: number }, lerpFactor?: number) {
@@ -107,18 +124,12 @@ export class RenderPipeline {
 
     public setPixelRatioCap(maxDpi: number) {
         this.basePixelRatio = maxDpi;
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDpi));
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.composer.setSize(window.innerWidth, window.innerHeight);
+        this.handleResize();
     }
 
     private setupResizeListener() {
         window.addEventListener('resize', () => {
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.basePixelRatio));
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.composer.setSize(window.innerWidth, window.innerHeight);
+            this.handleResize();
         });
     }
 

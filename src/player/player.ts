@@ -45,6 +45,11 @@ export class PlayerSystem {
     public activeModel: THREE.Group | null = null;
     public activeMixer: THREE.AnimationMixer | null = null;
     public onModelChanged: ((def: FlightModelDef) => void) | null = null;
+    private modelChangeListeners: ((def: FlightModelDef) => void)[] = [];
+
+    public addModelChangeListener(listener: (def: FlightModelDef) => void) {
+        this.modelChangeListeners.push(listener);
+    }
 
     constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera) {
         this.camera = camera;
@@ -94,17 +99,18 @@ export class PlayerSystem {
         return FLIGHT_MODELS;
     }
 
-    public teleportTo(x: number, z: number, yOffset: number = 50) {
+    public teleportTo(x: number, z: number, yOffset: number = 50, fixedY?: number) {
         const groundY = terrainHeightJS(x, z);
-        this.playerGrp.position.set(x, Math.max(groundY + yOffset, 25), z);
+        const targetY = fixedY !== undefined ? fixedY : Math.max(groundY + yOffset, 25);
+        this.playerGrp.position.set(x, targetY, z);
         this.cameraBase.position.copy(this.playerGrp.position);
         this.currentYaw = 0;
         this.currentPitch = 0;
         this.currentRoll = 0;
         this.turnVelocity = 0;
         this.velocity = 18.0;
-        this.currentBiome = getDominantBiome(x, z);
-        this.currentBiomeName = getDominantBiomeName(x, z);
+        this.currentBiome = getDominantBiome(x, z, targetY);
+        this.currentBiomeName = getDominantBiomeName(x, z, targetY);
     }
 
     public getCurrentModelDef(): FlightModelDef {
@@ -213,6 +219,13 @@ export class PlayerSystem {
                     if (this.onModelChanged) {
                         this.onModelChanged(modelDef);
                     }
+                    for (const listener of this.modelChangeListeners) {
+                        try {
+                            listener(modelDef);
+                        } catch (err) {
+                            console.error('Error in modelChangeListener:', err);
+                        }
+                    }
 
                     if (onComplete) onComplete();
                 },
@@ -234,15 +247,17 @@ export class PlayerSystem {
             // Do not start drag if clicking interactive UI buttons, inputs, or menus
             const targetEl = e.target as HTMLElement;
             if (
+                !targetEl ||
                 targetEl.tagName === 'BUTTON' ||
                 targetEl.tagName === 'INPUT' ||
                 targetEl.tagName === 'TEXTAREA' ||
-                targetEl.closest('#top-bar, #top-right-bar, #settings-menu, #model-dropdown, #debug-panel, #dev-editor-panel, #photo-mode-ui, #boost-btn')
+                targetEl.tagName === 'SELECT' ||
+                Boolean(targetEl.closest('#top-bar, #top-right-bar, #settings-menu, #model-dropdown, #biome-dropdown, #debug-panel, #dev-editor-panel, #photo-mode-ui, #boost-btn, #touch-controls, #simulator-toolbar, #simulator-info-bar'))
             ) {
                 return;
             }
             // For touch pointers only: reserve the left half for joystick control
-            if (e.pointerType === 'touch' && e.clientX < window.innerWidth * 0.55) {
+            if (e.pointerType === 'touch' && e.clientX < window.innerWidth * 0.65) {
                 return;
             }
             isDragging = true;
@@ -320,19 +335,21 @@ export class PlayerSystem {
         window.addEventListener('touchcancel', endPinch, { passive: true });
     }
 
-    public update(dt: number, inputState: InputState) {
-        // Update active animation mixer
+    public update(dt: number, inputState: InputState, skyCastles?: any) {
+        if (dt <= 0) return;
+
+        // Update active flight model animation mixer
         if (this.activeMixer) {
             this.activeMixer.update(dt);
         }
 
-        // Steering
+        // Yaw controls
         if (inputState.left) {
             this.turnVelocity += this.turnAcceleration * dt;
         } else if (inputState.right) {
             this.turnVelocity -= this.turnAcceleration * dt;
         } else {
-            this.turnVelocity = THREE.MathUtils.lerp(this.turnVelocity, 0, 3.5 * dt);
+            this.turnVelocity *= Math.pow(0.05, dt);
         }
 
         this.turnVelocity = Math.max(-this.maxTurnSpeed, Math.min(this.maxTurnSpeed, this.turnVelocity));
@@ -343,8 +360,8 @@ export class PlayerSystem {
         this.currentRoll = THREE.MathUtils.lerp(this.currentRoll, targetRoll, 2.5 * dt);
 
         // Biome tracking & dynamic flight aerodynamics
-        this.currentBiome = getDominantBiome(this.playerGrp.position.x, this.playerGrp.position.z);
-        this.currentBiomeName = getDominantBiomeName(this.playerGrp.position.x, this.playerGrp.position.z);
+        this.currentBiome = getDominantBiome(this.playerGrp.position.x, this.playerGrp.position.z, this.playerGrp.position.y);
+        this.currentBiomeName = getDominantBiomeName(this.playerGrp.position.x, this.playerGrp.position.z, this.playerGrp.position.y);
 
         // Terrain lean sampling
         const lookAheadDist = 30.0;
@@ -386,6 +403,12 @@ export class PlayerSystem {
         this.velocity += (targetSpeed - this.velocity) * dt * (inputState.brake ? 4.0 : (inputState.boost ? 3.0 : 2.0));
         this.playerGrp.position.add(moveDir.multiplyScalar(this.velocity * dt));
 
+        // 3D Model & Castle Collision Resolution (prevents clipping)
+        if (skyCastles && typeof skyCastles.resolveCollisions === 'function') {
+            const flightVel = moveDir.clone().multiplyScalar(this.velocity);
+            skyCastles.resolveCollisions(this.playerGrp.position, 2.8, flightVel);
+        }
+
         if (this.isUpdraftLift) {
             this.playerGrp.position.y += 3.5 * dt;
         }
@@ -418,7 +441,7 @@ export class PlayerSystem {
                 this.playerGrp.position.y = currentGroundY + 12;
             }
         }
-        this.playerGrp.position.y = Math.min(Math.max(this.playerGrp.position.y, 18), 300);
+        this.playerGrp.position.y = Math.min(Math.max(this.playerGrp.position.y, 18), 800);
 
         // Sync camera base
         this.cameraBase.position.copy(this.playerGrp.position);

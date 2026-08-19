@@ -54,6 +54,59 @@ export interface TerrainColorsSettings {
     colorSand: string;
     presetName?: string;
     isToonMode?: boolean;
+    terrainStyle?: 'toon' | 'standard' | 'crystal';
+    isCrystalMode?: boolean;
+    glassTransmission?: number;
+    iridescence?: number;
+    specularGlint?: number;
+    bevelGleam?: number;
+    veinGlow?: number;
+    showGroundCrystals?: boolean;
+}
+
+export interface ModelVegetationConfig {
+    modelId: string;
+    enabled: boolean;
+    scale: number;
+    density: number;
+    bioluminescence?: number;
+    useOriginalColors: boolean;
+    canopyColors: string[];
+    leafColors: string[];
+    trunkColors: string[];
+    activePreset?: string;
+}
+
+export function getDefaultModelConfig(modelId: string): ModelVegetationConfig {
+    const isFlower = modelId.includes('flower') || modelId.includes('clover') || modelId.includes('bush');
+    const isCastle = modelId.includes('castle');
+    const isShip = modelId.includes('ship') || modelId.includes('boat') || modelId.includes('galleon');
+
+    let scale = 6.0;
+    let density = 250;
+    if (isFlower) {
+        scale = 3.5;
+        density = 350;
+    } else if (isCastle) {
+        scale = 12.0;
+        density = 25;
+    } else if (isShip) {
+        scale = 8.0;
+        density = 40;
+    }
+
+    return {
+        modelId,
+        enabled: false,
+        scale,
+        density,
+        bioluminescence: 0.8,
+        useOriginalColors: false,
+        canopyColors: ['#ff1493', '#ff69b4', '#b026ff', '#8a2be2', '#00d2ff', '#00ff88', '#ffe600'],
+        leafColors: ['#22c55e', '#16a34a', '#15803d', '#4ade80', '#10b981'],
+        trunkColors: ['#5c3a21', '#451a03', '#78350f', '#3f3f46'],
+        activePreset: 'candy'
+    };
 }
 
 export interface VegetationBiomeSettings {
@@ -61,10 +114,45 @@ export interface VegetationBiomeSettings {
     treeDensity: number;
     bushScale: number;
     bushDensity: number;
+    bioluminescence?: number;
     canopyColors: string[];
     trunkColors: string[];
     activePreset: string;
     selectedTreeModelIds: string[];
+    models?: Record<string, ModelVegetationConfig>;
+}
+
+export interface CastleColorSettings {
+    preset?: string;
+    roofColor?: string;
+    wallColor?: string;
+    trimColor?: string;
+    crystalColor?: string;
+    crystalBloom?: number;
+}
+
+export interface SkyCastleIslandDef {
+    id: string;
+    name: string;
+    modelPath: string;
+    x: number;
+    y: number;
+    z: number;
+    rotationY: number;
+    scale: number;
+    cloudRadius: number;
+    cloudPuffCount: number;
+    colors?: CastleColorSettings;
+    locked?: boolean;
+}
+
+export interface SkyCitadelSettings {
+    layerFogEnabled: boolean;
+    layerFogAltitude: number;
+    layerFogDensity: number;
+    layerFogColor: string;
+    layerFogEmissive: string;
+    layerFogBloom: number;
 }
 
 export interface BiomeConfig {
@@ -75,6 +163,18 @@ export interface BiomeConfig {
     bloom: BloomSettings;
     vegetation: VegetationBiomeSettings;
     phases: [EnvPhaseConfig, EnvPhaseConfig, EnvPhaseConfig]; // Day, Dusk, Twilight
+}
+
+export interface PlacedWorldProp {
+    id: string;
+    modelId: string;
+    name: string;
+    position: [number, number, number];
+    rotation: [number, number, number];
+    scale: number;
+    groundOffset: number;
+    biomeId?: BiomeId;
+    locked?: boolean;
 }
 
 export interface AppConfig {
@@ -90,7 +190,10 @@ export interface AppConfig {
         color: string;
         emissive: string;
     };
+    skyCastles?: SkyCastleIslandDef[];
+    skyCitadel?: SkyCitadelSettings;
     biomes: Record<BiomeId, BiomeConfig>;
+    placedProps?: PlacedWorldProp[];
 }
 
 function createDefaultPhases(
@@ -101,7 +204,7 @@ function createDefaultPhases(
     return [
         {
             // Day
-            bg: dayBg, fog: dayFog, fogNear: 200, fogFar: 720,
+            bg: dayBg, fog: dayFog, fogNear: 350, fogFar: 1000,
             amb: dayAmb, ambI: 0.6,
             dir: dayDir, dirI: 0.9,
             dirPos: { x: 250, y: 350, z: -200 },
@@ -113,7 +216,7 @@ function createDefaultPhases(
         },
         {
             // Dusk
-            bg: duskBg, fog: duskFog, fogNear: 180, fogFar: 680,
+            bg: duskBg, fog: duskFog, fogNear: 300, fogFar: 950,
             amb: duskAmb, ambI: 0.5,
             dir: duskDir, dirI: 0.85,
             dirPos: { x: 0, y: 45, z: -600 },
@@ -125,7 +228,7 @@ function createDefaultPhases(
         },
         {
             // Twilight
-            bg: twiBg, fog: twiFog, fogNear: 180, fogFar: 700,
+            bg: twiBg, fog: twiFog, fogNear: 300, fogFar: 980,
             amb: twiAmb, ambI: 0.7,
             dir: twiDir, dirI: 0.6,
             dirPos: { x: 100, y: 250, z: -100 },
@@ -139,8 +242,9 @@ function createDefaultPhases(
 }
 
 export const FACTORY_CONFIG: AppConfig = {
-    version: 6,
-    activeBiomeId: 'meadow',
+    version: 15,
+    activeBiomeId: 'candyland',
+    placedProps: [],
     globalBloom: {
         strength: 0.0,
         radius: 0.0,
@@ -152,6 +256,61 @@ export const FACTORY_CONFIG: AppConfig = {
         emissive: '#fff6ea'
     },
     biomes: {
+        candyland: {
+            id: 'candyland',
+            name: 'Candyland',
+            terrain: {
+                colorLow: '#fffbf5',
+                colorHigh: '#fce7f3',
+                colorDirt: '#e9d5ff',
+                colorPath: '#fed7aa',
+                colorSand: '#ffffff',
+                presetName: 'Marshmallow Pastel',
+                isToonMode: true
+            },
+            water: {
+                color: '#f472b6',
+                opacity: 0.76,
+                reflectivity: 0.88,
+                roughness: 0.12,
+                metalness: 0.05,
+                clearcoat: 0.9,
+                clearcoatRoughness: 0.12,
+                isToonMode: false
+            },
+            bloom: {
+                globalStrength: 0.0,
+                globalRadius: 0.0,
+                globalThreshold: 0.70,
+                cloudBloom: 0.0,
+                cloudColor: '#fbcfe8',
+                cloudEmissive: '#fdf2f8',
+                treeBloom: 0.0,
+                treeCanopyGlow: 0.0,
+                treeTrunkGlow: 0.0,
+                bushBloom: 0.0,
+                bushGlow: 0.0,
+                shoreBloom: 0.0,
+                shoreColor: '#fbcfe8',
+                shoreWidth: 1.1
+            },
+            vegetation: {
+                treeScale: 5.5,
+                treeDensity: 280,
+                bushScale: 1.1,
+                bushDensity: 180,
+                bioluminescence: 0.8,
+                canopyColors: ['#f472b6', '#93c5fd', '#fde047', '#c084fc', '#ffffff', '#ffb6c1', '#a7f3d0'],
+                trunkColors: ['#ffffff', '#fffbf0', '#ffe4e6', '#f0f9ff'],
+                activePreset: 'candyland_pastel',
+                selectedTreeModelIds: ['candy_lollipop_spiral', 'candy_lollipop_sphere', 'candy_cane_single', 'candy_cane_cluster']
+            },
+            phases: createDefaultPhases(
+                '#c7d2fe', '#fbcfe8', '#fdf4ff', '#fffbeb',
+                '#f472b6', '#fbcfe8', '#fdf2f8', '#fb923c',
+                '#312e81', '#4338ca', '#6366f1', '#818cf8'
+            )
+        },
         meadow: {
             id: 'meadow',
             name: 'Lush Meadow',
@@ -192,13 +351,13 @@ export const FACTORY_CONFIG: AppConfig = {
             },
             vegetation: {
                 treeScale: 6.0,
-                treeDensity: 800,
+                treeDensity: 0,
                 bushScale: 1.0,
-                bushDensity: 250,
+                bushDensity: 0,
                 canopyColors: ['#ff1493', '#ff69b4', '#b026ff', '#8a2be2', '#00d2ff', '#00ff88', '#ffe600', '#ff7700', '#ff1744'],
                 trunkColors: ['#ffffff', '#fff3e0', '#ffe4e6', '#e0f7fa'],
                 activePreset: 'candy',
-                selectedTreeModelIds: ['cartoon_1', 'cartoon_2', 'cartoon_5', 'cartoon_6', 'bushy_1', 'bushy_2']
+                selectedTreeModelIds: []
             },
             phases: createDefaultPhases(
                 '#8cbce6', '#8cbce6', '#dcf2ff', '#fffaeb',
@@ -246,13 +405,13 @@ export const FACTORY_CONFIG: AppConfig = {
             },
             vegetation: {
                 treeScale: 4.8,
-                treeDensity: 550,
+                treeDensity: 0,
                 bushScale: 1.1,
-                bushDensity: 220,
+                bushDensity: 0,
                 canopyColors: ['#ff69b4', '#ffb6c1', '#fbcfe8', '#c4b5fd', '#93c5fd', '#ffffff'],
                 trunkColors: ['#fff3e0', '#ffe4e6', '#d6d3d1'],
                 activePreset: 'archipelago',
-                selectedTreeModelIds: ['cartoon_16', 'cartoon_13', 'cartoon_14', 'bushy_3', 'bushy_6']
+                selectedTreeModelIds: []
             },
             phases: createDefaultPhases(
                 '#7dd3fc', '#7dd3fc', '#e0f2fe', '#fffbeb',
@@ -300,13 +459,13 @@ export const FACTORY_CONFIG: AppConfig = {
             },
             vegetation: {
                 treeScale: 5.2,
-                treeDensity: 450,
+                treeDensity: 0,
                 bushScale: 0.95,
-                bushDensity: 180,
+                bushDensity: 0,
                 canopyColors: ['#ff3300', '#ff7700', '#ffaa00', '#cc1100', '#f59e0b'],
                 trunkColors: ['#27272a', '#3f3f46', '#1c1917'],
                 activePreset: 'geothermal',
-                selectedTreeModelIds: ['cartoon_9', 'cartoon_10', 'bushy_4', 'bushy_5']
+                selectedTreeModelIds: []
             },
             phases: createDefaultPhases(
                 '#fdba74', '#fdba74', '#ffedd5', '#fff7ed',
@@ -354,13 +513,13 @@ export const FACTORY_CONFIG: AppConfig = {
             },
             vegetation: {
                 treeScale: 4.2,
-                treeDensity: 600,
+                treeDensity: 0,
                 bushScale: 1.25,
-                bushDensity: 280,
+                bushDensity: 0,
                 canopyColors: ['#00f5d4', '#00bbf9', '#f72585', '#7209b7', '#4cc9f0', '#10b981'],
                 trunkColors: ['#ffffff', '#e0f2fe', '#fce7f3'],
                 activePreset: 'estuary',
-                selectedTreeModelIds: ['cartoon_3', 'cartoon_4', 'cartoon_15', 'bushy_7', 'bushy_8']
+                selectedTreeModelIds: []
             },
             phases: createDefaultPhases(
                 '#34d399', '#34d399', '#a7f3d0', '#ecfdf5',
@@ -408,24 +567,140 @@ export const FACTORY_CONFIG: AppConfig = {
             },
             vegetation: {
                 treeScale: 8.5,
-                treeDensity: 650,
+                treeDensity: 0,
                 bushScale: 1.15,
-                bushDensity: 220,
+                bushDensity: 0,
                 canopyColors: ['#15803d', '#166534', '#14532d', '#22c55e', '#4ade80'],
                 trunkColors: ['#78350f', '#451a03', '#522e18'],
                 activePreset: 'redwood',
-                selectedTreeModelIds: ['cartoon_8', 'cartoon_11', 'cartoon_12', 'bushy_1', 'bushy_2']
+                selectedTreeModelIds: []
             },
             phases: createDefaultPhases(
                 '#64748b', '#64748b', '#cbd5e1', '#f8fafc',
                 '#b45309', '#b45309', '#451a03', '#f59e0b',
                 '#022c22', '#022c22', '#15803d', '#4ade80'
             )
+        },
+        sky_citadel: {
+            id: 'sky_citadel',
+            name: 'Floating Cloud Citadel',
+            terrain: {
+                colorLow: '#e0e7ff',
+                colorHigh: '#f3e8ff',
+                colorDirt: '#ddd6fe',
+                colorPath: '#c084fc',
+                colorSand: '#fae8ff',
+                presetName: 'Celestial Haven',
+                isToonMode: true
+            },
+            water: {
+                color: '#67e8f9',
+                opacity: 0.88,
+                reflectivity: 0.85,
+                roughness: 0.10,
+                metalness: 0.05,
+                clearcoat: 0.9,
+                clearcoatRoughness: 0.10,
+                isToonMode: false
+            },
+            bloom: {
+                globalStrength: 0.0,
+                globalRadius: 0.0,
+                globalThreshold: 0.70,
+                cloudBloom: 0.0,
+                cloudColor: '#ffffff',
+                cloudEmissive: '#fff0f5',
+                treeBloom: 0.0,
+                treeCanopyGlow: 0.0,
+                treeTrunkGlow: 0.0,
+                bushBloom: 0.0,
+                bushGlow: 0.0,
+                shoreBloom: 0.0,
+                shoreColor: '#e0e7ff',
+                shoreWidth: 1.2
+            },
+            vegetation: {
+                treeScale: 5.0,
+                treeDensity: 0,
+                bushScale: 1.0,
+                bushDensity: 0,
+                canopyColors: ['#e0e7ff', '#f3e8ff', '#fae8ff', '#fce7f3', '#c4b5fd', '#bae6fd'],
+                trunkColors: ['#ffffff', '#fdf4ff', '#e0e7ff'],
+                activePreset: 'celestial',
+                selectedTreeModelIds: []
+            },
+            phases: createDefaultPhases(
+                '#a5b4fc', '#c7d2fe', '#ede9fe', '#fffbeb',
+                '#e879f9', '#f472b6', '#701a75', '#fb923c',
+                '#1e1b4b', '#312e81', '#4338ca', '#818cf8'
+            )
+        },
+        prism_sanctum: {
+            id: 'prism_sanctum',
+            name: 'Prism Sanctum',
+            terrain: {
+                colorLow: '#0b0f19',
+                colorHigh: '#1e1b4b',
+                colorDirt: '#38bdf8',
+                colorPath: '#f472b6',
+                colorSand: '#a855f7',
+                presetName: 'Crystal Prism',
+                isToonMode: false,
+                terrainStyle: 'crystal',
+                isCrystalMode: true,
+                glassTransmission: 0.65,
+                iridescence: 1.35,
+                specularGlint: 2.2,
+                bevelGleam: 1.1,
+                veinGlow: 1.5,
+                showGroundCrystals: true
+            },
+            water: {
+                color: '#38bdf8',
+                opacity: 0.85,
+                reflectivity: 0.90,
+                roughness: 0.08,
+                metalness: 0.10,
+                clearcoat: 0.95,
+                clearcoatRoughness: 0.08,
+                isToonMode: false
+            },
+            bloom: {
+                globalStrength: 0.0,
+                globalRadius: 0.0,
+                globalThreshold: 0.70,
+                cloudBloom: 0.0,
+                cloudColor: '#38bdf8',
+                cloudEmissive: '#38bdf8',
+                treeBloom: 0.0,
+                treeCanopyGlow: 0.0,
+                treeTrunkGlow: 0.0,
+                bushBloom: 0.0,
+                bushGlow: 0.0,
+                shoreBloom: 0.0,
+                shoreColor: '#38bdf8',
+                shoreWidth: 1.5
+            },
+            vegetation: {
+                treeScale: 5.0,
+                treeDensity: 0,
+                bushScale: 1.0,
+                bushDensity: 0,
+                canopyColors: ['#38bdf8', '#f472b6', '#a855f7', '#e0f2fe'],
+                trunkColors: ['#0f172a', '#1e1b4b'],
+                activePreset: 'prism',
+                selectedTreeModelIds: []
+            },
+            phases: createDefaultPhases(
+                '#38bdf8', '#bae6fd', '#f0f9ff', '#fffbeb',
+                '#f472b6', '#fed7aa', '#fdf2f8', '#fb923c',
+                '#0f172a', '#1e1b4b', '#38bdf8', '#818cf8'
+            )
         }
     }
 };
 
-const STORAGE_KEY = 'ghibli_flight_biome_editor_v7';
+const STORAGE_KEY = 'ghibli_flight_biome_editor_v16';
 
 export class ConfigManager {
     public config: AppConfig;
@@ -454,6 +729,9 @@ export class ConfigManager {
         if (custom.activeBiomeId) base.activeBiomeId = custom.activeBiomeId;
         if (custom.globalBloom) base.globalBloom = { ...base.globalBloom, ...custom.globalBloom };
         if (custom.cloud) base.cloud = { ...base.cloud, ...custom.cloud };
+        if (Array.isArray(custom.placedProps)) base.placedProps = custom.placedProps;
+        if (Array.isArray(custom.skyCastles)) base.skyCastles = custom.skyCastles;
+        if (custom.skyCitadel) base.skyCitadel = { ...(base.skyCitadel || { layerFogEnabled: true, layerFogAltitude: 260, layerFogDensity: 1.0, layerFogColor: '#ffffff', layerFogEmissive: '#fff0f5', layerFogBloom: 0.0 }), ...custom.skyCitadel };
 
         if (custom.biomes) {
             for (const key of Object.keys(base.biomes) as BiomeId[]) {
@@ -466,7 +744,13 @@ export class ConfigManager {
                         base.biomes[key].vegetation = { 
                             ...base.biomes[key].vegetation, 
                             ...cb.vegetation,
-                            selectedTreeModelIds: cb.vegetation.selectedTreeModelIds || base.biomes[key].vegetation.selectedTreeModelIds
+                            selectedTreeModelIds: Array.isArray(cb.vegetation.selectedTreeModelIds)
+                                ? cb.vegetation.selectedTreeModelIds
+                                : base.biomes[key].vegetation.selectedTreeModelIds,
+                            models: {
+                                ...(base.biomes[key].vegetation.models || {}),
+                                ...(cb.vegetation.models || {})
+                            }
                         };
                     }
                     if (cb.phases && Array.isArray(cb.phases)) {
@@ -527,6 +811,42 @@ export class ConfigManager {
 
     public exportJSON(): string {
         return JSON.stringify(this.config, null, 2);
+    }
+
+    public async saveConfigToDisk(): Promise<{ success: boolean; message: string }> {
+        this.saveGlobalDefaults();
+        try {
+            const res = await fetch('/api/save-config-to-disk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(this.config)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                return { success: true, message: data.message || 'Saved permanently to local disk' };
+            }
+            return { success: false, message: `Server returned status ${res.status}` };
+        } catch (err) {
+            console.warn('Local disk persistence endpoint not reachable, saved to browser storage', err);
+            return { success: false, message: 'Saved to browser storage (Local disk server offline)' };
+        }
+    }
+
+    public async syncFromDisk(): Promise<boolean> {
+        try {
+            const res = await fetch('/api/load-config-from-disk');
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.version === FACTORY_CONFIG.version && data.biomes) {
+                    this.config = this.mergeWithFactory(data);
+                    this.saveGlobalDefaults();
+                    return true;
+                }
+            }
+        } catch (err) {
+            // Silently ignore if offline or not in dev server mode
+        }
+        return false;
     }
 
     public importJSON(jsonString: string): boolean {

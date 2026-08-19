@@ -1,0 +1,1583 @@
+{
+  "version": 15,
+  "activeBiomeId": "candyland",
+  "placedProps": [],
+  "globalBloom": {
+    "strength": 0,
+    "radius": 0,
+    "threshold": 0.7
+  },
+  "cloud": {
+    "bloom": 0,
+    "color": "#ffffff",
+    "emissive": "#fff6ea"
+  },
+  "biomes": {
+    "candyland": {
+      "id": "candyland",
+      "name": "Candyland",
+      "terrain": {
+        "colorLow": "#fffbf5",
+        "colorHigh": "#fce7f3",
+        "colorDirt": "#e9d5ff",
+        "colorPath": "#fed7aa",
+        "colorSand": "#ffffff",
+        "presetName": "Marshmallow Pastel",
+        "isToonMode": true
+      },
+      "water": {
+        "color": "#f472b6",
+        "opacity": 0.76,
+        "reflectivity": 0.88,
+        "roughness": 0.12,
+        "metalness": 0.05,
+        "clearcoat": 0.9,
+        "clearcoatRoughness": 0.12,
+        "isToonMode": false
+      },
+      "bloom": {
+        "globalStrength": 0,
+        "globalRadius": 0,
+        "globalThreshold": 0.7,
+        "cloudBloom": 0,
+        "cloudColor": "#fbcfe8",
+        "cloudEmissive": "#fdf2f8",
+        "treeBloom": 0,
+        "treeCanopyGlow": 0,
+        "treeTrunkGlow": 0,
+        "bushBloom": 0,
+        "bushGlow": 0,
+        "shoreBloom": 0,
+        "shoreColor": "#fbcfe8",
+        "shoreWidth": 1.1
+      },
+      "vegetation": {
+        "treeScale": 5.5,
+        "treeDensity": 280,
+        "bushScale": 1.1,
+        "bushDensity": 180,
+        "bioluminescence": 0.8,
+        "canopyColors": [
+          "#f472b6",
+          "#93c5fd",
+          "#fde047",
+          "#c084fc",
+          "#ffffff",
+          "#ffb6c1",
+          "#a7f3d0"
+        ],
+        "trunkColors": [
+          "#ffffff",
+          "#fffbf0",
+          "#ffe4e6",
+          "#f0f9ff"
+        ],
+        "activePreset": "candyland_pastel",
+        "selectedTreeModelIds": [
+          "candy_lollipop_spiral",
+          "candy_lollipop_sphere",
+          "candy_cane_single",
+          "candy_cane_cluster"
+        ],
+        "models": {
+          "candy_lollipop_spiral": {
+            "modelId": "candy_lollipop_spiral",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          }
+        }
+      },
+      "phases": [
+        {
+          "bg": "#c7d2fe",
+          "fog": "#fbcfe8",
+          "fogNear": 350,
+          "fogFar": 1000,
+          "amb": "#fdf4ff",
+          "ambI": 0.6,
+          "dir": "#fffbeb",
+          "dirI": 0.9,
+          "dirPos": {
+            "x": 250,
+            "y": 350,
+            "z": -200
+          },
+          "hemi": 0.45,
+          "sunI": 0.9,
+          "sunC": "#fffae0",
+          "sunPos": {
+            "x": 350,
+            "y": 400,
+            "z": -850
+          },
+          "sunScale": 1,
+          "starOp": 0
+        },
+        {
+          "bg": "#f472b6",
+          "fog": "#fbcfe8",
+          "fogNear": 300,
+          "fogFar": 950,
+          "amb": "#fdf2f8",
+          "ambI": 0.5,
+          "dir": "#fb923c",
+          "dirI": 0.85,
+          "dirPos": {
+            "x": 0,
+            "y": 45,
+            "z": -600
+          },
+          "hemi": 0.35,
+          "sunI": 1,
+          "sunC": "#ff5511",
+          "sunPos": {
+            "x": 0,
+            "y": 15,
+            "z": -700
+          },
+          "sunScale": 1.6,
+          "starOp": 0.1
+        },
+        {
+          "bg": "#312e81",
+          "fog": "#4338ca",
+          "fogNear": 300,
+          "fogFar": 980,
+          "amb": "#6366f1",
+          "ambI": 0.7,
+          "dir": "#818cf8",
+          "dirI": 0.6,
+          "dirPos": {
+            "x": 100,
+            "y": 250,
+            "z": -100
+          },
+          "hemi": 0.4,
+          "sunI": 0,
+          "sunC": "#000000",
+          "sunPos": {
+            "x": 0,
+            "y": -300,
+            "z": -800
+          },
+          "sunScale": 0.1,
+          "starOp": 0.95
+        }
+      ]
+    },
+    "meadow": {
+      "id": "meadow",
+      "name": "Lush Meadow",
+      "terrain": {
+        "colorLow": "#76d149",
+        "colorHigh": "#89e05e",
+        "colorDirt": "#dcb58a",
+        "colorPath": "#bd9973",
+        "colorSand": "#f2e1b8",
+        "presetName": "Lush Green",
+        "isToonMode": true
+      },
+      "water": {
+        "color": "#4da9e8",
+        "opacity": 0.82,
+        "reflectivity": 0.65,
+        "roughness": 0.18,
+        "metalness": 0.05,
+        "clearcoat": 0.8,
+        "clearcoatRoughness": 0.15,
+        "isToonMode": false
+      },
+      "bloom": {
+        "globalStrength": 0,
+        "globalRadius": 0,
+        "globalThreshold": 0.7,
+        "cloudBloom": 0,
+        "cloudColor": "#ffffff",
+        "cloudEmissive": "#fff6ea",
+        "treeBloom": 0,
+        "treeCanopyGlow": 0,
+        "treeTrunkGlow": 0,
+        "bushBloom": 0,
+        "bushGlow": 0,
+        "shoreBloom": 0,
+        "shoreColor": "#ffffff",
+        "shoreWidth": 0.8
+      },
+      "vegetation": {
+        "treeScale": 6,
+        "treeDensity": 0,
+        "bushScale": 1,
+        "bushDensity": 0,
+        "canopyColors": [
+          "#ff1493",
+          "#ff69b4",
+          "#b026ff",
+          "#8a2be2",
+          "#00d2ff",
+          "#00ff88",
+          "#ffe600",
+          "#ff7700",
+          "#ff1744"
+        ],
+        "trunkColors": [
+          "#ffffff",
+          "#fff3e0",
+          "#ffe4e6",
+          "#e0f7fa"
+        ],
+        "activePreset": "candy",
+        "selectedTreeModelIds": [],
+        "models": {
+          "candy_lollipop_spiral": {
+            "modelId": "candy_lollipop_spiral",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          }
+        }
+      },
+      "phases": [
+        {
+          "bg": "#8cbce6",
+          "fog": "#8cbce6",
+          "fogNear": 350,
+          "fogFar": 1000,
+          "amb": "#dcf2ff",
+          "ambI": 0.6,
+          "dir": "#fffaeb",
+          "dirI": 0.9,
+          "dirPos": {
+            "x": 250,
+            "y": 350,
+            "z": -200
+          },
+          "hemi": 0.45,
+          "sunI": 0.9,
+          "sunC": "#fffae0",
+          "sunPos": {
+            "x": 350,
+            "y": 400,
+            "z": -850
+          },
+          "sunScale": 1,
+          "starOp": 0
+        },
+        {
+          "bg": "#dd5e42",
+          "fog": "#dd5e42",
+          "fogNear": 300,
+          "fogFar": 950,
+          "amb": "#6a4055",
+          "ambI": 0.5,
+          "dir": "#ff7722",
+          "dirI": 0.85,
+          "dirPos": {
+            "x": 0,
+            "y": 45,
+            "z": -600
+          },
+          "hemi": 0.35,
+          "sunI": 1,
+          "sunC": "#ff5511",
+          "sunPos": {
+            "x": 0,
+            "y": 15,
+            "z": -700
+          },
+          "sunScale": 1.6,
+          "starOp": 0.1
+        },
+        {
+          "bg": "#18182c",
+          "fog": "#18182c",
+          "fogNear": 300,
+          "fogFar": 980,
+          "amb": "#444470",
+          "ambI": 0.7,
+          "dir": "#6677aa",
+          "dirI": 0.6,
+          "dirPos": {
+            "x": 100,
+            "y": 250,
+            "z": -100
+          },
+          "hemi": 0.4,
+          "sunI": 0,
+          "sunC": "#000000",
+          "sunPos": {
+            "x": 0,
+            "y": -300,
+            "z": -800
+          },
+          "sunScale": 0.1,
+          "starOp": 0.95
+        }
+      ]
+    },
+    "archipelago": {
+      "id": "archipelago",
+      "name": "Floating Archipelago",
+      "terrain": {
+        "colorLow": "#6ee7b7",
+        "colorHigh": "#93c5fd",
+        "colorDirt": "#e2e8f0",
+        "colorPath": "#c4b5fd",
+        "colorSand": "#fef08a",
+        "presetName": "Ghibli Pastel",
+        "isToonMode": true
+      },
+      "water": {
+        "color": "#38bdf8",
+        "opacity": 0.75,
+        "reflectivity": 0.8,
+        "roughness": 0.12,
+        "metalness": 0.05,
+        "clearcoat": 0.9,
+        "clearcoatRoughness": 0.12,
+        "isToonMode": false
+      },
+      "bloom": {
+        "globalStrength": 0,
+        "globalRadius": 0,
+        "globalThreshold": 0.7,
+        "cloudBloom": 0,
+        "cloudColor": "#ffffff",
+        "cloudEmissive": "#f0f9ff",
+        "treeBloom": 0,
+        "treeCanopyGlow": 0,
+        "treeTrunkGlow": 0,
+        "bushBloom": 0,
+        "bushGlow": 0,
+        "shoreBloom": 0,
+        "shoreColor": "#bae6fd",
+        "shoreWidth": 1
+      },
+      "vegetation": {
+        "treeScale": 4.8,
+        "treeDensity": 0,
+        "bushScale": 1.1,
+        "bushDensity": 0,
+        "canopyColors": [
+          "#00bfff",
+          "#60a5fa",
+          "#ff66cc",
+          "#f43f5e",
+          "#c084fc",
+          "#ffaa00",
+          "#ffea00"
+        ],
+        "trunkColors": [
+          "#ffffff",
+          "#ffeef5",
+          "#e0f2fe"
+        ],
+        "activePreset": "cotton",
+        "selectedTreeModelIds": [],
+        "models": {
+          "candy_lollipop_spiral": {
+            "modelId": "candy_lollipop_spiral",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          }
+        }
+      },
+      "phases": [
+        {
+          "bg": "#7dd3fc",
+          "fog": "#7dd3fc",
+          "fogNear": 350,
+          "fogFar": 1000,
+          "amb": "#e0f2fe",
+          "ambI": 0.6,
+          "dir": "#fffbeb",
+          "dirI": 0.9,
+          "dirPos": {
+            "x": 250,
+            "y": 350,
+            "z": -200
+          },
+          "hemi": 0.45,
+          "sunI": 0.9,
+          "sunC": "#fffae0",
+          "sunPos": {
+            "x": 350,
+            "y": 400,
+            "z": -850
+          },
+          "sunScale": 1,
+          "starOp": 0
+        },
+        {
+          "bg": "#f43f5e",
+          "fog": "#f43f5e",
+          "fogNear": 300,
+          "fogFar": 950,
+          "amb": "#831843",
+          "ambI": 0.5,
+          "dir": "#fb923c",
+          "dirI": 0.85,
+          "dirPos": {
+            "x": 0,
+            "y": 45,
+            "z": -600
+          },
+          "hemi": 0.35,
+          "sunI": 1,
+          "sunC": "#ff5511",
+          "sunPos": {
+            "x": 0,
+            "y": 15,
+            "z": -700
+          },
+          "sunScale": 1.6,
+          "starOp": 0.1
+        },
+        {
+          "bg": "#0f172a",
+          "fog": "#0f172a",
+          "fogNear": 300,
+          "fogFar": 980,
+          "amb": "#38bdf8",
+          "ambI": 0.7,
+          "dir": "#818cf8",
+          "dirI": 0.6,
+          "dirPos": {
+            "x": 100,
+            "y": 250,
+            "z": -100
+          },
+          "hemi": 0.4,
+          "sunI": 0,
+          "sunC": "#000000",
+          "sunPos": {
+            "x": 0,
+            "y": -300,
+            "z": -800
+          },
+          "sunScale": 0.1,
+          "starOp": 0.95
+        }
+      ]
+    },
+    "geothermal": {
+      "id": "geothermal",
+      "name": "Geothermal Ridge",
+      "terrain": {
+        "colorLow": "#d97706",
+        "colorHigh": "#f59e0b",
+        "colorDirt": "#27272a",
+        "colorPath": "#9a3412",
+        "colorSand": "#fde68a",
+        "presetName": "Autumn Warmth",
+        "isToonMode": true
+      },
+      "water": {
+        "color": "#0284c7",
+        "opacity": 0.88,
+        "reflectivity": 0.55,
+        "roughness": 0.25,
+        "metalness": 0.1,
+        "clearcoat": 0.7,
+        "clearcoatRoughness": 0.2,
+        "isToonMode": false
+      },
+      "bloom": {
+        "globalStrength": 0,
+        "globalRadius": 0,
+        "globalThreshold": 0.7,
+        "cloudBloom": 0,
+        "cloudColor": "#fed7aa",
+        "cloudEmissive": "#ffedd5",
+        "treeBloom": 0,
+        "treeCanopyGlow": 0,
+        "treeTrunkGlow": 0,
+        "bushBloom": 0,
+        "bushGlow": 0,
+        "shoreBloom": 0,
+        "shoreColor": "#fed7aa",
+        "shoreWidth": 1.1
+      },
+      "vegetation": {
+        "treeScale": 5.2,
+        "treeDensity": 220,
+        "bushScale": 0.95,
+        "bushDensity": 0,
+        "canopyColors": [
+          "#ff3300",
+          "#ff7700",
+          "#ffaa00",
+          "#cc1100",
+          "#f59e0b"
+        ],
+        "trunkColors": [
+          "#27272a",
+          "#3f3f46",
+          "#1c1917"
+        ],
+        "activePreset": "geothermal",
+        "selectedTreeModelIds": [],
+        "models": {
+          "candy_lollipop_spiral": {
+            "modelId": "candy_lollipop_spiral",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          }
+        }
+      },
+      "phases": [
+        {
+          "bg": "#fdba74",
+          "fog": "#fdba74",
+          "fogNear": 350,
+          "fogFar": 1000,
+          "amb": "#ffedd5",
+          "ambI": 0.6,
+          "dir": "#fff7ed",
+          "dirI": 0.9,
+          "dirPos": {
+            "x": 250,
+            "y": 350,
+            "z": -200
+          },
+          "hemi": 0.45,
+          "sunI": 0.9,
+          "sunC": "#fffae0",
+          "sunPos": {
+            "x": 350,
+            "y": 400,
+            "z": -850
+          },
+          "sunScale": 1,
+          "starOp": 0
+        },
+        {
+          "bg": "#dc2626",
+          "fog": "#dc2626",
+          "fogNear": 300,
+          "fogFar": 950,
+          "amb": "#450a0a",
+          "ambI": 0.5,
+          "dir": "#ea580c",
+          "dirI": 0.85,
+          "dirPos": {
+            "x": 0,
+            "y": 45,
+            "z": -600
+          },
+          "hemi": 0.35,
+          "sunI": 1,
+          "sunC": "#ff5511",
+          "sunPos": {
+            "x": 0,
+            "y": 15,
+            "z": -700
+          },
+          "sunScale": 1.6,
+          "starOp": 0.1
+        },
+        {
+          "bg": "#1c1917",
+          "fog": "#1c1917",
+          "fogNear": 300,
+          "fogFar": 980,
+          "amb": "#78350f",
+          "ambI": 0.7,
+          "dir": "#f97316",
+          "dirI": 0.6,
+          "dirPos": {
+            "x": 100,
+            "y": 250,
+            "z": -100
+          },
+          "hemi": 0.4,
+          "sunI": 0,
+          "sunC": "#000000",
+          "sunPos": {
+            "x": 0,
+            "y": -300,
+            "z": -800
+          },
+          "sunScale": 0.1,
+          "starOp": 0.95
+        }
+      ]
+    },
+    "estuary": {
+      "id": "estuary",
+      "name": "Bioluminescent Estuary",
+      "terrain": {
+        "colorLow": "#10b981",
+        "colorHigh": "#06b6d4",
+        "colorDirt": "#ec4899",
+        "colorPath": "#a855f7",
+        "colorSand": "#fed7aa",
+        "presetName": "Candy Meadow",
+        "isToonMode": true
+      },
+      "water": {
+        "color": "#06b6d4",
+        "opacity": 0.7,
+        "reflectivity": 0.85,
+        "roughness": 0.1,
+        "metalness": 0.05,
+        "clearcoat": 0.95,
+        "clearcoatRoughness": 0.1,
+        "isToonMode": false
+      },
+      "bloom": {
+        "globalStrength": 0,
+        "globalRadius": 0,
+        "globalThreshold": 0.7,
+        "cloudBloom": 0,
+        "cloudColor": "#a7f3d0",
+        "cloudEmissive": "#ccfbf1",
+        "treeBloom": 0,
+        "treeCanopyGlow": 0,
+        "treeTrunkGlow": 0,
+        "bushBloom": 0,
+        "bushGlow": 0,
+        "shoreBloom": 0,
+        "shoreColor": "#00f5d4",
+        "shoreWidth": 1.2
+      },
+      "vegetation": {
+        "treeScale": 4.2,
+        "treeDensity": 0,
+        "bushScale": 1.25,
+        "bushDensity": 0,
+        "canopyColors": [
+          "#00f5d4",
+          "#00bbf9",
+          "#f72585",
+          "#7209b7",
+          "#4cc9f0",
+          "#10b981"
+        ],
+        "trunkColors": [
+          "#ffffff",
+          "#e0f2fe",
+          "#fce7f3"
+        ],
+        "activePreset": "estuary",
+        "selectedTreeModelIds": [],
+        "models": {
+          "candy_lollipop_spiral": {
+            "modelId": "candy_lollipop_spiral",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          }
+        }
+      },
+      "phases": [
+        {
+          "bg": "#34d399",
+          "fog": "#34d399",
+          "fogNear": 350,
+          "fogFar": 1000,
+          "amb": "#a7f3d0",
+          "ambI": 0.6,
+          "dir": "#ecfdf5",
+          "dirI": 0.9,
+          "dirPos": {
+            "x": 250,
+            "y": 350,
+            "z": -200
+          },
+          "hemi": 0.45,
+          "sunI": 0.9,
+          "sunC": "#fffae0",
+          "sunPos": {
+            "x": 350,
+            "y": 400,
+            "z": -850
+          },
+          "sunScale": 1,
+          "starOp": 0
+        },
+        {
+          "bg": "#8b5cf6",
+          "fog": "#8b5cf6",
+          "fogNear": 300,
+          "fogFar": 950,
+          "amb": "#4c1d95",
+          "ambI": 0.5,
+          "dir": "#c084fc",
+          "dirI": 0.85,
+          "dirPos": {
+            "x": 0,
+            "y": 45,
+            "z": -600
+          },
+          "hemi": 0.35,
+          "sunI": 1,
+          "sunC": "#ff5511",
+          "sunPos": {
+            "x": 0,
+            "y": 15,
+            "z": -700
+          },
+          "sunScale": 1.6,
+          "starOp": 0.1
+        },
+        {
+          "bg": "#064e3b",
+          "fog": "#064e3b",
+          "fogNear": 300,
+          "fogFar": 980,
+          "amb": "#047857",
+          "ambI": 0.7,
+          "dir": "#00f5d4",
+          "dirI": 0.6,
+          "dirPos": {
+            "x": 100,
+            "y": 250,
+            "z": -100
+          },
+          "hemi": 0.4,
+          "sunI": 0,
+          "sunC": "#000000",
+          "sunPos": {
+            "x": 0,
+            "y": -300,
+            "z": -800
+          },
+          "sunScale": 0.1,
+          "starOp": 0.95
+        }
+      ]
+    },
+    "redwood": {
+      "id": "redwood",
+      "name": "Colossal Redwood",
+      "terrain": {
+        "colorLow": "#15803d",
+        "colorHigh": "#166534",
+        "colorDirt": "#78350f",
+        "colorPath": "#522e18",
+        "colorSand": "#cbd5e1",
+        "presetName": "Alpine Highlands",
+        "isToonMode": true
+      },
+      "water": {
+        "color": "#0369a1",
+        "opacity": 0.85,
+        "reflectivity": 0.6,
+        "roughness": 0.2,
+        "metalness": 0.05,
+        "clearcoat": 0.75,
+        "clearcoatRoughness": 0.18,
+        "isToonMode": false
+      },
+      "bloom": {
+        "globalStrength": 0,
+        "globalRadius": 0,
+        "globalThreshold": 0.7,
+        "cloudBloom": 0,
+        "cloudColor": "#ffffff",
+        "cloudEmissive": "#f1f5f9",
+        "treeBloom": 0,
+        "treeCanopyGlow": 0,
+        "treeTrunkGlow": 0,
+        "bushBloom": 0,
+        "bushGlow": 0,
+        "shoreBloom": 0,
+        "shoreColor": "#e2e8f0",
+        "shoreWidth": 0.8
+      },
+      "vegetation": {
+        "treeScale": 8.5,
+        "treeDensity": 0,
+        "bushScale": 1.15,
+        "bushDensity": 0,
+        "canopyColors": [
+          "#15803d",
+          "#166534",
+          "#14532d",
+          "#22c55e",
+          "#4ade80"
+        ],
+        "trunkColors": [
+          "#78350f",
+          "#451a03",
+          "#522e18"
+        ],
+        "activePreset": "redwood",
+        "selectedTreeModelIds": [],
+        "models": {
+          "candy_lollipop_spiral": {
+            "modelId": "candy_lollipop_spiral",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          }
+        }
+      },
+      "phases": [
+        {
+          "bg": "#64748b",
+          "fog": "#64748b",
+          "fogNear": 350,
+          "fogFar": 1000,
+          "amb": "#cbd5e1",
+          "ambI": 0.6,
+          "dir": "#f8fafc",
+          "dirI": 0.9,
+          "dirPos": {
+            "x": 250,
+            "y": 350,
+            "z": -200
+          },
+          "hemi": 0.45,
+          "sunI": 0.9,
+          "sunC": "#fffae0",
+          "sunPos": {
+            "x": 350,
+            "y": 400,
+            "z": -850
+          },
+          "sunScale": 1,
+          "starOp": 0
+        },
+        {
+          "bg": "#b45309",
+          "fog": "#b45309",
+          "fogNear": 300,
+          "fogFar": 950,
+          "amb": "#451a03",
+          "ambI": 0.5,
+          "dir": "#f59e0b",
+          "dirI": 0.85,
+          "dirPos": {
+            "x": 0,
+            "y": 45,
+            "z": -600
+          },
+          "hemi": 0.35,
+          "sunI": 1,
+          "sunC": "#ff5511",
+          "sunPos": {
+            "x": 0,
+            "y": 15,
+            "z": -700
+          },
+          "sunScale": 1.6,
+          "starOp": 0.1
+        },
+        {
+          "bg": "#022c22",
+          "fog": "#022c22",
+          "fogNear": 300,
+          "fogFar": 980,
+          "amb": "#15803d",
+          "ambI": 0.7,
+          "dir": "#4ade80",
+          "dirI": 0.6,
+          "dirPos": {
+            "x": 100,
+            "y": 250,
+            "z": -100
+          },
+          "hemi": 0.4,
+          "sunI": 0,
+          "sunC": "#000000",
+          "sunPos": {
+            "x": 0,
+            "y": -300,
+            "z": -800
+          },
+          "sunScale": 0.1,
+          "starOp": 0.95
+        }
+      ]
+    },
+    "sky_citadel": {
+      "id": "sky_citadel",
+      "name": "Floating Cloud Citadel",
+      "terrain": {
+        "colorLow": "#e0e7ff",
+        "colorHigh": "#f3e8ff",
+        "colorDirt": "#ddd6fe",
+        "colorPath": "#c084fc",
+        "colorSand": "#fae8ff",
+        "presetName": "Celestial Haven",
+        "isToonMode": true
+      },
+      "water": {
+        "color": "#67e8f9",
+        "opacity": 0.88,
+        "reflectivity": 0.85,
+        "roughness": 0.1,
+        "metalness": 0.05,
+        "clearcoat": 0.9,
+        "clearcoatRoughness": 0.1,
+        "isToonMode": false
+      },
+      "bloom": {
+        "globalStrength": 0,
+        "globalRadius": 0,
+        "globalThreshold": 0.7,
+        "cloudBloom": 0,
+        "cloudColor": "#ffffff",
+        "cloudEmissive": "#fff0f5",
+        "treeBloom": 0,
+        "treeCanopyGlow": 0,
+        "treeTrunkGlow": 0,
+        "bushBloom": 0,
+        "bushGlow": 0,
+        "shoreBloom": 0,
+        "shoreColor": "#e0e7ff",
+        "shoreWidth": 1.2
+      },
+      "vegetation": {
+        "treeScale": 5,
+        "treeDensity": 0,
+        "bushScale": 1,
+        "bushDensity": 0,
+        "canopyColors": [
+          "#e0e7ff",
+          "#f3e8ff",
+          "#fae8ff",
+          "#fce7f3",
+          "#c4b5fd",
+          "#bae6fd"
+        ],
+        "trunkColors": [
+          "#ffffff",
+          "#fdf4ff",
+          "#e0e7ff"
+        ],
+        "activePreset": "celestial",
+        "selectedTreeModelIds": [],
+        "models": {
+          "candy_lollipop_spiral": {
+            "modelId": "candy_lollipop_spiral",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          }
+        }
+      },
+      "phases": [
+        {
+          "bg": "#a5b4fc",
+          "fog": "#c7d2fe",
+          "fogNear": 350,
+          "fogFar": 1000,
+          "amb": "#ede9fe",
+          "ambI": 0.6,
+          "dir": "#fffbeb",
+          "dirI": 0.9,
+          "dirPos": {
+            "x": 250,
+            "y": 350,
+            "z": -200
+          },
+          "hemi": 0.45,
+          "sunI": 0.9,
+          "sunC": "#fffae0",
+          "sunPos": {
+            "x": 350,
+            "y": 400,
+            "z": -850
+          },
+          "sunScale": 1,
+          "starOp": 0
+        },
+        {
+          "bg": "#e879f9",
+          "fog": "#f472b6",
+          "fogNear": 300,
+          "fogFar": 950,
+          "amb": "#701a75",
+          "ambI": 0.5,
+          "dir": "#fb923c",
+          "dirI": 0.85,
+          "dirPos": {
+            "x": 0,
+            "y": 45,
+            "z": -600
+          },
+          "hemi": 0.35,
+          "sunI": 1,
+          "sunC": "#ff5511",
+          "sunPos": {
+            "x": 0,
+            "y": 15,
+            "z": -700
+          },
+          "sunScale": 1.6,
+          "starOp": 0.1
+        },
+        {
+          "bg": "#1e1b4b",
+          "fog": "#312e81",
+          "fogNear": 300,
+          "fogFar": 980,
+          "amb": "#4338ca",
+          "ambI": 0.7,
+          "dir": "#818cf8",
+          "dirI": 0.6,
+          "dirPos": {
+            "x": 100,
+            "y": 250,
+            "z": -100
+          },
+          "hemi": 0.4,
+          "sunI": 0,
+          "sunC": "#000000",
+          "sunPos": {
+            "x": 0,
+            "y": -300,
+            "z": -800
+          },
+          "sunScale": 0.1,
+          "starOp": 0.95
+        }
+      ]
+    },
+    "prism_sanctum": {
+      "id": "prism_sanctum",
+      "name": "Prism Sanctum",
+      "terrain": {
+        "colorLow": "#0b0f19",
+        "colorHigh": "#1e1b4b",
+        "colorDirt": "#38bdf8",
+        "colorPath": "#f472b6",
+        "colorSand": "#a855f7",
+        "presetName": "Crystal Prism",
+        "isToonMode": false,
+        "terrainStyle": "crystal",
+        "isCrystalMode": true,
+        "glassTransmission": 0.65,
+        "iridescence": 1.35,
+        "specularGlint": 2.2,
+        "bevelGleam": 1.1,
+        "veinGlow": 1.5,
+        "showGroundCrystals": true
+      },
+      "water": {
+        "color": "#38bdf8",
+        "opacity": 0.85,
+        "reflectivity": 0.9,
+        "roughness": 0.08,
+        "metalness": 0.1,
+        "clearcoat": 0.95,
+        "clearcoatRoughness": 0.08,
+        "isToonMode": false
+      },
+      "bloom": {
+        "globalStrength": 0,
+        "globalRadius": 0,
+        "globalThreshold": 0.7,
+        "cloudBloom": 0,
+        "cloudColor": "#38bdf8",
+        "cloudEmissive": "#38bdf8",
+        "treeBloom": 0,
+        "treeCanopyGlow": 0,
+        "treeTrunkGlow": 0,
+        "bushBloom": 0,
+        "bushGlow": 0,
+        "shoreBloom": 0,
+        "shoreColor": "#38bdf8",
+        "shoreWidth": 1.5
+      },
+      "vegetation": {
+        "treeScale": 5,
+        "treeDensity": 0,
+        "bushScale": 1,
+        "bushDensity": 0,
+        "canopyColors": [
+          "#38bdf8",
+          "#f472b6",
+          "#a855f7",
+          "#e0f2fe"
+        ],
+        "trunkColors": [
+          "#0f172a",
+          "#1e1b4b"
+        ],
+        "activePreset": "prism",
+        "selectedTreeModelIds": []
+      },
+      "phases": [
+        {
+          "bg": "#38bdf8",
+          "fog": "#bae6fd",
+          "fogNear": 350,
+          "fogFar": 1000,
+          "amb": "#f0f9ff",
+          "ambI": 0.6,
+          "dir": "#fffbeb",
+          "dirI": 0.9,
+          "dirPos": {
+            "x": 250,
+            "y": 350,
+            "z": -200
+          },
+          "hemi": 0.45,
+          "sunI": 0.9,
+          "sunC": "#fffae0",
+          "sunPos": {
+            "x": 350,
+            "y": 400,
+            "z": -850
+          },
+          "sunScale": 1,
+          "starOp": 0
+        },
+        {
+          "bg": "#f472b6",
+          "fog": "#fed7aa",
+          "fogNear": 300,
+          "fogFar": 950,
+          "amb": "#fdf2f8",
+          "ambI": 0.5,
+          "dir": "#fb923c",
+          "dirI": 0.85,
+          "dirPos": {
+            "x": 0,
+            "y": 45,
+            "z": -600
+          },
+          "hemi": 0.35,
+          "sunI": 1,
+          "sunC": "#ff5511",
+          "sunPos": {
+            "x": 0,
+            "y": 15,
+            "z": -700
+          },
+          "sunScale": 1.6,
+          "starOp": 0.1
+        },
+        {
+          "bg": "#0f172a",
+          "fog": "#1e1b4b",
+          "fogNear": 300,
+          "fogFar": 980,
+          "amb": "#38bdf8",
+          "ambI": 0.7,
+          "dir": "#818cf8",
+          "dirI": 0.6,
+          "dirPos": {
+            "x": 100,
+            "y": 250,
+            "z": -100
+          },
+          "hemi": 0.4,
+          "sunI": 0,
+          "sunC": "#000000",
+          "sunPos": {
+            "x": 0,
+            "y": -300,
+            "z": -800
+          },
+          "sunScale": 0.1,
+          "starOp": 0.95
+        }
+      ]
+    }
+  },
+  "skyCastles": [
+    {
+      "id": "sky_castle_high_0",
+      "name": "Grand Celestial Palace",
+      "modelPath": "/Assets/Sky/fairytale_castle_high_compressed.glb",
+      "x": 132,
+      "y": 475,
+      "z": -517,
+      "rotationY": 1.5707963267948966,
+      "scale": 2.4,
+      "cloudRadius": 36,
+      "cloudPuffCount": 16,
+      "colors": {
+        "preset": "ruby",
+        "roofColor": "#e11d48",
+        "wallColor": "#fdf2f8",
+        "trimColor": "#f59e0b",
+        "crystalColor": "#ec4899",
+        "crystalBloom": 0.6
+      }
+    },
+    {
+      "id": "sky_castle_high_1",
+      "name": "Royal Citadel",
+      "modelPath": "/Assets/Sky/fairytale_castle_high_compressed (1).glb",
+      "x": 2667,
+      "y": 490,
+      "z": -675,
+      "rotationY": 2.2689280275926285,
+      "scale": 2.2,
+      "cloudRadius": 32,
+      "cloudPuffCount": 14,
+      "colors": {
+        "preset": "golden",
+        "roofColor": "#eab308",
+        "wallColor": "#fffbeb",
+        "trimColor": "#d97706",
+        "crystalColor": "#fbbf24",
+        "crystalBloom": 0.9
+      }
+    },
+    {
+      "id": "sky_castle_med_2_top",
+      "name": "Eastern Spire Gate",
+      "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (2).glb",
+      "x": 635,
+      "y": 505,
+      "z": 1370,
+      "rotationY": 2.9670597283903604,
+      "scale": 2.1,
+      "cloudRadius": 30,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "amethyst",
+        "roofColor": "#9333ea",
+        "wallColor": "#fdf4ff",
+        "trimColor": "#facc15",
+        "crystalColor": "#d946ef",
+        "crystalBloom": 0.8
+      }
+    },
+    {
+      "id": "sky_castle_med_0",
+      "name": "Northern Watch Spire",
+      "modelPath": "/Assets/Sky/fairytale_castle_med_compressed.glb",
+      "x": -567,
+      "y": 520,
+      "z": -58,
+      "rotationY": 3.665191429188092,
+      "scale": 2,
+      "cloudRadius": 28,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "sapphire",
+        "roofColor": "#2563eb",
+        "wallColor": "#f0fdf4",
+        "trimColor": "#93c5fd",
+        "crystalColor": "#06b6d4",
+        "crystalBloom": 0.7
+      }
+    },
+    {
+      "id": "sky_castle_med_2",
+      "name": "Eastern Spire Gate",
+      "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (2).glb",
+      "x": -1128,
+      "y": 475,
+      "z": 410,
+      "rotationY": 4.363323129985824,
+      "scale": 2.1,
+      "cloudRadius": 30,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "golden",
+        "roofColor": "#eab308",
+        "wallColor": "#fffbeb",
+        "trimColor": "#d97706",
+        "crystalColor": "#fbbf24",
+        "crystalBloom": 0.9
+      }
+    },
+    {
+      "id": "sky_castle_med_3",
+      "name": "South-East Bastion",
+      "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (3).glb",
+      "x": -1297,
+      "y": 490,
+      "z": -472,
+      "rotationY": 5.061454830783555,
+      "scale": 2.1,
+      "cloudRadius": 30,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "ruby",
+        "roofColor": "#e11d48",
+        "wallColor": "#fdf2f8",
+        "trimColor": "#f59e0b",
+        "crystalColor": "#ec4899",
+        "crystalBloom": 0.6
+      }
+    },
+    {
+      "id": "sky_castle_med_4",
+      "name": "Southern High Crown",
+      "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (4).glb",
+      "x": -873,
+      "y": 505,
+      "z": -1706,
+      "rotationY": 5.759586531581287,
+      "scale": 2.1,
+      "cloudRadius": 30,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "emerald",
+        "roofColor": "#059669",
+        "wallColor": "#f1f5f9",
+        "trimColor": "#b45309",
+        "crystalColor": "#34d399",
+        "crystalBloom": 0.7
+      }
+    },
+    {
+      "id": "sky_castle_med_5",
+      "name": "Royal Citadel",
+      "modelPath": "/Assets/Sky/fairytale_castle_high_compressed (1).glb",
+      "x": 208,
+      "y": 520,
+      "z": -1182,
+      "rotationY": 6.457718232379019,
+      "scale": 2.2,
+      "cloudRadius": 32,
+      "cloudPuffCount": 14,
+      "colors": {
+        "preset": "emerald",
+        "roofColor": "#059669",
+        "wallColor": "#f1f5f9",
+        "trimColor": "#b45309",
+        "crystalColor": "#34d399",
+        "crystalBloom": 0.7
+      }
+    },
+    {
+      "id": "sky_castle_med_6",
+      "name": "Western Citadel Gate",
+      "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (6).glb",
+      "x": 1057,
+      "y": 475,
+      "z": -887,
+      "rotationY": 7.155849933176751,
+      "scale": 2.1,
+      "cloudRadius": 30,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "amethyst",
+        "roofColor": "#9333ea",
+        "wallColor": "#fdf4ff",
+        "trimColor": "#facc15",
+        "crystalColor": "#d946ef",
+        "crystalBloom": 0.8
+      }
+    },
+    {
+      "id": "sky_castle_custom_1787166593937",
+      "name": "Castle Island 11",
+      "modelPath": "/Assets/Sky/fairytale_castle_high_compressed (1).glb",
+      "x": 109,
+      "y": 490,
+      "z": 813,
+      "rotationY": 0,
+      "scale": 2.2,
+      "cloudRadius": 30,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "amethyst",
+        "roofColor": "#9333ea",
+        "wallColor": "#fdf4ff",
+        "trimColor": "#facc15",
+        "crystalColor": "#d946ef",
+        "crystalBloom": 0.8
+      }
+    },
+    {
+      "id": "sky_castle_custom_1787166605368",
+      "name": "Castle Island 12",
+      "modelPath": "/Assets/Sky/fairytale_castle_high_compressed (1).glb",
+      "x": 886,
+      "y": 490,
+      "z": 719,
+      "rotationY": 0,
+      "scale": 2,
+      "cloudRadius": 30,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "ruby",
+        "roofColor": "#e11d48",
+        "wallColor": "#fdf2f8",
+        "trimColor": "#f59e0b",
+        "crystalColor": "#ec4899",
+        "crystalBloom": 0.6
+      }
+    }
+  ],
+  "skyCitadel": {
+    "layerFogEnabled": true,
+    "layerFogAltitude": 260,
+    "layerFogDensity": 1,
+    "layerFogColor": "#ffffff",
+    "layerFogEmissive": "#fff0f5",
+    "layerFogBloom": 0
+  }
+}

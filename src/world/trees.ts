@@ -5,7 +5,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { terrainHeightJS, getDominantBiome, BiomeId } from './noise';
 import { gradientMap } from './terrain';
-import { globalConfigManager } from '../core/config';
+import { globalConfigManager, ModelVegetationConfig, getDefaultModelConfig } from '../core/config';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -20,93 +20,123 @@ export type PresetKey = 'candy' | 'cotton' | 'lollipop' | 'mints' | 'berry' | 'a
 export interface ColorPreset {
     name: string;
     canopyColors: string[];
+    leafColors: string[];
     trunkColors: string[];
 }
 
 export const BIOME_VEG_PRESETS: Record<string, ColorPreset> = {
+    candyland_pastel: {
+        name: 'Candyland Pastel',
+        canopyColors: ['#f472b6', '#93c5fd', '#fde047', '#c084fc', '#ffffff', '#ffb6c1', '#a7f3d0'],
+        leafColors: ['#f43f5e', '#ffffff', '#38bdf8', '#c084fc', '#facc15'],
+        trunkColors: ['#ffffff', '#fffbf0', '#ffe4e6', '#f0f9ff']
+    },
+    original: {
+        name: 'Original Colors',
+        canopyColors: ['#ff1493', '#ff69b4', '#b026ff', '#8a2be2', '#00d2ff', '#00ff88', '#ffe600'],
+        leafColors: ['#22c55e', '#16a34a', '#15803d', '#4ade80'],
+        trunkColors: ['#5c3a21', '#451a03', '#78350f', '#ffffff']
+    },
     candy: {
         name: 'Candy Mix',
         canopyColors: ['#ff1493', '#ff69b4', '#b026ff', '#8a2be2', '#00d2ff', '#00ff88', '#ffe600', '#ff7700', '#ff1744'],
+        leafColors: ['#00ff88', '#10ff9e', '#00f5d4', '#4ade80', '#22c55e'],
         trunkColors: ['#ffffff', '#fff3e0', '#ffe4e6', '#e0f7fa']
     },
     cotton: {
         name: 'Cotton Candy',
         canopyColors: ['#00bfff', '#60a5fa', '#ff66cc', '#f43f5e', '#c084fc', '#ffaa00', '#ffea00'],
+        leafColors: ['#67e8f9', '#a5f3fc', '#a7f3d0', '#86efac'],
         trunkColors: ['#ffffff', '#ffeef5', '#e0f2fe']
     },
     lollipop: {
         name: 'Lollipop',
         canopyColors: ['#ff0033', '#ff6600', '#39ff14', '#00f0ff', '#9900ff', '#ff007f', '#ffd700'],
+        leafColors: ['#39ff14', '#00ff88', '#22c55e', '#16a34a'],
         trunkColors: ['#ffffff', '#ffedd5', '#ffd1dc', '#935116']
     },
     mints: {
         name: 'Spearmint & Ice',
         canopyColors: ['#00ff88', '#10ff9e', '#00f5d4', '#00c8ff', '#38bdf8', '#00e676'],
+        leafColors: ['#00ff88', '#10ff9e', '#34d399', '#6ee7b7'],
         trunkColors: ['#ffffff', '#d1fae5', '#e0f2fe']
     },
     berry: {
         name: 'Wild Berry',
         canopyColors: ['#ff0066', '#d90429', '#9d4edd', '#3a0ca3', '#d00000', '#f72585'],
+        leafColors: ['#059669', '#10b981', '#34d399', '#047857'],
         trunkColors: ['#ffffff', '#fce7f3', '#6a0dad']
     },
     archipelago: {
         name: 'Sakura & Cloud Blossom',
         canopyColors: ['#ff69b4', '#ffb6c1', '#fbcfe8', '#c4b5fd', '#93c5fd', '#ffffff'],
+        leafColors: ['#86efac', '#bbf7d0', '#6ee7b7', '#4ade80'],
         trunkColors: ['#fff3e0', '#ffe4e6', '#d6d3d1']
     },
     archipelago_crystal: {
         name: 'Cyan Crystal Flora',
         canopyColors: ['#00f5d4', '#38bdf8', '#7dd3fc', '#bae6fd', '#a7f3d0'],
+        leafColors: ['#38bdf8', '#7dd3fc', '#a7f3d0', '#6ee7b7'],
         trunkColors: ['#ffffff', '#e2e8f0', '#cbd5e1']
     },
     archipelago_lavender: {
         name: 'Lavender Mist',
         canopyColors: ['#a855f7', '#c084fc', '#e9d5ff', '#d8b4fe', '#818cf8'],
+        leafColors: ['#c084fc', '#a855f7', '#86efac', '#a7f3d0'],
         trunkColors: ['#faf5ff', '#f3e8ff', '#e9d5ff']
     },
     geothermal: {
         name: 'Ash & Lava Ember',
         canopyColors: ['#ff3300', '#ff7700', '#ffaa00', '#cc1100', '#f59e0b'],
+        leafColors: ['#84cc16', '#a3e635', '#65a30d', '#4d7c0f'],
         trunkColors: ['#27272a', '#3f3f46', '#1c1917']
     },
     geothermal_magma: {
         name: 'Molten Magma',
         canopyColors: ['#ef4444', '#dc2626', '#b91c1c', '#f97316', '#fbbf24'],
+        leafColors: ['#ca8a04', '#eab308', '#84cc16', '#65a30d'],
         trunkColors: ['#18181b', '#292524', '#44403c']
     },
     geothermal_sulfur: {
         name: 'Sulfur & Caldera Gold',
         canopyColors: ['#eab308', '#facc15', '#fef08a', '#ca8a04', '#84cc16'],
+        leafColors: ['#84cc16', '#a3e635', '#65a30d', '#ca8a04'],
         trunkColors: ['#3f3f46', '#52525b', '#27272a']
     },
     estuary: {
         name: 'Bioluminescent Coral',
         canopyColors: ['#00f5d4', '#00bbf9', '#f72585', '#7209b7', '#4cc9f0', '#10b981'],
+        leafColors: ['#00f5d4', '#10b981', '#34d399', '#00e676'],
         trunkColors: ['#ffffff', '#e0f2fe', '#fce7f3']
     },
     estuary_neon: {
         name: 'Neon Lagoon',
         canopyColors: ['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981'],
+        leafColors: ['#10b981', '#06b6d4', '#00ff88', '#22c55e'],
         trunkColors: ['#0f172a', '#1e293b', '#334155']
     },
     estuary_spirit: {
         name: 'Spirit Blossom',
         canopyColors: ['#f472b6', '#38bdf8', '#818cf8', '#34d399', '#fbcfe8'],
+        leafColors: ['#34d399', '#6ee7b7', '#a7f3d0', '#fbcfe8'],
         trunkColors: ['#fdf4ff', '#fae8ff', '#f5d0fe']
     },
     redwood: {
         name: 'Ancient Giant Redwood',
         canopyColors: ['#15803d', '#166534', '#14532d', '#22c55e', '#4ade80'],
+        leafColors: ['#15803d', '#166534', '#22c55e', '#14532d'],
         trunkColors: ['#78350f', '#451a03', '#522e18']
     },
     redwood_golden: {
         name: 'Golden Forest',
         canopyColors: ['#eab308', '#ca8a04', '#a16207', '#65a30d', '#84cc16'],
+        leafColors: ['#65a30d', '#84cc16', '#a3e635', '#a16207'],
         trunkColors: ['#5c2c10', '#431407', '#78350f']
     },
     redwood_conifer: {
         name: 'Deep Conifer',
         canopyColors: ['#064e3b', '#065f46', '#047857', '#0f766e', '#115e59'],
+        leafColors: ['#065f46', '#047857', '#064e3b', '#0f766e'],
         trunkColors: ['#3b1c0b', '#2e1407', '#4a2511']
     }
 };
@@ -129,13 +159,178 @@ function cellSeed(cx: number, cz: number, offset: number = 0): number {
     return Math.abs(h) | 1;
 }
 
-// ── GLB Geometry Loader (Split Trunk vs Canopy) ────────────────────────────────
+function strHash(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash) | 1;
+}
+
+// ── GLB Geometry Loader (Accurate Stem/Trunk, Leaf, Flower & Original Colors) ─
+
+function extractVertexColorFromTexture(
+    img: any,
+    u: number,
+    v: number,
+    fallback: [number, number, number]
+): [number, number, number] {
+    if (!img) return fallback;
+    const w = img.width || (img.naturalWidth || 64);
+    const h = img.height || (img.naturalHeight || 64);
+    if (!w || !h) return fallback;
+
+    let canvas = img._cachedCanvas;
+    let ctx = img._cachedCtx;
+    if (!canvas) {
+        try {
+            canvas = document.createElement('canvas');
+            canvas.width = Math.min(w, 256);
+            canvas.height = Math.min(h, 256);
+            ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (ctx) {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                img._cachedCanvas = canvas;
+                img._cachedCtx = ctx;
+            }
+        } catch {
+            return fallback;
+        }
+    }
+    if (!ctx) return fallback;
+    const px = Math.max(0, Math.min(canvas.width - 1, Math.floor(u * canvas.width)));
+    const py = Math.max(0, Math.min(canvas.height - 1, Math.floor((1 - v) * canvas.height)));
+    try {
+        const d = ctx.getImageData(px, py, 1, 1).data;
+        return [d[0] / 255, d[1] / 255, d[2] / 255];
+    } catch {
+        return fallback;
+    }
+}
+
+function attachAttributes(geo: THREE.BufferGeometry, partType: number, defaultColor: [number, number, number]): THREE.BufferGeometry {
+    const nonIndexed = geo.toNonIndexed ? geo.toNonIndexed() : geo;
+    const count = nonIndexed.attributes.position.count;
+    if (!nonIndexed.attributes.normal) nonIndexed.computeVertexNormals();
+    if (!nonIndexed.attributes.uv) {
+        nonIndexed.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(count * 2), 2));
+    }
+    const partTypes = new Float32Array(count).fill(partType);
+    nonIndexed.setAttribute('aPartType', new THREE.BufferAttribute(partTypes, 1));
+
+    const colors = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+        colors[i * 3] = defaultColor[0];
+        colors[i * 3 + 1] = defaultColor[1];
+        colors[i * 3 + 2] = defaultColor[2];
+    }
+    nonIndexed.setAttribute('aOriginalColor', new THREE.BufferAttribute(colors, 3));
+    return nonIndexed;
+}
+
+function attachStripedAttributes(geo: THREE.BufferGeometry, partType: number): THREE.BufferGeometry {
+    const nonIndexed = geo.toNonIndexed ? geo.toNonIndexed() : geo;
+    const count = nonIndexed.attributes.position.count;
+    if (!nonIndexed.attributes.normal) nonIndexed.computeVertexNormals();
+    if (!nonIndexed.attributes.uv) {
+        nonIndexed.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(count * 2), 2));
+    }
+    const partTypes = new Float32Array(count).fill(partType);
+    nonIndexed.setAttribute('aPartType', new THREE.BufferAttribute(partTypes, 1));
+
+    const pos = nonIndexed.attributes.position;
+    const colors = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+        const x = pos.getX(i);
+        const y = pos.getY(i);
+        const z = pos.getZ(i);
+        const stripe = Math.sin((y * 5.0 + Math.atan2(z, x) * 2.0) * Math.PI * 0.5);
+        if (stripe > 0.0) {
+            colors[i * 3] = 1.0;
+            colors[i * 3 + 1] = 1.0;
+            colors[i * 3 + 2] = 1.0;
+        } else {
+            colors[i * 3] = 0.95;
+            colors[i * 3 + 1] = 0.35;
+            colors[i * 3 + 2] = 0.50;
+        }
+    }
+    nonIndexed.setAttribute('aOriginalColor', new THREE.BufferAttribute(colors, 3));
+    return nonIndexed;
+}
+
+function buildSpiralLollipopGeometry(): THREE.BufferGeometry {
+    const stick = attachAttributes(new THREE.CylinderGeometry(0.12, 0.14, 5.0, 16).translate(0, 2.5, 0), 0.0, [1, 1, 1]);
+    const disc = attachAttributes(new THREE.CylinderGeometry(2.0, 2.0, 0.45, 32).rotateX(Math.PI / 2).translate(0, 5.0, 0), 2.0, [0.96, 0.50, 0.72]);
+    const ring = attachAttributes(new THREE.TorusGeometry(1.5, 0.28, 16, 32).translate(0, 5.0, 0), 2.0, [0.70, 0.85, 1.0]);
+    const center = attachAttributes(new THREE.SphereGeometry(0.65, 16, 16).scale(1, 1, 0.5).translate(0, 5.0, 0), 2.0, [1.0, 0.95, 0.65]);
+    const merged = mergeGeometries([stick, disc, ring, center], false) || disc;
+    return merged;
+}
+
+function buildSphericalLollipopGeometry(): THREE.BufferGeometry {
+    const stick = attachAttributes(new THREE.CylinderGeometry(0.12, 0.14, 4.5, 16).translate(0, 2.25, 0), 0.0, [1, 1, 1]);
+    const sphere = attachAttributes(new THREE.SphereGeometry(1.65, 24, 20).translate(0, 4.6, 0), 2.0, [0.85, 0.65, 0.98]);
+    const collar = attachAttributes(new THREE.TorusGeometry(0.5, 0.16, 12, 20).rotateX(Math.PI / 2).translate(0, 3.2, 0), 1.0, [1.0, 1.0, 1.0]);
+    const merged = mergeGeometries([stick, sphere, collar], false) || sphere;
+    return merged;
+}
+
+function buildCandyCaneGeometry(): THREE.BufferGeometry {
+    const shaft = new THREE.CylinderGeometry(0.14, 0.14, 2.8, 16).translate(0, 1.4, 0);
+    const hook = new THREE.TorusGeometry(0.6, 0.14, 16, 24, Math.PI).rotateZ(-Math.PI).translate(0.6, 2.8, 0);
+    const tip = new THREE.SphereGeometry(0.14, 12, 12).translate(1.2, 2.8, 0);
+    const base = new THREE.SphereGeometry(0.14, 12, 12).translate(0, 0.05, 0);
+    const nonAttrMerged = mergeGeometries([shaft, hook, tip, base], false) || shaft;
+    const finalGeo = attachStripedAttributes(nonAttrMerged, 2.0);
+    return finalGeo;
+}
+
+function buildCandyCaneClusterGeometry(): THREE.BufferGeometry {
+    const cane1 = buildCandyCaneGeometry();
+    
+    const cane2 = buildCandyCaneGeometry();
+    cane2.scale(0.85, 0.85, 0.85);
+    cane2.rotateZ(0.15);
+    cane2.rotateY(2.1);
+    cane2.translate(0.45, 0, 0.35);
+
+    const cane3 = buildCandyCaneGeometry();
+    cane3.scale(0.75, 0.75, 0.75);
+    cane3.rotateZ(-0.12);
+    cane3.rotateY(4.2);
+    cane3.translate(-0.4, 0, -0.25);
+
+    const merged = mergeGeometries([cane1, cane2, cane3], false) || cane1;
+    return merged;
+}
 
 async function loadTreeGeometries(
     source: string | ArrayBuffer,
     loader: GLTFLoader,
     customScale: number = 1.0
-): Promise<{ trunkGeo: THREE.BufferGeometry; canopyGeo: THREE.BufferGeometry; treeGeo: THREE.BufferGeometry }> {
+): Promise<{ trunkGeo: THREE.BufferGeometry; canopyGeo: THREE.BufferGeometry; treeGeo: THREE.BufferGeometry; map?: THREE.Texture }> {
+    if (typeof source === 'string' && source.startsWith('procedural:')) {
+        const type = source.replace('procedural:', '');
+        let geo: THREE.BufferGeometry;
+        if (type === 'candy_lollipop_spiral') {
+            geo = buildSpiralLollipopGeometry();
+        } else if (type === 'candy_lollipop_sphere') {
+            geo = buildSphericalLollipopGeometry();
+        } else if (type === 'candy_cane_single') {
+            geo = buildCandyCaneGeometry();
+        } else if (type === 'candy_cane_cluster') {
+            geo = buildCandyCaneClusterGeometry();
+        } else {
+            geo = buildSpiralLollipopGeometry();
+        }
+        if (customScale !== 1.0) {
+            geo.scale(customScale, customScale, customScale);
+        }
+        return { treeGeo: geo, trunkGeo: geo, canopyGeo: geo };
+    }
+
     let gltf: any;
     if (typeof source === 'string') {
         const cleanPath = source.replace(/^\.?\//, '');
@@ -146,23 +341,18 @@ async function loadTreeGeometries(
             loader.parse(source, '', (g) => resolve(g), (err) => reject(err));
         });
     }
-    const trunkGeos: THREE.BufferGeometry[] = [];
-    const canopyGeos: THREE.BufferGeometry[] = [];
     gltf.scene.updateMatrixWorld(true);
 
     const allMeshes: THREE.Mesh[] = [];
-    let modelMinY = Infinity;
-    let modelMaxY = -Infinity;
+    let modelMinY = Infinity, modelMaxY = -Infinity;
+    let modelMinX = Infinity, modelMaxX = -Infinity;
+    let modelMinZ = Infinity, modelMaxZ = -Infinity;
 
-    const hasNamedRoots = gltf.scene.children.some(c => c.name && c.name.trim().length > 0);
+    let primaryMap: THREE.Texture | undefined = undefined;
 
-    gltf.scene.traverse((child) => {
+    gltf.scene.traverse((child: any) => {
         if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
-            // Ignore unnamed orphan root meshes when named tree nodes exist
-            if (hasNamedRoots && child.parent === gltf.scene && (!child.name || child.name.trim() === '')) {
-                return;
-            }
             mesh.geometry.computeBoundingBox();
             const bb = mesh.geometry.boundingBox;
             if (bb) {
@@ -170,12 +360,25 @@ async function loadTreeGeometries(
                 const max = bb.max.clone().applyMatrix4(mesh.matrixWorld);
                 modelMinY = Math.min(modelMinY, min.y, max.y);
                 modelMaxY = Math.max(modelMaxY, min.y, max.y);
+                modelMinX = Math.min(modelMinX, min.x, max.x);
+                modelMaxX = Math.max(modelMaxX, min.x, max.x);
+                modelMinZ = Math.min(modelMinZ, min.z, max.z);
+                modelMaxZ = Math.max(modelMaxZ, min.z, max.z);
+            }
+            if (!primaryMap) {
+                const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+                if (mat && (mat as THREE.MeshStandardMaterial).map) {
+                    primaryMap = (mat as THREE.MeshStandardMaterial).map || undefined;
+                }
             }
             allMeshes.push(mesh);
         }
     });
 
     const modelHeight = Math.max(0.001, modelMaxY - modelMinY);
+    const modelCenterX = (modelMinX + modelMaxX) / 2;
+    const modelCenterZ = (modelMinZ + modelMaxZ) / 2;
+    const modelWidth = Math.max(0.001, Math.hypot(modelMaxX - modelMinX, modelMaxZ - modelMinZ));
 
     interface SubPart {
         geo: THREE.BufferGeometry;
@@ -193,21 +396,32 @@ async function loadTreeGeometries(
         if (worldGeo.groups && worldGeo.groups.length > 1) {
             for (const g of worldGeo.groups) {
                 const subGeo = new THREE.BufferGeometry();
-                subGeo.setAttribute('position', worldGeo.getAttribute('position'));
-                subGeo.setAttribute('normal', worldGeo.getAttribute('normal'));
-                if (worldGeo.getAttribute('uv')) subGeo.setAttribute('uv', worldGeo.getAttribute('uv'));
+                const pos = worldGeo.getAttribute('position') as THREE.BufferAttribute;
+                const norm = worldGeo.getAttribute('normal') as THREE.BufferAttribute;
+                const uv = worldGeo.getAttribute('uv') as THREE.BufferAttribute | undefined;
+                const col = worldGeo.getAttribute('color') as THREE.BufferAttribute | undefined;
 
                 if (worldGeo.index) {
                     const indices = worldGeo.index.array.slice(g.start, g.start + g.count);
+                    subGeo.setAttribute('position', pos);
+                    if (norm) subGeo.setAttribute('normal', norm);
+                    if (uv) subGeo.setAttribute('uv', uv);
+                    if (col) subGeo.setAttribute('color', col);
                     subGeo.setIndex(new THREE.BufferAttribute(indices, 1));
                 } else {
-                    const pos = worldGeo.getAttribute('position') as THREE.BufferAttribute;
-                    const norm = worldGeo.getAttribute('normal') as THREE.BufferAttribute;
                     const pArr = pos.array.slice(g.start * 3, (g.start + g.count) * 3);
                     subGeo.setAttribute('position', new THREE.BufferAttribute(pArr, 3));
                     if (norm) {
                         const nArr = norm.array.slice(g.start * 3, (g.start + g.count) * 3);
                         subGeo.setAttribute('normal', new THREE.BufferAttribute(nArr, 3));
+                    }
+                    if (uv) {
+                        const uvArr = uv.array.slice(g.start * 2, (g.start + g.count) * 2);
+                        subGeo.setAttribute('uv', new THREE.BufferAttribute(uvArr, 2));
+                    }
+                    if (col) {
+                        const colArr = col.array.slice(g.start * 3, (g.start + g.count) * 3);
+                        subGeo.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
                     }
                 }
                 const nonIndexed = subGeo.toNonIndexed ? subGeo.toNonIndexed() : subGeo;
@@ -217,8 +431,9 @@ async function loadTreeGeometries(
         } else {
             const clean = new THREE.BufferGeometry();
             clean.setAttribute('position', worldGeo.getAttribute('position'));
-            clean.setAttribute('normal', worldGeo.getAttribute('normal'));
+            if (worldGeo.getAttribute('normal')) clean.setAttribute('normal', worldGeo.getAttribute('normal'));
             if (worldGeo.getAttribute('uv')) clean.setAttribute('uv', worldGeo.getAttribute('uv'));
+            if (worldGeo.getAttribute('color')) clean.setAttribute('color', worldGeo.getAttribute('color'));
             if (worldGeo.index) clean.setIndex(worldGeo.index);
             const nonIndexed = clean.toNonIndexed ? clean.toNonIndexed() : clean;
             const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
@@ -226,130 +441,167 @@ async function loadTreeGeometries(
         }
     }
 
-    if (subParts.length > 1) {
-        for (const sp of subParts) {
-            const mat = sp.mat;
-            const matName = mat ? mat.name : '';
-            const name = (sp.mesh.name + ' ' + (sp.mesh.parent ? sp.mesh.parent.name : '') + ' ' + matName).toLowerCase();
+    // Process every subpart and assign aPartType, aOriginalColor, UVs, and normals
+    const processedGeos: THREE.BufferGeometry[] = [];
 
-            // 1. Explicit keyword check
-            const isTrunkName = name.includes('wood') || name.includes('stick') || name.includes('trunk') || 
-                                name.includes('branch') || name.includes('bark') || name.includes('stem') || 
-                                name.includes('brown') || name.includes('holz') || name.includes('stamm');
-            const isCanopyName = name.includes('leaf') || name.includes('leaves') || name.includes('canopy') || 
-                                 name.includes('bubble') || name.includes('crown') || name.includes('foliage') || 
-                                 name.includes('yellow') || name.includes('green') || name.includes('sphere') || 
-                                 name.includes('crone') || name.includes('krone') || name.includes('laub');
+    for (const sp of subParts) {
+        const mat = sp.mat;
+        const matName = (mat ? mat.name : '').toLowerCase();
+        const meshName = (sp.mesh ? sp.mesh.name : '').toLowerCase();
+        const parentName = (sp.mesh && sp.mesh.parent ? sp.mesh.parent.name : '').toLowerCase();
+        const name = `${meshName} ${parentName} ${matName}`;
 
-            if (isTrunkName && !isCanopyName) {
-                trunkGeos.push(sp.geo);
-                continue;
-            }
-            if (isCanopyName && !isTrunkName) {
-                canopyGeos.push(sp.geo);
-                continue;
-            }
+        const isExplicitFlower = name.includes('flower') || name.includes('flowers') || name.includes('petal') || 
+                                 name.includes('blossom') || name.includes('bloom') ||
+                                 name.includes('palettematerial002') || name.includes('palettematerial003') || 
+                                 name.includes('palettematerial004') || name.includes('palettematerial005') ||
+                                 name.includes('roof') || name.includes('spire') || name.includes('dome') || 
+                                 name.includes('sail') || name.includes('flag') || name.includes('banner');
 
-            // 2. Material color check
-            const col = (mat as THREE.MeshStandardMaterial)?.color;
-            if (col) {
-                if (col.r > col.g * 1.15 && col.b < col.r * 0.85) {
-                    trunkGeos.push(sp.geo);
-                    continue;
-                } else if (col.g > col.r * 1.05 || (col.g > 0.35 && col.b > col.r)) {
-                    canopyGeos.push(sp.geo);
-                    continue;
-                }
-            }
+        const isExplicitTrunk = name.includes('wood') || name.includes('trunk') || name.includes('stick') || 
+                                name.includes('branch') || name.includes('bark') || name.includes('wood_trunk') ||
+                                name.includes('palettematerial001') || name.includes('hull') || name.includes('keel') || 
+                                name.includes('mast') || name.includes('wall') || name.includes('tower') || 
+                                name.includes('base') || name.includes('foundation') || name.includes('stone') || 
+                                name.includes('rock') || name.includes('cube') || name.includes('cylind');
 
-            // 3. Position-based check
-            sp.geo.computeBoundingBox();
-            const bb = sp.geo.boundingBox!;
-            const meshCenterY = (bb.min.y + bb.max.y) / 2;
-            const relY = (meshCenterY - modelMinY) / modelHeight;
-            if (relY < 0.35 || (bb.min.y <= modelMinY + 0.05 * modelHeight && bb.max.y < modelMinY + 0.55 * modelHeight)) {
-                trunkGeos.push(sp.geo);
-            } else {
-                canopyGeos.push(sp.geo);
-            }
-        }
-    }
+        const isExplicitLeaves = name.includes('leaves_canopy') || name.includes('leaves_large') || 
+                                 name.includes('leaves_normaltree') || name.includes('leaves_hanging') ||
+                                 name.includes('leaf') || name.includes('leaves') || name.includes('foliage') || 
+                                 name.includes('frond') || name.includes('clover') || name.includes('tree.002') ||
+                                 name.includes('tree.1') || name.includes('tree.001') || name.includes('crone');
 
-    // Fallback or single-mesh model: if either trunkGeos or canopyGeos is empty, split triangles by height
-    if (trunkGeos.length === 0 || canopyGeos.length === 0) {
-        trunkGeos.length = 0;
-        canopyGeos.length = 0;
+        const isCastle = name.includes('castle');
+        const isShip = name.includes('ship') || name.includes('boat') || name.includes('galleon');
 
-        const allGeos = subParts.map(sp => sp.geo);
-        const mergedAll = allGeos.length === 1 ? allGeos[0] : (mergeGeometries(allGeos, false) || allGeos[0]);
-        const nonIndexed = mergedAll.toNonIndexed ? mergedAll.toNonIndexed() : mergedAll;
-        const pos = nonIndexed.attributes.position as THREE.BufferAttribute;
-        const norm = nonIndexed.attributes.normal as THREE.BufferAttribute | undefined;
-        const splitY = modelMinY + modelHeight * 0.30;
+        const geo = sp.geo;
+        const pos = geo.attributes.position as THREE.BufferAttribute;
+        const norm = geo.attributes.normal as THREE.BufferAttribute | undefined;
+        const uv = geo.attributes.uv as THREE.BufferAttribute | undefined;
+        const colAttr = geo.attributes.color as THREE.BufferAttribute | undefined;
+        const vertCount = pos.count;
 
-        const trunkPositions: number[] = [];
-        const canopyPositions: number[] = [];
-        const trunkNormals: number[] = [];
-        const canopyNormals: number[] = [];
+        const partTypes = new Float32Array(vertCount);
+        const originalColors = new Float32Array(vertCount * 3);
 
-        const triCount = pos.count / 3;
-        for (let i = 0; i < triCount; i++) {
-            const i0 = i * 3, i1 = i * 3 + 1, i2 = i * 3 + 2;
-            const y0 = pos.getY(i0), y1 = pos.getY(i1), y2 = pos.getY(i2);
-            const avgY = (y0 + y1 + y2) / 3;
+        const stdMat = mat as (THREE.MeshStandardMaterial | THREE.MeshBasicMaterial | undefined);
+        const mapImg = (stdMat && stdMat.map && (stdMat.map as any).image) ? (stdMat.map as any).image : undefined;
 
-            const targetPos = avgY < splitY ? trunkPositions : canopyPositions;
-            const targetNorm = avgY < splitY ? trunkNormals : canopyNormals;
+        for (let i = 0; i < vertCount; i++) {
+            const x = pos.getX(i);
+            const y = pos.getY(i);
+            const z = pos.getZ(i);
 
-            for (const idx of [i0, i1, i2]) {
-                targetPos.push(pos.getX(idx), pos.getY(idx), pos.getZ(idx));
-                if (norm) {
-                    targetNorm.push(norm.getX(idx), norm.getY(idx), norm.getZ(idx));
+            const relY = Math.max(0, Math.min(1, (y - modelMinY) / modelHeight));
+            const horizDist = Math.hypot(x - modelCenterX, z - modelCenterZ);
+            const relHoriz = horizDist / (modelWidth * 0.5);
+
+            let partType = 0.0;
+            if (isExplicitFlower) {
+                partType = 2.0; // Flower / Petal / Canopy / Roof / Sail
+            } else if (isExplicitTrunk && !isExplicitLeaves) {
+                partType = 0.0; // Stem / Trunk / Wall / Hull
+            } else if (isExplicitLeaves) {
+                if (name.includes('flower') || name.includes('bush') || name.includes('normaltree') || name.includes('hanging') || name.includes('frond') || name.includes('clover')) {
+                    partType = 1.0; // Leaf / Foliage / Frond
                 } else {
-                    targetNorm.push(0, 1, 0);
+                    partType = 2.0; // Tree Canopy
                 }
+            } else if (isCastle) {
+                if (relY > 0.65) {
+                    partType = 2.0; // Roofs & Spires
+                } else if (relY > 0.32) {
+                    partType = 1.0; // Accent & Trim
+                } else {
+                    partType = 0.0; // Building & Walls
+                }
+            } else if (isShip) {
+                if (relY > 0.60) {
+                    partType = 2.0; // Sails & Rigging
+                } else if (relY > 0.30) {
+                    partType = 1.0; // Cabin & Deck
+                } else {
+                    partType = 0.0; // Hull & Keel
+                }
+            } else if (subParts.length === 1) {
+                // Single-mesh models
+                if (name.includes('flower')) {
+                    if (relY > 0.60) {
+                        partType = 2.0; // Flower head / petals
+                    } else if (relHoriz > 0.16) {
+                        partType = 1.0; // Ground / stem leaves
+                    } else {
+                        partType = 0.0; // Stem stalk
+                    }
+                } else if (name.includes('clover')) {
+                    if (relY < 0.28) {
+                        partType = 0.0; // Clover stalk
+                    } else {
+                        partType = 1.0; // Clover leaves
+                    }
+                } else if (name.includes('tree') || name.includes('bigtree')) {
+                    if (relY < 0.35) {
+                        partType = 0.0; // Trunk
+                    } else {
+                        partType = 2.0; // Canopy
+                    }
+                } else {
+                    partType = relY < 0.35 ? 0.0 : (relY > 0.70 ? 2.0 : 1.0);
+                }
+            } else {
+                partType = relY < 0.35 ? 0.0 : (relY > 0.70 ? 2.0 : 1.0);
             }
+
+            partTypes[i] = partType;
+
+            // Determine Original Color
+            let r = 0.6, g = 0.6, b = 0.6;
+            if (colAttr) {
+                r = colAttr.getX(i);
+                g = colAttr.getY(i);
+                b = colAttr.getZ(i);
+            } else if (mapImg && uv) {
+                const uVal = uv.getX(i);
+                const vVal = uv.getY(i);
+                const fallback: [number, number, number] = partType === 0.0 ? [0.45, 0.28, 0.18] : (partType === 1.0 ? [0.18, 0.55, 0.22] : [0.95, 0.35, 0.45]);
+                [r, g, b] = extractVertexColorFromTexture(mapImg, uVal, vVal, fallback);
+            } else if (stdMat && stdMat.color) {
+                r = stdMat.color.r;
+                g = stdMat.color.g;
+                b = stdMat.color.b;
+            } else {
+                if (partType === 0.0) { r = 0.45; g = 0.28; b = 0.18; }
+                else if (partType === 1.0) { r = 0.18; g = 0.55; b = 0.22; }
+                else { r = 0.95; g = 0.35; b = 0.45; }
+            }
+
+            originalColors[i * 3] = r;
+            originalColors[i * 3 + 1] = g;
+            originalColors[i * 3 + 2] = b;
         }
 
-        if (trunkPositions.length > 0) {
-            const tGeo = new THREE.BufferGeometry();
-            tGeo.setAttribute('position', new THREE.Float32BufferAttribute(trunkPositions, 3));
-            tGeo.setAttribute('normal', new THREE.Float32BufferAttribute(trunkNormals, 3));
-            trunkGeos.push(tGeo);
-        }
-        if (canopyPositions.length > 0) {
-            const cGeo = new THREE.BufferGeometry();
-            cGeo.setAttribute('position', new THREE.Float32BufferAttribute(canopyPositions, 3));
-            cGeo.setAttribute('normal', new THREE.Float32BufferAttribute(canopyNormals, 3));
-            canopyGeos.push(cGeo);
-        }
-    }
-
-    // Helper to sanitize geometry attributes to only position and normal
-    function sanitizeGeo(geo: THREE.BufferGeometry): THREE.BufferGeometry {
-        const clean = new THREE.BufferGeometry();
-        if (geo.attributes.position) {
-            clean.setAttribute('position', geo.attributes.position);
-        }
-        if (geo.attributes.normal) {
-            clean.setAttribute('normal', geo.attributes.normal);
+        const cleanGeo = new THREE.BufferGeometry();
+        cleanGeo.setAttribute('position', pos);
+        if (norm) {
+            cleanGeo.setAttribute('normal', norm);
         } else {
-            clean.computeVertexNormals();
+            cleanGeo.computeVertexNormals();
         }
-        return clean;
+        if (uv) {
+            cleanGeo.setAttribute('uv', uv);
+        } else {
+            cleanGeo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(vertCount * 2), 2));
+        }
+        cleanGeo.setAttribute('aPartType', new THREE.Float32BufferAttribute(partTypes, 1));
+        cleanGeo.setAttribute('aOriginalColor', new THREE.Float32BufferAttribute(originalColors, 3));
+        processedGeos.push(cleanGeo);
     }
 
-    const sanitizedTrunks = trunkGeos.map(g => sanitizeGeo(g));
-    const sanitizedCanopies = canopyGeos.map(g => sanitizeGeo(g));
+    const mergedTree = processedGeos.length === 1 ? processedGeos[0] : (mergeGeometries(processedGeos, false) || processedGeos[0]);
 
-    const mergedTrunk = sanitizedTrunks.length > 0 ? (sanitizedTrunks.length === 1 ? sanitizedTrunks[0] : (mergeGeometries(sanitizedTrunks, false) || sanitizedTrunks[0])) : new THREE.BufferGeometry();
-    const mergedCanopy = sanitizedCanopies.length > 0 ? (sanitizedCanopies.length === 1 ? sanitizedCanopies[0] : (mergeGeometries(sanitizedCanopies, false) || sanitizedCanopies[0])) : new THREE.BufferGeometry();
-
-    const combined = mergeGeometries([sanitizeGeo(mergedTrunk), sanitizeGeo(mergedCanopy)], false);
-
-    if (combined && combined.attributes.position) {
-        combined.computeBoundingBox();
-        const box = combined.boundingBox!;
+    if (mergedTree && mergedTree.attributes.position) {
+        mergedTree.computeBoundingBox();
+        const box = mergedTree.boundingBox!;
         const size = new THREE.Vector3();
         box.getSize(size);
         const center = new THREE.Vector3();
@@ -359,47 +611,14 @@ async function loadTreeGeometries(
         const baseScaleFactor = size.y > 0.001 ? 6.0 / size.y : 1.0;
         const scaleFactor = baseScaleFactor * customScale;
 
-        if (mergedTrunk.attributes.position) {
-            mergedTrunk.translate(-center.x, -bottomY, -center.z);
-            mergedTrunk.scale(scaleFactor, scaleFactor, scaleFactor);
-            mergedTrunk.computeVertexNormals();
-        }
-        if (mergedCanopy.attributes.position) {
-            mergedCanopy.translate(-center.x, -bottomY, -center.z);
-            mergedCanopy.scale(scaleFactor, scaleFactor, scaleFactor);
-            mergedCanopy.computeVertexNormals();
+        mergedTree.translate(-center.x, -bottomY, -center.z);
+        mergedTree.scale(scaleFactor, scaleFactor, scaleFactor);
+        if (!mergedTree.getAttribute('normal')) {
+            mergedTree.computeVertexNormals();
         }
     }
 
-    if (!mergedTrunk.attributes.position) {
-        mergedTrunk.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0,0,0, 0,0,0, 0,0,0]), 3));
-        mergedTrunk.setAttribute('normal', new THREE.BufferAttribute(new Float32Array([0,1,0, 0,1,0, 0,1,0]), 3));
-    }
-    if (!mergedCanopy.attributes.position) {
-        mergedCanopy.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0,0,0, 0,0,0, 0,0,0]), 3));
-        mergedCanopy.setAttribute('normal', new THREE.BufferAttribute(new Float32Array([0,1,0, 0,1,0, 0,1,0]), 3));
-    }
-
-    const trunkVertexCount = mergedTrunk.attributes.position.count;
-    const canopyVertexCount = mergedCanopy.attributes.position.count;
-
-    mergedTrunk.setAttribute('aIsCanopy', new THREE.Float32BufferAttribute(new Float32Array(trunkVertexCount).fill(0.0), 1));
-    mergedCanopy.setAttribute('aIsCanopy', new THREE.Float32BufferAttribute(new Float32Array(canopyVertexCount).fill(1.0), 1));
-
-    // Ensure clean attribute set on both before final merge
-    const finalTrunk = new THREE.BufferGeometry();
-    finalTrunk.setAttribute('position', mergedTrunk.attributes.position);
-    finalTrunk.setAttribute('normal', mergedTrunk.attributes.normal);
-    finalTrunk.setAttribute('aIsCanopy', mergedTrunk.attributes.aIsCanopy);
-
-    const finalCanopy = new THREE.BufferGeometry();
-    finalCanopy.setAttribute('position', mergedCanopy.attributes.position);
-    finalCanopy.setAttribute('normal', mergedCanopy.attributes.normal);
-    finalCanopy.setAttribute('aIsCanopy', mergedCanopy.attributes.aIsCanopy);
-
-    const mergedTree = mergeGeometries([finalTrunk, finalCanopy], false) || finalTrunk;
-
-    return { treeGeo: mergedTree, trunkGeo: finalTrunk, canopyGeo: finalCanopy };
+    return { treeGeo: mergedTree, trunkGeo: mergedTree, canopyGeo: mergedTree, map: primaryMap };
 }
 
 export interface TreeCatalogItem {
@@ -413,41 +632,66 @@ export interface TreeCatalogItem {
 }
 
 export const TREE_CATALOG: TreeCatalogItem[] = [
-    // Cartoon Trees (16 models)
-    { id: 'cartoon_1', name: 'Cartoon Oak 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_1.glb', previewImage: '/Assets/TreePreviews/cartoon_1.png', scaleMultiplier: 1.0, description: 'Lush round canopy oak' },
-    { id: 'cartoon_2', name: 'Cartoon Oak 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_2.glb', previewImage: '/Assets/TreePreviews/cartoon_2.png', scaleMultiplier: 1.0, description: 'Branching stylized oak' },
-    { id: 'cartoon_3', name: 'Cone Canopy', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_3.glb', previewImage: '/Assets/TreePreviews/cartoon_3.png', scaleMultiplier: 1.0, description: 'Tapered conical tree' },
-    { id: 'cartoon_4', name: 'Tall Columnar', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_4.glb', previewImage: '/Assets/TreePreviews/cartoon_4.png', scaleMultiplier: 1.0, description: 'Tall pillar tree' },
-    { id: 'cartoon_5', name: 'Cloud Canopy', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_5.glb', previewImage: '/Assets/TreePreviews/cartoon_5.png', scaleMultiplier: 1.0, description: 'Triple cloud cluster tree' },
-    { id: 'cartoon_6', name: 'Round Canopy 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_6.glb', previewImage: '/Assets/TreePreviews/cartoon_6.png', scaleMultiplier: 1.0, description: 'Compact spherical tree' },
-    { id: 'cartoon_7', name: 'Round Canopy 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_7.glb', previewImage: '/Assets/TreePreviews/cartoon_7.png', scaleMultiplier: 1.0, description: 'Medium spherical tree' },
-    { id: 'cartoon_8', name: 'Tall Oval', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_8.glb', previewImage: '/Assets/TreePreviews/cartoon_8.png', scaleMultiplier: 1.0, description: 'Elongated oval canopy' },
-    { id: 'cartoon_9', name: 'Bent Trunk', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_9.glb', previewImage: '/Assets/TreePreviews/cartoon_9.png', scaleMultiplier: 1.0, description: 'Curved trunk stylized tree' },
-    { id: 'cartoon_10', name: 'Slender Spire', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_10.glb', previewImage: '/Assets/TreePreviews/cartoon_10.png', scaleMultiplier: 1.0, description: 'Slender tapered canopy' },
-    { id: 'cartoon_11', name: 'Poplar Tree', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_11.glb', previewImage: '/Assets/TreePreviews/cartoon_11.png', scaleMultiplier: 1.0, description: 'Tall slender poplar' },
-    { id: 'cartoon_12', name: 'Wide Spire', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_12.glb', previewImage: '/Assets/TreePreviews/cartoon_12.png', scaleMultiplier: 1.0, description: 'Wide flared stylized tree' },
-    { id: 'cartoon_13', name: 'Stylized Broadleaf 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_1.glb', previewImage: '/Assets/TreePreviews/cartoon_13.png', scaleMultiplier: 1.0, description: 'Classic stylized broadleaf' },
-    { id: 'cartoon_14', name: 'Stylized Broadleaf 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_2.glb', previewImage: '/Assets/TreePreviews/cartoon_14.png', scaleMultiplier: 1.0, description: 'Curved stylized broadleaf' },
-    { id: 'cartoon_15', name: 'Stylized Broadleaf 3', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_3.glb', previewImage: '/Assets/TreePreviews/cartoon_15.png', scaleMultiplier: 1.0, description: 'Flowering stylized tree' },
-    { id: 'cartoon_16', name: 'Cherry Blossom', category: 'Cartoon', path: '/Assets/Tree/Cartoon/tree_Tree_10.glb', previewImage: '/Assets/TreePreviews/cartoon_16.png', scaleMultiplier: 1.0, description: 'Delicate blossom tree' },
+    // Candyland (4 procedural candy models)
+    { id: 'candy_lollipop_spiral', name: 'Spiral Lollipop Tree', category: 'Trees', path: 'procedural:candy_lollipop_spiral', previewImage: '/Assets/Previews/veg_cartoon_7.png', scaleMultiplier: 1.1, description: 'Swirling pastel lollipop tree on a white stick' },
+    { id: 'candy_lollipop_sphere', name: 'Round Candy Pop', category: 'Trees', path: 'procedural:candy_lollipop_sphere', previewImage: '/Assets/Previews/veg_cartoon_8.png', scaleMultiplier: 1.0, description: 'Glossy spherical pastel lollipop' },
+    { id: 'candy_cane_single', name: 'Candy Cane Flora', category: 'Flowers & Flora', path: 'procedural:candy_cane_single', previewImage: '/Assets/Previews/veg_flower3_single.png', scaleMultiplier: 0.75, description: 'Classic striped candy cane flower' },
+    { id: 'candy_cane_cluster', name: 'Candy Cane Cluster', category: 'Flowers & Flora', path: 'procedural:candy_cane_cluster', previewImage: '/Assets/Previews/veg_flower3_group.png', scaleMultiplier: 0.85, description: 'Cluster of sweet candy canes' },
 
-    // Bushy Trees (8 models)
-    { id: 'bushy_1', name: 'Umbrella Canopy', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type0_04_Model_balanced_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_1.png', scaleMultiplier: 1.0, description: 'Flat-topped umbrella tree' },
-    { id: 'bushy_2', name: 'Tall Bushy Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_01_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_2.png', scaleMultiplier: 1.0, description: 'Tall branching bushy tree' },
-    { id: 'bushy_3', name: 'Sprawling Savanna Acacia', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_02_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_3.png', scaleMultiplier: 1.0, description: 'Wide sprawling savanna acacia' },
-    { id: 'bushy_4', name: 'Angular Bushy Pine', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_4.png', scaleMultiplier: 1.0, description: 'Geometric faceted bushy pine' },
-    { id: 'bushy_5', name: 'Tiered Flat Canopy', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l2.glb', previewImage: '/Assets/TreePreviews/bushy_5.png', scaleMultiplier: 1.0, description: 'Tiered horizontal plate canopy' },
-    { id: 'bushy_6', name: 'Branching Bushy Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_6.png', scaleMultiplier: 1.0, description: 'Wide dual-branch bushy tree' },
-    { id: 'bushy_7', name: 'Slender Grove Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l2.glb', previewImage: '/Assets/TreePreviews/bushy_7.png', scaleMultiplier: 1.0, description: 'Slender trunk crown tree' },
-    { id: 'bushy_8', name: 'Multi-Stem Birch Shrub', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type5_04_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_8.png', scaleMultiplier: 1.0, description: 'Multi-stem white birch shrub' },
+    // Vegetation (23 models)
+    { id: 'veg_bigtree_1', name: 'Big Tree Var 1', category: 'Trees', path: '/Assets/Vegetation/BigTree2_Var1.glb', previewImage: '/Assets/Previews/veg_bigtree_1.png', scaleMultiplier: 1.1, description: 'Large branching deciduous tree' },
+    { id: 'veg_bush_flowers', name: 'Flowering Bush', category: 'Flowers & Flora', path: '/Assets/Vegetation/Bush_Common_Flowers.glb', previewImage: '/Assets/Previews/veg_bush_flowers.png', scaleMultiplier: 0.85, description: 'Dense bush with colorful blossoms' },
+    { id: 'veg_cartoon_1', name: 'Stylized Oak 1', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Pack_Tree_1.glb', previewImage: '/Assets/Previews/veg_cartoon_1.png', scaleMultiplier: 1.0, description: 'Lush round canopy oak' },
+    { id: 'veg_cartoon_2', name: 'Stylized Oak 2', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Pack_Tree_2.glb', previewImage: '/Assets/Previews/veg_cartoon_2.png', scaleMultiplier: 1.0, description: 'Branching stylized oak' },
+    { id: 'veg_cartoon_7', name: 'Round Canopy Tree', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Pack_Tree_7.glb', previewImage: '/Assets/Previews/veg_cartoon_7.png', scaleMultiplier: 1.0, description: 'Compact spherical tree' },
+    { id: 'veg_cartoon_8', name: 'Tall Oval Tree', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Pack_Tree_8.glb', previewImage: '/Assets/Previews/veg_cartoon_8.png', scaleMultiplier: 1.0, description: 'Elongated oval canopy' },
+    { id: 'veg_cartoon_10', name: 'Slender Spire Tree', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Pack_Tree_10.glb', previewImage: '/Assets/Previews/veg_cartoon_10.png', scaleMultiplier: 1.0, description: 'Slender tapered canopy' },
+    { id: 'veg_cartoon_11', name: 'Poplar Tree', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Pack_Tree_11.glb', previewImage: '/Assets/Previews/veg_cartoon_11.png', scaleMultiplier: 1.0, description: 'Tall slender poplar' },
+    { id: 'veg_cartoon_12', name: 'Wide Spire Tree', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Pack_Tree_12.glb', previewImage: '/Assets/Previews/veg_cartoon_12.png', scaleMultiplier: 1.0, description: 'Wide flared stylized tree' },
+    { id: 'veg_tree_broadleaf_1', name: 'Broadleaf Tree 1', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Tree_1.glb', previewImage: '/Assets/Previews/veg_tree_broadleaf_1.png', scaleMultiplier: 1.0, description: 'Classic stylized broadleaf' },
+    { id: 'veg_tree_broadleaf_2', name: 'Broadleaf Tree 2', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Tree_2.glb', previewImage: '/Assets/Previews/veg_tree_broadleaf_2.png', scaleMultiplier: 1.0, description: 'Curved stylized broadleaf' },
+    { id: 'veg_tree_broadleaf_3', name: 'Flowering Broadleaf', category: 'Trees', path: '/Assets/Vegetation/Cartoon_Trees_Tree_3.glb', previewImage: '/Assets/Previews/veg_tree_broadleaf_3.png', scaleMultiplier: 1.0, description: 'Flowering stylized tree' },
+    { id: 'veg_clover_2', name: 'Giant Clover', category: 'Flowers & Flora', path: '/Assets/Vegetation/Clover_2.glb', previewImage: '/Assets/Previews/veg_clover_2.png', scaleMultiplier: 0.75, description: 'Stylized clover flora' },
+    { id: 'veg_fantasy_jungle', name: 'Fantasy Jungle Tree', category: 'Trees', path: '/Assets/Vegetation/fantasy_jungle_tree.glb', previewImage: '/Assets/Previews/veg_fantasy_jungle.png', scaleMultiplier: 1.2, description: 'Exotic hanging jungle tree' },
+    { id: 'veg_flower2_var3', name: 'Wildflower Var 3', category: 'Flowers & Flora', path: '/Assets/Vegetation/Flower2_Var3.glb', previewImage: '/Assets/Previews/veg_flower2_var3.png', scaleMultiplier: 0.75, description: 'Delicate wildflower bloom' },
+    { id: 'veg_flower3_group', name: 'Flower Cluster', category: 'Flowers & Flora', path: '/Assets/Vegetation/Flower_3_Group.glb', previewImage: '/Assets/Previews/veg_flower3_group.png', scaleMultiplier: 0.8, description: 'Group of meadow flowers' },
+    { id: 'veg_flower3_single', name: 'Single Flower 3', category: 'Flowers & Flora', path: '/Assets/Vegetation/Flower_3_Single.glb', previewImage: '/Assets/Previews/veg_flower3_single.png', scaleMultiplier: 0.75, description: 'Single tall meadow flower' },
+    { id: 'veg_flower4_single', name: 'Single Flower 4', category: 'Flowers & Flora', path: '/Assets/Vegetation/Flower_4_Single.glb', previewImage: '/Assets/Previews/veg_flower4_single.png', scaleMultiplier: 0.75, description: 'Single stylized blooming flower' },
+    { id: 'veg_flower_var4', name: 'Wildflower Var 4', category: 'Flowers & Flora', path: '/Assets/Vegetation/Flower_Var4.glb', previewImage: '/Assets/Previews/veg_flower_var4.png', scaleMultiplier: 0.75, description: 'Vibrant single wildflower' },
+    { id: 'veg_palm_a', name: 'Tropical Palm A', category: 'Trees', path: '/Assets/Vegetation/GEO_PalmTree_A.glb', previewImage: '/Assets/Previews/veg_palm_a.png', scaleMultiplier: 1.0, description: 'Curved tropical palm tree' },
+    { id: 'veg_palm_c', name: 'Tropical Palm C', category: 'Trees', path: '/Assets/Vegetation/GEO_PalmTree_C.glb', previewImage: '/Assets/Previews/veg_palm_c.png', scaleMultiplier: 1.0, description: 'Straight tropical palm tree' },
+    { id: 'veg_cherry_blossom', name: 'Blossom Tree', category: 'Trees', path: '/Assets/Vegetation/tree_Tree_10.glb', previewImage: '/Assets/Previews/veg_cherry_blossom.png', scaleMultiplier: 1.0, description: 'Delicate blossom tree' },
+    { id: 'veg_tree_var4', name: 'Stylized Tree Var 4', category: 'Trees', path: '/Assets/Vegetation/Tree_Var4.glb', previewImage: '/Assets/Previews/veg_tree_var4.png', scaleMultiplier: 1.0, description: 'Stylized woodland tree' },
+
+    // Castles (9 models)
+    { id: 'castle_med_0', name: 'Fairytale Castle Med', category: 'Castle', path: '/Assets/Sky/fairytale_castle_med_compressed.glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', scaleMultiplier: 2.2, description: 'Medieval fairytale castle with spires' },
+    { id: 'castle_med_2', name: 'Fairytale Castle Med 2', category: 'Castle', path: '/Assets/Sky/fairytale_castle_med_compressed (2).glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', scaleMultiplier: 2.2, description: 'Twin-spire castle' },
+    { id: 'castle_med_3', name: 'Fairytale Castle Med 3', category: 'Castle', path: '/Assets/Sky/fairytale_castle_med_compressed (3).glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', scaleMultiplier: 2.2, description: 'Grand multi-tower castle' },
+    { id: 'castle_med_4', name: 'Fairytale Castle Med 4', category: 'Castle', path: '/Assets/Sky/fairytale_castle_med_compressed (4).glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', scaleMultiplier: 2.2, description: 'Fortified keep with battlements' },
+    { id: 'castle_med_5', name: 'Fairytale Castle Med 5', category: 'Castle', path: '/Assets/Sky/fairytale_castle_med_compressed (5).glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', scaleMultiplier: 2.2, description: 'High palace complex' },
+    { id: 'castle_med_6', name: 'Fairytale Castle Med 6', category: 'Castle', path: '/Assets/Sky/fairytale_castle_med_compressed (6).glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', scaleMultiplier: 2.2, description: 'Royal citadel and spires' },
+    { id: 'castle_high_0', name: 'Fairytale Castle High', category: 'Castle', path: '/Assets/Sky/fairytale_castle_high_compressed.glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', scaleMultiplier: 2.2, description: 'High-detail fairytale castle' },
+    { id: 'castle_high_1', name: 'Fairytale Castle High 1', category: 'Castle', path: '/Assets/Sky/fairytale_castle_high_compressed (1).glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', scaleMultiplier: 2.2, description: 'High-detail castle variant' },
+    { id: 'caste_instanced', name: 'Imperial Fortress Keep', category: 'Castle', path: '/Assets/Sky/Caste_compressed_instanced_l1.glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', scaleMultiplier: 1.0, description: 'Colossal stone fortress and keep' },
+
+    // Ships & Other (6 models)
+    { id: 'ship_golden_galleon', name: 'Golden Galleon', category: 'Ship / Other', path: '/Assets/Other/Golden_Galleon_compressed_80_instanced_l1.glb', previewImage: '/Assets/Previews/other_golden_galleon.png', scaleMultiplier: 2.0, description: 'Majestic multi-deck galleon' },
+    { id: 'ship_etire_boat', name: 'Etire Boat', category: 'Ship / Other', path: '/Assets/Other/Etire_boat.glb', previewImage: '/Assets/Previews/other_etire_boat.png', scaleMultiplier: 1.5, description: 'Classic coastal boat' },
+    { id: 'ship_boat_1', name: 'Ship Boat 1', category: 'Ship / Other', path: '/Assets/Other/ship_boat_1.glb', previewImage: '/Assets/Previews/other_ship_1.png', scaleMultiplier: 1.5, description: 'Exploration sailing sloop' },
+    { id: 'ship_boat_2', name: 'Ship Boat 2', category: 'Ship / Other', path: '/Assets/Other/ship_boat_2.glb', previewImage: '/Assets/Previews/other_ship_2.png', scaleMultiplier: 1.5, description: 'Merchant trading vessel' },
+    { id: 'ship_boat_3', name: 'Ship Boat 3', category: 'Ship / Other', path: '/Assets/Other/ship_boat_3.glb', previewImage: '/Assets/Previews/other_ship_3.png', scaleMultiplier: 1.5, description: 'Coastal transport ship' },
+    { id: 'ship_boat_4', name: 'Ship Boat 4', category: 'Ship / Other', path: '/Assets/Other/ship_boat_4.glb', previewImage: '/Assets/Previews/other_ship_4.png', scaleMultiplier: 1.5, description: 'Two-masted schooner' }
 ];
 
 export const DEFAULT_BIOME_TREE_IDS: Record<BiomeId, string[]> = {
-    meadow: ['cartoon_1', 'cartoon_2', 'cartoon_5', 'cartoon_6', 'bushy_1', 'bushy_2'],
-    archipelago: ['cartoon_16', 'cartoon_13', 'cartoon_14', 'bushy_3', 'bushy_6'],
-    geothermal: ['cartoon_9', 'cartoon_10', 'bushy_4', 'bushy_5'],
-    estuary: ['cartoon_3', 'cartoon_4', 'cartoon_15', 'bushy_7', 'bushy_8'],
-    redwood: ['cartoon_8', 'cartoon_11', 'cartoon_12', 'bushy_1', 'bushy_2']
+    candyland: ['candy_lollipop_spiral', 'candy_lollipop_sphere', 'candy_cane_single', 'candy_cane_cluster'],
+    meadow: [],
+    archipelago: [],
+    geothermal: [],
+    estuary: [],
+    redwood: [],
+    sky_citadel: [],
+    prism_sanctum: []
 };
 
 function isVegetationAllowed(x: number, z: number, y: number, biome: BiomeId): boolean {
@@ -458,7 +702,10 @@ function isVegetationAllowed(x: number, z: number, y: number, biome: BiomeId): b
     const hF = terrainHeightJS(x, z + 2.5);
     const slope = Math.max(Math.abs(hR - y), Math.abs(hF - y)) / 2.5;
 
-    if (biome === 'archipelago') {
+    if (biome === 'candyland') {
+        // Candyland: soft marshmallow hills and dunes
+        return y <= 45.0 && slope < 0.85;
+    } else if (biome === 'archipelago') {
         // Archipelago: strictly land only (green & beige terrain), no trees on mountain spires or cliffs
         return y <= 33.0 && slope < 0.70;
     } else if (biome === 'redwood') {
@@ -492,17 +739,14 @@ export class TreeSystem {
     private treeMat!: THREE.MeshToonMaterial;
     private bushMat!: THREE.MeshToonMaterial;
 
-    // Emissive Glow & Bloom Uniforms
-    private canopyGlowUniform = { value: 0.0 };
-    private trunkGlowUniform = { value: 0.0 };
-    private bushGlowUniform = { value: 0.0 };
-    private treeBloomUniform = { value: 0.0 };
-    private bushBloomUniform = { value: 0.0 };
+    // Bioluminescence & Color Mode Uniforms
+    private bioluminescenceUniform = { value: 0.8 };
+    private timePhaseGlowUniform = { value: 0.0 };
+    private useOriginalColorUniform = { value: 0.0 };
+    private leafColorUniform = { value: new THREE.Color(0.20, 0.58, 0.22) };
 
     // Glow State
-    private currentCanopyGlow = 0.0;
-    private currentTrunkGlow = 0.0;
-    private currentBushGlow = 0.0;
+    private currentTimePhaseGlow = 0.0;
 
     // Spatial & Loading State
     public ready: boolean = false;
@@ -530,6 +774,10 @@ export class TreeSystem {
         inst.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
         const trunkColorAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
         inst.geometry.setAttribute('aTrunkColor', trunkColorAttr);
+        const leafColorAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+        inst.geometry.setAttribute('aLeafColor', leafColorAttr);
+        const colorModeAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1);
+        inst.geometry.setAttribute('aColorMode', colorModeAttr);
         this.scene.add(inst);
         return inst;
     }
@@ -546,26 +794,46 @@ export class TreeSystem {
             color: 0xffffff,
             gradientMap,
             dithering: true,
+            side: THREE.DoubleSide,
+            shadowSide: THREE.DoubleSide,
+            alphaTest: 0.25,
+            transparent: false,
+            depthWrite: true,
         });
         this.treeMat.onBeforeCompile = (shader) => {
-            shader.uniforms.uTrunkGlow = this.trunkGlowUniform;
-            shader.uniforms.uCanopyGlow = this.canopyGlowUniform;
-            shader.uniforms.uTreeBloom = this.treeBloomUniform;
+            shader.uniforms.uBioluminescence = this.bioluminescenceUniform;
+            shader.uniforms.uTimePhaseGlow = this.timePhaseGlowUniform;
+            shader.uniforms.uLeafColor = this.leafColorUniform;
 
             shader.vertexShader = `
-                attribute float aIsCanopy;
+                attribute float aPartType;
+                attribute vec3 aOriginalColor;
                 attribute vec3 aTrunkColor;
-                varying float vIsCanopy;
+                attribute vec3 aLeafColor;
+                attribute float aColorMode;
+                varying float vPartType;
+                varying vec3 vOriginalColor;
                 varying vec3 vTrunkColor;
+                varying vec3 vLeafColor;
                 varying vec3 vCanopyColor;
+                varying float vColorMode;
+                varying vec2 vTreeUv;
             ` + shader.vertexShader;
 
             shader.vertexShader = shader.vertexShader.replace(
                 '#include <begin_vertex>',
                 `
                 #include <begin_vertex>
-                vIsCanopy = aIsCanopy;
+                vPartType = aPartType;
+                vOriginalColor = aOriginalColor;
                 vTrunkColor = aTrunkColor;
+                vLeafColor = aLeafColor;
+                vColorMode = aColorMode;
+                #ifdef USE_UV
+                    vTreeUv = uv;
+                #else
+                    vTreeUv = vec2(0.0);
+                #endif
                 #ifdef USE_INSTANCING_COLOR
                     vCanopyColor = instanceColor;
                 #else
@@ -575,19 +843,42 @@ export class TreeSystem {
             );
 
             shader.fragmentShader = `
-                uniform float uTrunkGlow;
-                uniform float uCanopyGlow;
-                uniform float uTreeBloom;
-                varying float vIsCanopy;
+                uniform float uBioluminescence;
+                uniform float uTimePhaseGlow;
+                uniform vec3 uLeafColor;
+                varying float vPartType;
+                varying vec3 vOriginalColor;
                 varying vec3 vTrunkColor;
+                varying vec3 vLeafColor;
                 varying vec3 vCanopyColor;
+                varying float vColorMode;
+                varying vec2 vTreeUv;
             ` + shader.fragmentShader;
 
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <color_fragment>',
                 `
                 #include <color_fragment>
-                vec3 finalTreeColor = mix(vTrunkColor, vCanopyColor, clamp(vIsCanopy, 0.0, 1.0));
+                vec3 finalTreeColor;
+                #ifdef USE_MAP
+                    vec4 texCol = texture2D(map, vTreeUv);
+                    if (texCol.a < 0.25) discard;
+                #endif
+                if (vColorMode > 0.5) {
+                    #ifdef USE_MAP
+                        finalTreeColor = texCol.rgb;
+                    #else
+                        finalTreeColor = vOriginalColor;
+                    #endif
+                } else {
+                    if (vPartType > 1.5) {
+                        finalTreeColor = vCanopyColor;
+                    } else if (vPartType > 0.5) {
+                        finalTreeColor = vLeafColor;
+                    } else {
+                        finalTreeColor = vTrunkColor;
+                    }
+                }
                 diffuseColor.rgb = finalTreeColor;
                 `
             );
@@ -596,11 +887,11 @@ export class TreeSystem {
                 '#include <emissivemap_fragment>',
                 `
                 #include <emissivemap_fragment>
-                vec3 glowCol = mix(vTrunkColor, vCanopyColor, clamp(vIsCanopy, 0.0, 1.0));
+                vec3 glowCol = (vColorMode > 0.5) ? vOriginalColor : ((vPartType > 1.5) ? vCanopyColor : ((vPartType > 0.5) ? vLeafColor : vTrunkColor));
                 float maxC = max(glowCol.r, max(glowCol.g, glowCol.b));
                 vec3 normCol = maxC > 0.01 ? (glowCol / maxC) : glowCol;
-                float glow = mix(uTrunkGlow * 0.45, uCanopyGlow * 1.5, clamp(vIsCanopy, 0.0, 1.0));
-                totalEmissiveRadiance += normCol * (glow * uTreeBloom);
+                float glow = uBioluminescence * uTimePhaseGlow * 2.2;
+                totalEmissiveRadiance += normCol * glow;
                 `
             );
         };
@@ -610,11 +901,16 @@ export class TreeSystem {
             color: 0xffffff,
             gradientMap,
             dithering: true,
+            side: THREE.DoubleSide,
+            shadowSide: THREE.DoubleSide,
+            alphaTest: 0.25,
+            transparent: false,
+            depthWrite: true,
         });
         this.bushMat.onBeforeCompile = (shader) => {
-            shader.uniforms.uBushGlow = this.bushGlowUniform;
-            shader.uniforms.uBushBloom = this.bushBloomUniform;
-            shader.fragmentShader = `uniform float uBushGlow;\nuniform float uBushBloom;\n` + shader.fragmentShader;
+            shader.uniforms.uBioluminescence = this.bioluminescenceUniform;
+            shader.uniforms.uTimePhaseGlow = this.timePhaseGlowUniform;
+            shader.fragmentShader = `uniform float uBioluminescence;\nuniform float uTimePhaseGlow;\n` + shader.fragmentShader;
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <emissivemap_fragment>',
                 `
@@ -623,9 +919,9 @@ export class TreeSystem {
                     vec3 col = vInstanceColor.rgb;
                     float maxC = max(col.r, max(col.g, col.b));
                     vec3 normCol = maxC > 0.01 ? (col / maxC) : col;
-                    totalEmissiveRadiance += normCol * (uBushGlow * 1.3 * uBushBloom);
+                    totalEmissiveRadiance += normCol * (uBioluminescence * uTimePhaseGlow * 1.8);
                 #else
-                    totalEmissiveRadiance += diffuseColor.rgb * (uBushGlow * 1.3 * uBushBloom);
+                    totalEmissiveRadiance += diffuseColor.rgb * (uBioluminescence * uTimePhaseGlow * 1.8);
                 #endif
                 `
             );
@@ -635,7 +931,13 @@ export class TreeSystem {
         const loadPromises = TREE_CATALOG.map(async (item) => {
             try {
                 const geo = await loadTreeGeometries(item.path, this.loader, item.scaleMultiplier ?? 1.0);
-                const treeInst = this.setupInstMesh(geo.treeGeo, this.treeMat, MAX_CAPACITY, true);
+                let mat = this.treeMat;
+                if (geo.map) {
+                    mat = this.treeMat.clone();
+                    mat.map = geo.map;
+                    mat.needsUpdate = true;
+                }
+                const treeInst = this.setupInstMesh(geo.treeGeo, mat, MAX_CAPACITY, true);
                 const entry: LoadedCatalogEntry = {
                     item,
                     treeGeo: geo.treeGeo,
@@ -673,13 +975,19 @@ export class TreeSystem {
         const cleanName = name.replace(/\.glb$/i, '').trim() || 'Custom Tree';
         const id = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
         const geo = await loadTreeGeometries(source, this.loader, scaleMultiplier);
-        const treeInst = this.setupInstMesh(geo.treeGeo, this.treeMat, MAX_CAPACITY, true);
+        let mat = this.treeMat;
+        if (geo.map) {
+            mat = this.treeMat.clone();
+            mat.map = geo.map;
+            mat.needsUpdate = true;
+        }
+        const treeInst = this.setupInstMesh(geo.treeGeo, mat, MAX_CAPACITY, true);
         const item: TreeCatalogItem = {
             id,
             name: cleanName,
             category: 'Custom / Loaded',
             path: typeof source === 'string' ? source : 'Uploaded Custom File',
-            previewImage: '/Assets/TreePreviews/cartoon_1.png',
+            previewImage: '/Assets/Previews/veg_cartoon_1.png',
             scaleMultiplier,
             description: 'Custom loaded 3D tree asset'
         };
@@ -720,27 +1028,16 @@ export class TreeSystem {
 
         const bId = activeBiomeId || globalConfigManager.config.activeBiomeId;
         const activeBiome = globalConfigManager.getBiomeConfig(bId);
-        const blm = activeBiome.bloom;
+        const veg = activeBiome.vegetation;
+        const bioVal = veg.bioluminescence !== undefined ? veg.bioluminescence : 0.8;
 
-        this.treeBloomUniform.value = blm.treeBloom;
-        this.bushBloomUniform.value = blm.bushBloom;
+        this.bioluminescenceUniform.value = bioVal;
 
-        // Trunk base glow
-        const trunkTarget = 0.75 * blm.treeTrunkGlow;
-        this.currentTrunkGlow += (trunkTarget - this.currentTrunkGlow) * Math.min(1, dt * 2.5);
-        this.trunkGlowUniform.value = this.currentTrunkGlow;
-
-        // Canopy glowstick effect (Day = 0, Dusk = 0.5, Night = 1.35)
-        const NIGHT_MAX = 1.35;
-        const DUSK_50 = NIGHT_MAX * 0.50;
-        const canopyTarget = ([0.0, DUSK_50, NIGHT_MAX][timePhase] ?? 0.0) * blm.treeCanopyGlow;
-        this.currentCanopyGlow += (canopyTarget - this.currentCanopyGlow) * Math.min(1, dt * 2.5);
-        this.canopyGlowUniform.value = this.currentCanopyGlow;
-
-        // Bush glowstick effect
-        const bushTarget = ([0.0, DUSK_50, NIGHT_MAX][timePhase] ?? 0.0) * blm.bushGlow;
-        this.currentBushGlow += (bushTarget - this.currentBushGlow) * Math.min(1, dt * 2.5);
-        this.bushGlowUniform.value = this.currentBushGlow;
+        // Automated time-phase calculation: Day = 0.0 (no glow), Dusk = 0.40 (slight glow), Twilight = 1.00 (full glow)
+        const timePhaseTargets = [0.0, 0.40, 1.00];
+        const target = timePhaseTargets[timePhase] ?? 0.0;
+        this.currentTimePhaseGlow += (target - this.currentTimePhaseGlow) * Math.min(1, dt * 3.0);
+        this.timePhaseGlowUniform.value = this.currentTimePhaseGlow;
     }
 
     // ── Rebuild Instanced Meshes ───────────────────────────────────────────────
@@ -762,21 +1059,23 @@ export class TreeSystem {
             modelCounts.set(key, 0);
         }
 
-        const allBiomes: BiomeId[] = ['meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
+        const allBiomes: BiomeId[] = ['candyland', 'meadow', 'prism_sanctum', 'archipelago', 'geothermal', 'estuary', 'redwood', 'sky_citadel'];
         const biomeActiveModels: Record<BiomeId, LoadedCatalogEntry[]> = {
+            candyland: [],
             meadow: [],
+            prism_sanctum: [],
             archipelago: [],
             geothermal: [],
             estuary: [],
-            redwood: []
+            redwood: [],
+            sky_citadel: []
         };
 
         for (const b of allBiomes) {
             const bCfg = globalConfigManager.getBiomeConfig(b);
-            let userModelIds = bCfg.vegetation.selectedTreeModelIds;
-            if (!userModelIds || userModelIds.length === 0) {
-                userModelIds = DEFAULT_BIOME_TREE_IDS[b] || [];
-            }
+            const userModelIds = bCfg.vegetation.selectedTreeModelIds !== undefined
+                ? bCfg.vegetation.selectedTreeModelIds
+                : (DEFAULT_BIOME_TREE_IDS[b] || []);
             
             const entries: LoadedCatalogEntry[] = [];
             for (const mId of userModelIds) {
@@ -788,75 +1087,104 @@ export class TreeSystem {
 
         for (let cx = minCX; cx <= maxCX; cx++) {
             for (let cz = minCZ; cz <= maxCZ; cz++) {
-                const rng = mulberry32(cellSeed(cx, cz, 101));
-
-                const x = (cx + 0.15 + rng() * 0.7) * treeGridSpacing;
-                const z = (cz + 0.15 + rng() * 0.7) * treeGridSpacing;
+                const x = (cx + 0.5) * treeGridSpacing;
+                const z = (cz + 0.5) * treeGridSpacing;
 
                 const dx = x - px;
                 const dz = z - pz;
-                if (dx * dx + dz * dz > SPAWN_RADIUS * SPAWN_RADIUS) continue;
+                if (dx * dx + dz * dz > (SPAWN_RADIUS + treeGridSpacing) ** 2) continue;
 
-                const y = terrainHeightJS(x, z);
                 const biome = getDominantBiome(x, z);
-                if (!isVegetationAllowed(x, z, y, biome)) continue;
                 const biomeCfg = globalConfigManager.getBiomeConfig(biome);
                 const veg = biomeCfg.vegetation;
-
-                // Density filter
-                const densityChance = veg.treeDensity / 800.0;
-                if (rng() > densityChance) continue;
 
                 const activeModels = biomeActiveModels[biome];
                 if (!activeModels || activeModels.length === 0) continue;
 
-                const variantIndex = Math.floor(rng() * activeModels.length);
-                const selectedModel = activeModels[variantIndex];
-                const modelKey = selectedModel.item.id;
-                const currentCount = modelCounts.get(modelKey) || 0;
-                if (currentCount >= MAX_CAPACITY) continue;
+                for (let mIdx = 0; mIdx < activeModels.length; mIdx++) {
+                    const selectedModel = activeModels[mIdx];
+                    const modelKey = selectedModel.item.id;
+                    const mCfg = (veg.models && veg.models[modelKey]) ? veg.models[modelKey] : getDefaultModelConfig(modelKey);
+                    
+                    const mDensity = mCfg.density !== undefined ? mCfg.density : (veg.treeDensity || 200);
+                    if (mDensity <= 0) continue;
+                    
+                    const densityChance = mDensity / 800.0;
+                    const modelRng = mulberry32(cellSeed(cx, cz, strHash(modelKey)));
+                    if (modelRng() > densityChance) continue;
 
-                // Scale factor per biome with instance variation
-                let baseScale = veg.treeScale * 0.16;
-                if (biome === 'redwood') baseScale *= 1.35;
-                if (biome === 'estuary') baseScale *= 0.85;
+                    const currentCount = modelCounts.get(modelKey) || 0;
+                    if (currentCount >= MAX_CAPACITY) continue;
 
-                const sizeVariation = 0.85 + rng() * 0.35;
-                const scaleX = baseScale * sizeVariation;
-                const scaleY = baseScale * (0.9 + rng() * 0.25);
-                const scaleZ = baseScale * sizeVariation;
+                    const instX = (cx + 0.1 + modelRng() * 0.8) * treeGridSpacing;
+                    const instZ = (cz + 0.1 + modelRng() * 0.8) * treeGridSpacing;
 
-                const rotY = rng() * Math.PI * 2;
-                const tiltX = (rng() - 0.5) * 0.08;
-                const tiltZ = (rng() - 0.5) * 0.08;
+                    const instDx = instX - px;
+                    const instDz = instZ - pz;
+                    if (instDx * instDx + instDz * instDz > SPAWN_RADIUS * SPAWN_RADIUS) continue;
 
-                this.dummy.position.set(x, y - 0.15, z);
-                this.dummy.rotation.set(tiltX, rotY, tiltZ);
-                this.dummy.scale.set(scaleX, scaleY, scaleZ);
-                this.dummy.updateMatrix();
+                    const instY = terrainHeightJS(instX, instZ);
+                    if (!isVegetationAllowed(instX, instZ, instY, biome)) continue;
 
-                selectedModel.treeInst.setMatrixAt(currentCount, this.dummy.matrix);
+                    // Independent Scale per model
+                    const mScale = mCfg.scale !== undefined ? mCfg.scale : (veg.treeScale || 6.0);
+                    let baseScale = mScale * 0.16;
+                    if (biome === 'redwood') baseScale *= 1.35;
+                    if (biome === 'estuary') baseScale *= 0.85;
 
-                // Canopy Color selection with per-tree instance variation
-                const canopyPalette = veg.canopyColors.length > 0 ? veg.canopyColors : ['#ff1493', '#00d2ff', '#00ff88'];
-                const canopyHex = canopyPalette[Math.floor(rng() * canopyPalette.length)];
-                this.tempColor.set(canopyHex);
-                this.tempColor.getHSL(this.tempHSL);
-                this.tempHSL.l = THREE.MathUtils.clamp(this.tempHSL.l + (rng() - 0.5) * 0.08, 0.1, 0.9);
-                this.tempHSL.s = THREE.MathUtils.clamp(this.tempHSL.s + (rng() - 0.5) * 0.06, 0.2, 1.0);
-                this.tempColor.setHSL(this.tempHSL.h, this.tempHSL.s, this.tempHSL.l);
-                selectedModel.treeInst.setColorAt(currentCount, this.tempColor);
+                    const sizeVariation = 0.85 + modelRng() * 0.35;
+                    const scaleX = baseScale * sizeVariation;
+                    const scaleY = baseScale * (0.9 + modelRng() * 0.25);
+                    const scaleZ = baseScale * sizeVariation;
 
-                // Trunk Color selection with per-tree instance variation
-                const trunkPalette = veg.trunkColors.length > 0 ? veg.trunkColors : ['#ffffff', '#fff3e0'];
-                const trunkHex = trunkPalette[Math.floor(rng() * trunkPalette.length)];
-                this.tempColor.set(trunkHex);
-                const trunkAttr = selectedModel.treeInst.geometry.getAttribute('aTrunkColor') as THREE.InstancedBufferAttribute;
-                if (trunkAttr) {
-                    trunkAttr.setXYZ(currentCount, this.tempColor.r, this.tempColor.g, this.tempColor.b);
+                    const rotY = modelRng() * Math.PI * 2;
+                    const tiltX = (modelRng() - 0.5) * 0.08;
+                    const tiltZ = (modelRng() - 0.5) * 0.08;
+
+                    this.dummy.position.set(instX, instY - 0.15, instZ);
+                    this.dummy.rotation.set(tiltX, rotY, tiltZ);
+                    this.dummy.scale.set(scaleX, scaleY, scaleZ);
+                    this.dummy.updateMatrix();
+
+                    selectedModel.treeInst.setMatrixAt(currentCount, this.dummy.matrix);
+
+                    // Independent Canopy Color selection per model
+                    const canopyPalette = (mCfg.canopyColors && mCfg.canopyColors.length > 0) ? mCfg.canopyColors : (veg.canopyColors.length > 0 ? veg.canopyColors : ['#ff1493', '#00d2ff', '#00ff88']);
+                    const canopyHex = canopyPalette[Math.floor(modelRng() * canopyPalette.length)];
+                    this.tempColor.set(canopyHex);
+                    this.tempColor.getHSL(this.tempHSL);
+                    this.tempHSL.l = THREE.MathUtils.clamp(this.tempHSL.l + (modelRng() - 0.5) * 0.08, 0.1, 0.9);
+                    this.tempHSL.s = THREE.MathUtils.clamp(this.tempHSL.s + (modelRng() - 0.5) * 0.06, 0.2, 1.0);
+                    this.tempColor.setHSL(this.tempHSL.h, this.tempHSL.s, this.tempHSL.l);
+                    selectedModel.treeInst.setColorAt(currentCount, this.tempColor);
+
+                    // Independent Leaf / Foliage Color selection per model
+                    const leafPalette = (mCfg.leafColors && mCfg.leafColors.length > 0) ? mCfg.leafColors : ['#22c55e', '#16a34a', '#15803d', '#4ade80'];
+                    const leafHex = leafPalette[Math.floor(modelRng() * leafPalette.length)];
+                    this.tempColor.set(leafHex);
+                    const leafAttr = selectedModel.treeInst.geometry.getAttribute('aLeafColor') as THREE.InstancedBufferAttribute;
+                    if (leafAttr) {
+                        leafAttr.setXYZ(currentCount, this.tempColor.r, this.tempColor.g, this.tempColor.b);
+                    }
+
+                    // Independent Trunk / Stem Color selection per model
+                    const trunkPalette = (mCfg.trunkColors && mCfg.trunkColors.length > 0) ? mCfg.trunkColors : (veg.trunkColors.length > 0 ? veg.trunkColors : ['#5c3a21', '#451a03']);
+                    const trunkHex = trunkPalette[Math.floor(modelRng() * trunkPalette.length)];
+                    this.tempColor.set(trunkHex);
+                    const trunkAttr = selectedModel.treeInst.geometry.getAttribute('aTrunkColor') as THREE.InstancedBufferAttribute;
+                    if (trunkAttr) {
+                        trunkAttr.setXYZ(currentCount, this.tempColor.r, this.tempColor.g, this.tempColor.b);
+                    }
+
+                    // Independent Color Mode (Original vs Custom) per model
+                    const isOriginal = (mCfg.useOriginalColors || mCfg.activePreset === 'original' || veg.activePreset === 'original') ? 1.0 : 0.0;
+                    const colorModeAttr = selectedModel.treeInst.geometry.getAttribute('aColorMode') as THREE.InstancedBufferAttribute;
+                    if (colorModeAttr) {
+                        colorModeAttr.setX(currentCount, isOriginal);
+                    }
+
+                    modelCounts.set(modelKey, currentCount + 1);
                 }
-
-                modelCounts.set(modelKey, currentCount + 1);
             }
         }
 
@@ -871,6 +1199,10 @@ export class TreeSystem {
                 if (entry.treeInst.instanceColor) entry.treeInst.instanceColor.needsUpdate = true;
                 const trunkAttr = entry.treeInst.geometry.getAttribute('aTrunkColor');
                 if (trunkAttr) trunkAttr.needsUpdate = true;
+                const leafAttr = entry.treeInst.geometry.getAttribute('aLeafColor');
+                if (leafAttr) leafAttr.needsUpdate = true;
+                const colorModeAttr = entry.treeInst.geometry.getAttribute('aColorMode');
+                if (colorModeAttr) colorModeAttr.needsUpdate = true;
             }
         }
 
@@ -898,6 +1230,7 @@ export class TreeSystem {
                 const biomeCfg = globalConfigManager.getBiomeConfig(biome);
                 const veg = biomeCfg.vegetation;
 
+                if (!veg.bushDensity || veg.bushDensity <= 0) continue;
                 const bushChance = veg.bushDensity / 400.0;
                 if (rng() > bushChance) continue;
 
@@ -914,8 +1247,9 @@ export class TreeSystem {
 
                 inst.setMatrixAt(idx, this.dummy.matrix);
 
-                const palette = veg.canopyColors.length > 0 ? veg.canopyColors : ['#ff1493', '#00ff88'];
-                this.tempColor.set(palette[Math.floor(rng() * palette.length)]);
+                const cPalette = veg.canopyColors.length > 0 ? veg.canopyColors : ['#ff69b4', '#00ff88'];
+                const bHex = cPalette[Math.floor(rng() * cPalette.length)];
+                this.tempColor.set(bHex);
                 inst.setColorAt(idx, this.tempColor);
 
                 if (variant === 0) bushCount0++;
@@ -923,29 +1257,95 @@ export class TreeSystem {
             }
         }
 
-        if (this.bushInsts[0]) {
-            this.bushInsts[0].count = bushCount0;
-            this.bushInsts[0].visible = bushCount0 > 0;
-            if (bushCount0 > 0) {
-                if (this.bushInsts[0].instanceMatrix) this.bushInsts[0].instanceMatrix.needsUpdate = true;
-                if (this.bushInsts[0].instanceColor) this.bushInsts[0].instanceColor.needsUpdate = true;
-            }
+        this.bushInsts[0].count = bushCount0;
+        this.bushInsts[0].visible = bushCount0 > 0;
+        if (bushCount0 > 0) {
+            if (this.bushInsts[0].instanceMatrix) this.bushInsts[0].instanceMatrix.needsUpdate = true;
+            if (this.bushInsts[0].instanceColor) this.bushInsts[0].instanceColor.needsUpdate = true;
         }
-        if (this.bushInsts[1]) {
-            this.bushInsts[1].count = bushCount1;
-            this.bushInsts[1].visible = bushCount1 > 0;
-            if (bushCount1 > 0) {
-                if (this.bushInsts[1].instanceMatrix) this.bushInsts[1].instanceMatrix.needsUpdate = true;
-                if (this.bushInsts[1].instanceColor) this.bushInsts[1].instanceColor.needsUpdate = true;
-            }
+
+        this.bushInsts[1].count = bushCount1;
+        this.bushInsts[1].visible = bushCount1 > 0;
+        if (bushCount1 > 0) {
+            if (this.bushInsts[1].instanceMatrix) this.bushInsts[1].instanceMatrix.needsUpdate = true;
+            if (this.bushInsts[1].instanceColor) this.bushInsts[1].instanceColor.needsUpdate = true;
         }
     }
 
-    // ── Live Setters per Biome ─────────────────────────────────────────────────
+    // ── External API for DevEditor ─────────────────────────────────────────────
+
+    public getModelConfig(biomeId: BiomeId, modelId: string): ModelVegetationConfig {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        if (!veg.models) veg.models = {};
+        if (!veg.models[modelId]) {
+            veg.models[modelId] = getDefaultModelConfig(modelId);
+        }
+        return veg.models[modelId];
+    }
+
+    public setModelScale(biomeId: BiomeId, modelId: string, scale: number): void {
+        const cfg = this.getModelConfig(biomeId, modelId);
+        cfg.scale = Math.max(0.1, Math.min(50.0, scale));
+        this.forceRebuild();
+    }
+
+    public setModelDensity(biomeId: BiomeId, modelId: string, density: number): void {
+        const cfg = this.getModelConfig(biomeId, modelId);
+        cfg.density = Math.max(0, Math.min(800, Math.round(density)));
+        this.forceRebuild();
+    }
+
+    public setModelColorMode(biomeId: BiomeId, modelId: string, useOriginal: boolean): void {
+        const cfg = this.getModelConfig(biomeId, modelId);
+        cfg.useOriginalColors = useOriginal;
+        if (useOriginal) {
+            cfg.activePreset = 'original';
+        } else if (cfg.activePreset === 'original') {
+            cfg.activePreset = 'custom';
+        }
+        this.forceRebuild();
+    }
+
+    public setModelCanopyColors(biomeId: BiomeId, modelId: string, colors: string[]): void {
+        const cfg = this.getModelConfig(biomeId, modelId);
+        cfg.canopyColors = [...colors];
+        cfg.useOriginalColors = false;
+        cfg.activePreset = 'custom';
+        this.forceRebuild();
+    }
+
+    public setModelLeafColors(biomeId: BiomeId, modelId: string, colors: string[]): void {
+        const cfg = this.getModelConfig(biomeId, modelId);
+        cfg.leafColors = [...colors];
+        cfg.useOriginalColors = false;
+        cfg.activePreset = 'custom';
+        this.forceRebuild();
+    }
+
+    public setModelTrunkColors(biomeId: BiomeId, modelId: string, colors: string[]): void {
+        const cfg = this.getModelConfig(biomeId, modelId);
+        cfg.trunkColors = [...colors];
+        cfg.useOriginalColors = false;
+        cfg.activePreset = 'custom';
+        this.forceRebuild();
+    }
+
+    public applyModelPreset(biomeId: BiomeId, modelId: string, presetKey: string): void {
+        const preset = BIOME_VEG_PRESETS[presetKey];
+        if (preset) {
+            const cfg = this.getModelConfig(biomeId, modelId);
+            cfg.canopyColors = [...preset.canopyColors];
+            if (preset.leafColors) cfg.leafColors = [...preset.leafColors];
+            cfg.trunkColors = [...preset.trunkColors];
+            cfg.activePreset = presetKey;
+            cfg.useOriginalColors = (presetKey === 'original');
+            this.forceRebuild();
+        }
+    }
 
     public setBiomeTreeScale(biomeId: BiomeId, scale: number): void {
         const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
-        veg.treeScale = Math.max(0.5, Math.min(50.0, scale));
+        veg.treeScale = Math.max(0.5, Math.min(30.0, scale));
         this.forceRebuild();
     }
 
@@ -970,12 +1370,14 @@ export class TreeSystem {
     public setBiomeCanopyColors(biomeId: BiomeId, colors: string[]): void {
         const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
         veg.canopyColors = colors;
+        veg.activePreset = 'custom';
         this.forceRebuild();
     }
 
     public setBiomeTrunkColors(biomeId: BiomeId, colors: string[]): void {
         const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
         veg.trunkColors = colors;
+        veg.activePreset = 'custom';
         this.forceRebuild();
     }
 
@@ -995,11 +1397,22 @@ export class TreeSystem {
         const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
         const current = veg.selectedTreeModelIds || [];
         if (current.includes(modelId)) {
-            if (current.length > 1) {
-                veg.selectedTreeModelIds = current.filter(id => id !== modelId);
-            }
+            veg.selectedTreeModelIds = current.filter(id => id !== modelId);
         } else {
             veg.selectedTreeModelIds = [...current, modelId];
+        }
+        this.forceRebuild();
+    }
+
+    public setBiomeTreeModelSelected(biomeId: BiomeId, modelId: string, selected: boolean): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        const current = veg.selectedTreeModelIds || [];
+        if (selected) {
+            if (!current.includes(modelId)) {
+                veg.selectedTreeModelIds = [...current, modelId];
+            }
+        } else {
+            veg.selectedTreeModelIds = current.filter(id => id !== modelId);
         }
         this.forceRebuild();
     }
@@ -1011,19 +1424,26 @@ export class TreeSystem {
             veg.canopyColors = [...preset.canopyColors];
             veg.trunkColors = [...preset.trunkColors];
             veg.activePreset = presetKey;
+            if (biomeId === globalConfigManager.config.activeBiomeId) {
+                this.useOriginalColorUniform.value = (presetKey === 'original') ? 1.0 : 0.0;
+            }
             this.forceRebuild();
         }
     }
 
+    public setBioluminescence(intensity: number, biomeId?: BiomeId): void {
+        const bId = biomeId || globalConfigManager.config.activeBiomeId;
+        const veg = globalConfigManager.getBiomeConfig(bId).vegetation;
+        veg.bioluminescence = Math.max(0.0, Math.min(1.0, intensity));
+        if (bId === globalConfigManager.config.activeBiomeId) {
+            this.bioluminescenceUniform.value = veg.bioluminescence;
+        }
+    }
+
     public setBiomeBloomAndGlow(biomeId: BiomeId, bloomProps: Partial<any>): void {
-        const blm = globalConfigManager.getBiomeConfig(biomeId).bloom;
-        Object.assign(blm, bloomProps);
-        if (biomeId === globalConfigManager.config.activeBiomeId) {
-            if (blm.treeBloom !== undefined) this.treeBloomUniform.value = blm.treeBloom;
-            if (blm.bushBloom !== undefined) this.bushBloomUniform.value = blm.bushBloom;
-            if (blm.treeTrunkGlow !== undefined) this.trunkGlowUniform.value = 0.75 * blm.treeTrunkGlow;
-            if (blm.treeCanopyGlow !== undefined) this.canopyGlowUniform.value = this.currentCanopyGlow * blm.treeCanopyGlow;
-            if (blm.bushGlow !== undefined) this.bushGlowUniform.value = this.currentBushGlow * blm.bushGlow;
+        if (bloomProps.treeBloom !== undefined || bloomProps.treeCanopyGlow !== undefined) {
+            const val = (bloomProps.treeBloom ?? bloomProps.treeCanopyGlow ?? 1.0) / 2.0;
+            this.setBioluminescence(val, biomeId);
         }
     }
 
@@ -1032,23 +1452,23 @@ export class TreeSystem {
     }
 
     public setTreeBloomIntensity(intensity: number): void {
-        this.setBiomeBloomAndGlow(globalConfigManager.config.activeBiomeId, { treeBloom: intensity });
+        this.setBioluminescence(intensity / 3.0);
     }
 
     public setCanopyGlowMultiplier(m: number): void {
-        this.setBiomeBloomAndGlow(globalConfigManager.config.activeBiomeId, { treeCanopyGlow: m });
+        this.setBioluminescence(m / 2.0);
     }
 
     public setTrunkGlowMultiplier(m: number): void {
-        this.setBiomeBloomAndGlow(globalConfigManager.config.activeBiomeId, { treeTrunkGlow: m });
+        this.setBioluminescence(m / 2.0);
     }
 
     public setBushBloomIntensity(intensity: number): void {
-        this.setBiomeBloomAndGlow(globalConfigManager.config.activeBiomeId, { bushBloom: intensity });
+        this.setBioluminescence(intensity / 3.0);
     }
 
     public setBushGlowMultiplier(m: number): void {
-        this.setBiomeBloomAndGlow(globalConfigManager.config.activeBiomeId, { bushGlow: m });
+        this.setBioluminescence(m / 2.0);
     }
 
     public setScale(s: number): void {

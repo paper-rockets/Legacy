@@ -3,31 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Ghibli Flight</title>
+  <title>Wanderlust</title>
   <style>
     :root {
-      color-scheme: dark;
+      color-scheme: light;
     }
     *, *::before, *::after {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
     html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      overflow: hidden; background: #62b1e8;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      touch-action: none; 
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #62b1e8;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-size: 11.5px;
+      color: #000000;
+      touch-action: none;
       user-select: none;
       -webkit-user-select: none;
     }
     #app {
-      position: fixed; inset: 0; touch-action: none;
+      position: fixed;
+      inset: 0;
+      touch-action: none;
     }
     canvas {
-      display: block; touch-action: none;
+      display: block;
+      touch-action: none;
     }
 
-    /* Minimalist Top Status Bar */
     #top-bar {
       position: fixed;
       top: max(12px, env(safe-area-inset-top));
@@ -36,7 +46,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 6px;
+      padding: 4px 10px;
       background: rgba(18, 22, 32, 0.42);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
@@ -167,7 +177,8 @@
 
     #fps-counter {
       color: rgba(255, 255, 255, 0.65);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
       font-size: 11px;
       font-weight: 600;
       padding: 6px 10px;
@@ -185,6 +196,198 @@
       gap: 8px;
       z-index: 35;
       pointer-events: auto;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(18, 22, 32, 0.42);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      outline: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.94);
+    }
+
+    .icon-btn svg {
+      display: block;
+      pointer-events: none;
+    }
+
+    /* Dropdown Menus */
+    #settings-menu-container, #model-selector-container, #biome-selector-container {
+      position: relative;
+    }
+
+    #settings-menu, #model-dropdown, #biome-dropdown {
+      display: none;
+      position: absolute;
+      background: rgba(18, 22, 32, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 14px;
+      padding: 6px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      flex-direction: column;
+      gap: 4px;
+      z-index: 50;
+    }
+
+    #settings-menu {
+      top: 46px;
+      right: 0;
+      min-width: 220px;
+      max-height: calc(100vh - 70px);
+      overflow-y: auto;
+    }
+
+    #model-dropdown, #biome-dropdown {
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 195px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .model-option-btn, .biome-option-btn, .menu-item-btn {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: rgba(255, 255, 255, 0.85);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 7px 10px;
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .model-option-btn:hover, .biome-option-btn:hover, .menu-item-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+    }
+
+    .model-option-btn.active, .biome-option-btn.active, .menu-item-btn.active {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .biome-option-subtitle {
+      font-size: 9px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.55);
+      margin-top: 1px;
+    }
+
+    .biome-option-btn.active .biome-option-subtitle {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .menu-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      margin: 4px 0;
+    }
+
+    .menu-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+    }
+
+    .menu-presets-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      padding: 0 4px;
+    }
+
+    .menu-preset-btn {
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.85);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .menu-preset-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+    }
+
+    .menu-preset-btn.active {
+      background: rgba(255, 255, 255, 0.28);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .menu-slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 3px 6px;
+    }
+
+    .menu-slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .menu-slider-val {
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
+      font-size: 10px;
+      font-weight: 600;
+      color: #ff9ec6;
+    }
+
+    .menu-slider {
+      width: 100%;
+      height: 5px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.12);
+      outline: none;
+      accent-color: #ff77a9;
+      cursor: pointer;
     }
 
     @media (max-width: 768px) {
@@ -313,268 +516,634 @@
       }
     }
 
-    .icon-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: rgba(18, 22, 32, 0.42);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      color: rgba(255, 255, 255, 0.85);
+    /* ── Sleek AAA Dark Studio Dev Editor Panel ───────────────────────── */
+    #dev-editor-panel {
+      position: fixed;
+      right: max(12px, env(safe-area-inset-right));
+      top: max(12px, env(safe-area-inset-top));
+      bottom: max(12px, env(safe-area-inset-bottom));
+      width: min(580px, calc(100vw - 24px));
+      max-height: calc(100vh - 24px);
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(99, 102, 241, 0.15);
+      z-index: 120;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      color: #f8fafc;
+      pointer-events: auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .dev-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: rgba(15, 23, 42, 0.98);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+
+    .dev-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dev-header-title {
+      font-size: 11.5px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .dev-header-badge {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #ffffff;
+      background: #4f46e5;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      box-shadow: 0 0 10px rgba(79, 70, 229, 0.4);
+    }
+
+    .dev-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Biome Select Bar */
+    .dev-biome-nav {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      padding: 6px 10px;
+      background: rgba(30, 41, 59, 0.7);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    .dev-biome-btn {
+      padding: 5px 2px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      background: #1e293b;
+      color: #cbd5e1;
+      font-family: inherit;
+      font-size: 9.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.15s ease;
+    }
+
+    .dev-biome-btn:hover {
+      background: #334155;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .dev-biome-btn.active {
+      background: #4f46e5;
+      color: #ffffff;
+      border-color: #6366f1;
+      box-shadow: 0 0 12px rgba(79, 70, 229, 0.45);
+    }
+
+    /* Top Tab Navigation Bar */
+    .dev-tabs-nav {
+      display: flex;
+      overflow-x: auto;
+      padding: 6px 10px;
+      gap: 4px;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+    .dev-tabs-nav::-webkit-scrollbar { display: none; }
+
+    .dev-tab-btn {
+      padding: 5px 9px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      background: #1e293b;
+      color: #94a3b8;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      text-transform: uppercase;
+      transition: all 0.15s ease;
+    }
+
+    .dev-tab-btn:hover {
+      background: #334155;
+      color: #f1f5f9;
+    }
+
+    .dev-tab-btn.active {
+      background: #6366f1;
+      color: #ffffff;
+      border-color: #818cf8;
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .dev-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #0b0f19;
+    }
+
+    .dev-scroll-body::-webkit-scrollbar {
+      width: 5px;
+    }
+    .dev-scroll-body::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+
+    .dev-tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dev-tab-pane.active {
+      display: flex;
+    }
+
+    /* Section Card */
+    .dev-section {
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dev-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 2px;
+    }
+
+    .dev-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: #38bdf8;
+      text-transform: uppercase;
+    }
+
+    .dev-section-tag {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    /* Island Horizontal Chip Selector */
+    .dev-island-chips {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .dev-island-chips::-webkit-scrollbar { height: 4px; }
+    .dev-island-chips::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+    .dev-island-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 8px;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      color: #cbd5e1;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .dev-island-chip:hover {
+      background: #334155;
+      color: #ffffff;
+    }
+    .dev-island-chip.active {
+      background: #4f46e5;
+      color: #ffffff;
+      border-color: #6366f1;
+      box-shadow: 0 0 12px rgba(79, 70, 229, 0.4);
+    }
+    .dev-island-chip .chip-num {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 9px;
+    }
+    .dev-island-chip .chip-lock-tag {
+      color: #f87171;
+      font-size: 8.5px;
+      font-weight: 800;
+    }
+
+    /* Visual 3D Castle Model Card Grid */
+    .castle-model-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding: 4px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+    }
+    .castle-model-grid::-webkit-scrollbar { width: 5px; }
+    .castle-model-grid::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+    .castle-model-card {
+      display: flex;
+      flex-direction: column;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .castle-model-card:hover {
+      transform: translateY(-2px);
+      border-color: #6366f1;
+      background: rgba(51, 65, 85, 0.85);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
+    }
+    .castle-model-card.active {
+      border: 2px solid #38bdf8;
+      background: rgba(15, 23, 42, 0.95);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.45);
+    }
+    .castle-model-card.dragging {
+      opacity: 0.45;
+      border-color: #38bdf8;
+      transform: scale(0.96);
+    }
+    .castle-model-card:active {
+      cursor: grabbing;
+    }
+    .castle-model-thumb-wrap {
+      width: 100%;
+      height: 75px;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      padding: 0;
-      outline: none;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-      transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+      background: radial-gradient(circle, rgba(51, 65, 85, 0.5) 0%, rgba(15, 23, 42, 0.9) 100%);
+      padding: 4px;
     }
-
-    .icon-btn:hover {
-      background: rgba(255, 255, 255, 0.14);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.25);
-    }
-
-    .icon-btn:active {
-      transform: scale(0.94);
-    }
-
-    .icon-btn svg {
-      display: block;
+    .castle-model-thumb {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
       pointer-events: none;
     }
-
-    .dev-top-btn {
-      background: rgba(18, 22, 32, 0.55);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: rgba(255, 255, 255, 0.9);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      padding: 8px 14px;
-      border-radius: 9999px;
-      cursor: pointer;
-      outline: none;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-      transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
-    }
-
-    .dev-top-btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.35);
-    }
-
-    .dev-top-btn.active {
-      background: rgba(77, 169, 232, 0.35);
-      border-color: rgba(77, 169, 232, 0.8);
-      color: #ffffff;
-    }
-
-    /* Dropdown Settings Menu */
-    #settings-menu-container, #model-selector-container, #biome-selector-container {
-      position: relative;
-    }
-
-    #settings-menu, #model-dropdown, #biome-dropdown {
-      display: none;
-      position: absolute;
-      background: rgba(18, 22, 32, 0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: 14px;
-      padding: 6px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-      flex-direction: column;
-      gap: 4px;
-      z-index: 50;
-    }
-
-    #settings-menu {
-      top: 46px;
-      right: 0;
-      min-width: 220px;
-      max-height: 500px;
-      overflow-y: auto;
-    }
-
-    #model-dropdown {
-      top: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%);
-      min-width: 195px;
-      max-height: 280px;
-      overflow-y: auto;
-    }
-
-    #biome-dropdown {
-      top: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%);
-      min-width: 230px;
-      max-height: 320px;
-      overflow-y: auto;
-    }
-
-    .model-option-btn, .biome-option-btn {
-      width: 100%;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: rgba(255, 255, 255, 0.85);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 7px 10px;
-      border-radius: 8px;
-      text-align: left;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s ease, color 0.15s ease;
-    }
-
-    .biome-option-btn {
+    .castle-model-card-info {
+      padding: 5px 6px;
       display: flex;
       flex-direction: column;
       gap: 2px;
     }
-
-    .biome-option-subtitle {
-      font-size: 9px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.55);
-      white-space: normal;
-    }
-
-    .model-option-btn:hover, .biome-option-btn:hover {
-      background: rgba(255, 255, 255, 0.14);
-      color: #ffffff;
-    }
-
-    .model-option-btn.active, .biome-option-btn.active {
-      background: rgba(77, 169, 232, 0.35);
-      border: 1px solid rgba(77, 169, 232, 0.7);
-      color: #ffffff;
-      font-weight: 700;
-    }
-
-    .menu-item-btn {
-      width: 100%;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: rgba(255, 255, 255, 0.88);
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 8px 12px;
-      border-radius: 8px;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
+    .castle-model-card-name {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #f8fafc;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-
-    .menu-item-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-    }
-
-    .menu-item-btn:active {
-      background: rgba(255, 255, 255, 0.18);
-    }
-
-    .menu-divider {
-      height: 1px;
-      background: rgba(255, 255, 255, 0.12);
-      margin: 4px 6px;
-      border: none;
-    }
-
-    .menu-section-title {
-      font-size: 10px;
+    .castle-model-card-tag {
+      font-size: 8px;
       font-weight: 700;
-      letter-spacing: 0.06em;
-      color: rgba(255, 255, 255, 0.45);
+      color: #38bdf8;
       text-transform: uppercase;
-      padding: 6px 10px 2px;
     }
 
-    .menu-presets-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 4px;
-      padding: 3px 10px 5px;
-    }
-
-    .menu-preset-btn {
-      padding: 5px 6px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(255, 255, 255, 0.07);
-      color: rgba(255, 255, 255, 0.85);
-      font-family: inherit;
-      font-size: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-      white-space: nowrap;
-    }
-
-    .menu-preset-btn:hover {
-      background: rgba(255, 255, 255, 0.14);
-      color: #ffffff;
-    }
-
-    .menu-preset-btn.active {
-      background: rgba(255, 119, 169, 0.35);
-      border-color: rgba(255, 119, 169, 0.7);
-      color: #ffffff;
-      font-weight: 700;
-    }
-
-    .menu-slider-row {
+    /* Sliders and Numerical Displays */
+    .dev-row {
       display: flex;
       flex-direction: column;
       gap: 3px;
-      padding: 4px 10px;
     }
 
-    .menu-slider-header {
+    .dev-row-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.85);
-    }
-
-    .menu-slider-val {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 10px;
-      font-weight: 600;
-      color: #ff9ec6;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
     }
 
-    .menu-slider {
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.14);
+    .dev-row-val {
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
+      font-size: 10px;
+      font-weight: 800;
+      color: #38bdf8;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .dev-num-input {
+      width: 60px;
+      padding: 3px 5px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      background: #0f172a;
+      color: #38bdf8;
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
+      font-size: 10px;
+      font-weight: 800;
+      text-align: right;
       outline: none;
-      accent-color: #ff77a9;
+    }
+    .dev-num-input:focus {
+      border-color: #38bdf8;
+    }
+
+    .dev-select {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-family: inherit;
+      font-size: 10.5px;
+      outline: none;
+    }
+    .dev-select:focus {
+      border-color: #6366f1;
+    }
+
+    .dev-btn {
+      padding: 5px 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      background: #1e293b;
+      color: #f1f5f9;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .dev-btn:hover {
+      background: #334155;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .dev-btn.active {
+      background: #4f46e5;
+      color: #ffffff;
+      border-color: #6366f1;
+      box-shadow: 0 0 10px rgba(79, 70, 229, 0.4);
+    }
+
+    .dev-save-btn {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      transition: all 0.15s ease;
+    }
+    .dev-save-btn:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5);
+    }
+
+    .dev-color-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+    .dev-color-hex {
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
+      color: #38bdf8;
+      font-size: 9.5px;
+    }
+    .dev-color-picker {
+      -webkit-appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      width: 32px;
+      height: 22px;
+      padding: 0;
+      background: transparent;
       cursor: pointer;
     }
+    .dev-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+    .dev-color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
 
-    /* Touch Controls: Dynamic Left Joystick & See-Through Boost */
+    #dev-status-msg {
+      display: none;
+      padding: 6px 10px;
+      background: rgba(30, 41, 59, 0.95);
+      border: 1px solid #38bdf8;
+      border-radius: 6px;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-align: center;
+      text-transform: uppercase;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── Performance Debug Panel ────────────────────────────────────────── */
+    #debug-panel {
+      position: fixed;
+      left: max(10px, env(safe-area-inset-left));
+      top: max(10px, env(safe-area-inset-top));
+      z-index: 100;
+      background: #ffffff;
+      border: 2px solid #000000;
+      padding: 10px;
+      color: #000000;
+      box-shadow: 4px 4px 0px #000000;
+      width: min(300px, calc(100vw - 20px));
+      pointer-events: auto;
+    }
+
+    .debug-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #000000;
+      padding-bottom: 4px;
+    }
+
+    .debug-header {
+      font-size: 10.5px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: #000000;
+      text-transform: uppercase;
+    }
+
+    .debug-close-btn {
+      background: #ffffff;
+      border: 1px solid #000000;
+      color: #000000;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-family: inherit;
+      text-transform: uppercase;
+    }
+
+    .debug-close-btn:hover {
+      background: #e5e5e5;
+    }
+
+    .debug-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .debug-btn {
+      padding: 3px 6px;
+      border: 1px solid #000000;
+      background: #ffffff;
+      color: #000000;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      min-width: 105px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .debug-btn:hover {
+      background: #e5e5e5;
+    }
+
+    .debug-btn.on {
+      background: #16a34a;
+      color: #ffffff;
+    }
+
+    .debug-divider {
+      border: none;
+      border-top: 1px solid #000000;
+      margin: 8px 0 6px 0;
+    }
+
+    .debug-btn-master {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #000000;
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      background: #ffffff;
+      color: #000000;
+      text-transform: uppercase;
+    }
+
+    .debug-btn-master:hover {
+      background: #e5e5e5;
+    }
+
+    /* ── Photo Mode UI ─────────────────────────────────────────────────── */
+    #photo-mode-ui {
+      display: none;
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffffff;
+      border: 2px solid #000000;
+      padding: 6px 12px;
+      z-index: 100;
+      align-items: center;
+      gap: 8px;
+      color: #000000;
+      font-weight: 800;
+      font-size: 11px;
+      box-shadow: 3px 3px 0px #000000;
+      text-transform: uppercase;
+    }
+
+    #photo-mode-ui button {
+      padding: 4px 10px;
+      border: 1px solid #000000;
+      background: #ffffff;
+      color: #000000;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 10.5px;
+      text-transform: uppercase;
+    }
+
+    #photo-mode-ui button:hover {
+      background: #e5e5e5;
+    }
+
+    /* ── Touch Controls & Boost ────────────────────────────────────────── */
     #touch-controls {
       position: fixed;
       inset: 0;
@@ -594,8 +1163,10 @@
 
     #joystick-base {
       position: absolute;
-      width: 110px;
-      height: 110px;
+      left: max(65px, calc(14% + env(safe-area-inset-left)));
+      bottom: max(65px, calc(16% + env(safe-area-inset-bottom)));
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.06);
       border: 1.5px solid rgba(255, 255, 255, 0.18);
@@ -604,18 +1175,27 @@
       transform: translate(-50%, -50%);
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.15s ease;
+      transition: opacity 0.2s ease;
+    }
+
+    body.is-touch-device #joystick-base.resting {
+      opacity: 0.45;
+    }
+
+    #joystick-base.active {
+      opacity: 1 !important;
+      background: rgba(255, 255, 255, 0.12);
     }
 
     #joystick-knob {
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.22);
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.4);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       transform: translate(-50%, -50%);
       pointer-events: none;
@@ -646,6 +1226,7 @@
       transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
       touch-action: none;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      text-transform: uppercase;
     }
 
     #boost-btn.active, #boost-btn:active {
@@ -655,749 +1236,126 @@
       transform: scale(0.92);
     }
 
-    /* Minimalist Debug Panel */
-    #debug-panel {
-      position: fixed;
-      left: max(14px, env(safe-area-inset-left));
-      top: max(14px, env(safe-area-inset-top));
-      z-index: 100;
-      background: rgba(18, 22, 32, 0.92);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 14px;
-      padding: 14px;
-      color: #ffffff;
-      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
-      width: min(290px, calc(100vw - 28px));
-      pointer-events: auto;
-    }
-
-    .debug-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .debug-header {
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      color: rgba(255, 255, 255, 0.7);
-      text-transform: uppercase;
-    }
-
-    .debug-close-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: rgba(255, 255, 255, 0.85);
-      border-radius: 6px;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 8px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.15s ease, color 0.15s ease;
-    }
-
-    .debug-close-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
-      color: #ffffff;
-    }
-
-    .debug-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .debug-row span {
-      color: rgba(255, 255, 255, 0.75);
-    }
-
-    .debug-btn {
-      padding: 5px 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      background: rgba(255, 255, 255, 0.08);
-      color: rgba(255, 255, 255, 0.9);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      min-width: 105px;
-      text-align: center;
-      transition: background 0.15s ease, border-color 0.15s ease;
-    }
-
-    .debug-btn.on {
-      background: rgba(46, 125, 50, 0.75);
-      border-color: rgba(76, 175, 80, 0.6);
-      color: #ffffff;
-    }
-
-    .debug-divider {
-      border: none;
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      margin: 12px 0 10px 0;
-    }
-
-    .debug-btn-master {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      cursor: pointer;
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-      transition: background 0.15s ease;
-    }
-
-    .debug-btn-master:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    /* ── Minimal 1-Page Biome Studio Developer Editor ── */
-    #dev-editor-panel {
-      position: fixed;
-      right: max(14px, env(safe-area-inset-right));
-      top: max(14px, env(safe-area-inset-top));
-      bottom: max(14px, env(safe-area-inset-bottom));
-      width: min(460px, calc(100vw - 28px));
-      max-height: calc(100vh - 28px);
-      background: rgba(11, 15, 22, 0.96);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 14px;
-      z-index: 120;
+    /* Merged Top-Down Blueprint HUD & Controls */
+    #top-view-hud {
       display: none;
-      flex-direction: column;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
-      overflow: hidden;
-      color: #f8fafc;
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 2px solid #6366f1;
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
       pointer-events: auto;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 98vw;
+      transition: all 0.2s ease;
     }
 
-    .dev-header-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.025);
-      flex-shrink: 0;
-    }
-
-    .dev-header-left {
+    .top-view-main-row {
       display: flex;
       align-items: center;
       gap: 8px;
-    }
-
-    .dev-header-title {
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.09em;
-      color: #94a3b8;
-      text-transform: uppercase;
-    }
-
-    .dev-header-badge {
-      font-size: 11px;
-      font-weight: 700;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.12);
-      padding: 2px 7px;
-      border-radius: 5px;
-      border: 1px solid rgba(56, 189, 248, 0.25);
-    }
-
-    .dev-header-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .dev-header-btn {
-      padding: 4px 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.06);
-      color: #cbd5e1;
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-    }
-
-    .dev-header-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.25);
-    }
-
-    .dev-header-btn.primary {
-      border-color: rgba(56, 189, 248, 0.5);
-      background: rgba(56, 189, 248, 0.18);
-      color: #38bdf8;
-    }
-
-    .dev-header-btn.primary:hover {
-      background: rgba(56, 189, 248, 0.35);
-      color: #ffffff;
-    }
-
-    /* Biome Select Bar */
-    .dev-biome-nav {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 4px;
-      padding: 6px 10px;
-      background: rgba(0, 0, 0, 0.4);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-      flex-shrink: 0;
-    }
-
-    .dev-biome-btn {
-      padding: 6px 2px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      background: rgba(255, 255, 255, 0.04);
-      color: #94a3b8;
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.12s ease;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .dev-biome-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #f1f5f9;
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .dev-biome-btn.active {
-      background: rgba(56, 189, 248, 0.22);
-      border-color: rgba(56, 189, 248, 0.8);
-      color: #38bdf8;
-      font-weight: 700;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
-    }
-
-    .dev-scroll-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .dev-scroll-body::-webkit-scrollbar {
-      width: 5px;
-    }
-    .dev-scroll-body::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.18);
-      border-radius: 3px;
-    }
-
-    /* Minimal Section Card */
-    .dev-section {
-      background: rgba(255, 255, 255, 0.028);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-    }
-
-    .dev-section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 4px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      margin-bottom: 2px;
-    }
-
-    .dev-section-title {
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      color: #cbd5e1;
-      text-transform: uppercase;
-    }
-
-    .dev-section-tag {
-      font-size: 10px;
-      font-weight: 600;
-      color: #64748b;
-    }
-
-    /* Tree Loader & Action Bar */
-    .dev-tree-action-bar {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      margin-bottom: 2px;
-    }
-
-    .dev-tree-upload-btn {
-      flex: 1;
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px dashed rgba(56, 189, 248, 0.5);
-      background: rgba(56, 189, 248, 0.08);
-      color: #38bdf8;
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      transition: background 0.15s ease, border-color 0.15s ease;
-    }
-
-    .dev-tree-upload-btn:hover {
-      background: rgba(56, 189, 248, 0.18);
-      border-color: rgba(56, 189, 248, 0.8);
-      color: #ffffff;
-    }
-
-    .dev-tree-cat-bar {
-      display: flex;
       flex-wrap: wrap;
-      gap: 3px;
-      margin-bottom: 4px;
     }
 
-    .dev-tree-cat-btn {
+    .top-view-nudge-pad {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 2px 4px;
+    }
+
+    .top-view-nudge-btn {
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      font-size: 9.5px;
+      font-weight: 800;
       padding: 3px 6px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.03);
-      color: #94a3b8;
-      font-family: inherit;
-      font-size: 9.5px;
-      font-weight: 600;
       cursor: pointer;
-      transition: all 0.12s ease;
-    }
-
-    .dev-tree-cat-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #f1f5f9;
-    }
-
-    .dev-tree-cat-btn.active {
-      background: rgba(56, 189, 248, 0.2);
-      border-color: rgba(56, 189, 248, 0.7);
-      color: #38bdf8;
-      font-weight: 700;
-    }
-
-    .dev-tree-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      max-height: 250px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .dev-tree-grid::-webkit-scrollbar {
-      width: 4px;
-    }
-    .dev-tree-grid::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 2px;
-    }
-
-    .dev-tree-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 6px 4px 5px 4px;
-      border-radius: 7px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.03);
-      color: #94a3b8;
-      cursor: pointer;
-      text-align: center;
-      font-family: inherit;
-      transition: all 0.12s ease;
       user-select: none;
-      position: relative;
+      transition: all 0.1s ease;
+    }
+    .top-view-nudge-btn:hover {
+      background: #38bdf8;
+      color: #0f172a;
+      border-color: #38bdf8;
+    }
+    .top-view-nudge-btn:active {
+      transform: scale(0.92);
     }
 
-    .dev-tree-card:hover {
-      background: rgba(255, 255, 255, 0.07);
-      border-color: rgba(255, 255, 255, 0.2);
-      color: #f1f5f9;
-      transform: translateY(-1px);
-    }
-
-    .dev-tree-card.active {
-      background: rgba(56, 189, 248, 0.14);
-      border-color: rgba(56, 189, 248, 0.85);
-      color: #ffffff;
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
-    }
-
-    .dev-tree-thumb-box {
-      width: 100%;
-      height: 62px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 4px;
-      background: rgba(0, 0, 0, 0.25);
-      border-radius: 5px;
-      padding: 2px;
-    }
-
-    .dev-tree-thumb-img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-      pointer-events: none;
-    }
-
-    .dev-tree-card-title {
-      font-size: 10px;
+    .top-view-step-btn {
+      background: #0f172a;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      border-radius: 3px;
+      font-size: 8.5px;
       font-weight: 700;
-      color: #f1f5f9;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-      margin-bottom: 2px;
+      padding: 2px 4px;
+      cursor: pointer;
+    }
+    .top-view-step-btn.active {
+      background: #4f46e5;
+      color: #ffffff;
+      border-color: #6366f1;
     }
 
-    .dev-tree-card-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      padding: 0 2px;
+    #top-view-drawer {
+      display: none;
+      border-top: 1px solid #334155;
+      padding-top: 6px;
+      gap: 10px;
+      align-items: stretch;
+      flex-wrap: wrap;
     }
 
-    .dev-tree-card-tag {
-      font-size: 8.5px;
-      font-weight: 600;
-      color: #64748b;
-      letter-spacing: 0.02em;
-    }
-
-    .dev-tree-card.active .dev-tree-card-tag {
-      color: #7dd3fc;
-    }
-
-    .dev-tree-card-status {
-      font-size: 8.5px;
-      font-weight: 800;
-      color: #475569;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .dev-tree-card.active .dev-tree-card-status {
-      color: #38bdf8;
-    }
-
-    /* Sliders and Numerical Displays */
-    .dev-row {
+    .top-view-drawer-section {
       display: flex;
       flex-direction: column;
-      gap: 3px;
-    }
-
-    .dev-row-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 10.5px;
-      font-weight: 600;
-      color: #cbd5e1;
-    }
-
-    .dev-row-val {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 10px;
-      font-weight: 700;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.12);
-      padding: 1px 5px;
-      border-radius: 4px;
-    }
-
-    .dev-slider {
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.12);
-      outline: none;
-      accent-color: #38bdf8;
-      cursor: pointer;
-    }
-
-    /* Color Swatches and Pickers */
-    .dev-color-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 10.5px;
-      font-weight: 600;
-      color: #cbd5e1;
-    }
-
-    .dev-color-picker-wrap {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .dev-color-hex-label {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 9.5px;
-      color: #64748b;
-    }
-
-    .dev-color-input {
-      -webkit-appearance: none;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 5px;
-      width: 32px;
-      height: 20px;
-      padding: 0;
-      background: transparent;
-      cursor: pointer;
-      transition: border-color 0.12s ease, transform 0.1s ease;
-    }
-
-    .dev-color-input:hover {
-      border-color: #38bdf8;
-      transform: scale(1.05);
-    }
-
-    .dev-color-input::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-
-    .dev-color-input::-webkit-color-swatch {
-      border: none;
-      border-radius: 4px;
-    }
-
-    .dev-chip-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 2px;
-    }
-
-    .dev-color-chip {
-      position: relative;
-      width: 24px;
-      height: 24px;
-      border-radius: 5px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      cursor: pointer;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-      overflow: hidden;
-      transition: transform 0.12s ease, border-color 0.12s ease;
-    }
-
-    .dev-color-chip:hover {
-      transform: scale(1.15);
-      border-color: #ffffff;
-    }
-
-    .dev-chip-picker {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    /* Grids & Buttons */
-    .dev-btn-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
       gap: 4px;
-    }
-
-    .dev-btn-grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-    }
-
-    .dev-btn {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
       padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.05);
-      color: #cbd5e1;
-      font-family: inherit;
-      font-size: 10.5px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.12s ease;
-      white-space: nowrap;
     }
 
-    .dev-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-    }
-
-    .dev-btn.active {
-      background: rgba(56, 189, 248, 0.25);
-      border-color: rgba(56, 189, 248, 0.8);
-      color: #38bdf8;
-      font-weight: 700;
-    }
-
-    .dev-save-btn {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(56, 189, 248, 0.6);
-      background: rgba(56, 189, 248, 0.2);
-      color: #38bdf8;
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      cursor: pointer;
-      text-align: center;
-      transition: background 0.15s ease, transform 0.1s ease;
-    }
-
-    .dev-save-btn:hover {
-      background: rgba(56, 189, 248, 0.35);
-      color: #ffffff;
-    }
-
-    .dev-save-btn:active {
-      transform: scale(0.98);
-    }
-
-    .dev-reset-btn {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(239, 68, 68, 0.5);
-      background: rgba(239, 68, 68, 0.15);
-      color: #f87171;
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      cursor: pointer;
-      text-align: center;
-      transition: background 0.15s ease, transform 0.1s ease;
-    }
-
-    .dev-reset-btn:hover {
-      background: rgba(239, 68, 68, 0.3);
-      color: #ffffff;
-    }
-
-    .dev-reset-btn:active {
-      transform: scale(0.98);
-    }
-
-    #dev-status-msg {
-      display: none;
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      font-size: 10.5px;
-      font-weight: 600;
-      text-align: center;
-    }
-
-    .dev-textarea {
-      width: 100%;
-      height: 90px;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
-      color: #cbd5e1;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 9.5px;
-      padding: 6px 8px;
-      resize: vertical;
-      outline: none;
-    }
-
-    /* Photo Mode UI */
-    #photo-mode-ui {
-      display: none;
-      position: fixed;
-      bottom: max(16px, env(safe-area-inset-bottom));
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(18, 22, 32, 0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      padding: 8px 16px;
-      border-radius: 9999px;
-      z-index: 100;
-      align-items: center;
-      gap: 12px;
-      color: #ffffff;
-      font-weight: 600;
-      font-size: 13px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    }
-
-    #photo-mode-ui button {
-      padding: 6px 14px;
-      border: none;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.15);
-      color: #ffffff;
-      font-family: inherit;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 12px;
-      transition: background 0.15s ease;
-    }
-
-    #photo-mode-ui button:hover {
-      background: rgba(255, 255, 255, 0.25);
+    .top-view-drawer-title {
+      font-size: 9px;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
   </style>
 </head>
 <body>
   <div id="app"></div>
 
-  <!-- Top Status Bar: Pause Flight, Day Selector (Day/Dusk/Twilight), FPS -->
+  <!-- Placement Mode Banner Overlay -->
+  <div id="dev-placement-hud">
+    <span id="dev-placement-hud-text">PLACEMENT MODE: CLICK TERRAIN TO PLACE | ESC TO CANCEL</span>
+    <button id="dev-placement-cancel-btn">Cancel</button>
+  </div>
+
+  <!-- Minimalist Frosted Glass Top Status Bar -->
   <div id="top-bar">
-    <button id="pause-flight-btn" class="top-icon-btn" aria-label="Pause Flight" title="Pause Flight">
+    <button id="pause-flight-btn" class="top-icon-btn" aria-label="Pause Exploration" title="Pause Exploration">
       <svg id="pause-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
         <rect x="5" y="4" width="4.5" height="16" rx="1.5"></rect>
         <rect x="14.5" y="4" width="4.5" height="16" rx="1.5"></rect>
@@ -1440,7 +1398,7 @@
     </div>
     <div class="top-divider"></div>
     <div id="model-selector-container">
-      <button id="model-select-btn" class="top-btn" aria-label="Select Flight Model" title="Change Flight Model">Scarlet Macaw</button>
+      <button id="model-select-btn" class="top-btn" aria-label="Select Avatar" title="Change Avatar">Scarlet Macaw</button>
       <div id="model-dropdown"></div>
     </div>
     <div class="top-divider"></div>
@@ -1468,47 +1426,33 @@
         </svg>
       </button>
 
-      <!-- Settings Dropdown containing Music, Debug, and Tree Editor -->
+      <!-- Settings Dropdown containing Biome Studio, Music, Debug, and Customization -->
       <div id="settings-menu">
         <button id="dev-menu-toggle" class="menu-item-btn" style="background: rgba(56, 189, 248, 0.16); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-weight: 700; text-align: center;">Developer Editor</button>
         <button id="music-toggle" class="menu-item-btn">Music</button>
-        <button id="track-toggle" class="menu-item-btn" style="display: none;">Track: Spirited Winds</button>
+        <button id="track-toggle" class="menu-item-btn" style="display: none;">Track: Skyline Breeze</button>
         <button id="debug-toggle" class="menu-item-btn">Debug: OFF</button>
         <button id="photo-toggle" class="menu-item-btn">Photo Mode</button>
         <hr class="menu-divider" />
         <div class="menu-section-title">Terrain Shading Style</div>
-        <button id="terrain-shading-toggle" class="menu-item-btn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); text-align: center; font-weight: 700; color: #38bdf8;">Style: Painterly Ghibli</button>
+        <button id="terrain-shading-toggle" class="menu-item-btn" style="text-align: center;">Style: Painterly Ghibli</button>
         <hr class="menu-divider" />
         <div class="menu-section-title">Color Palette</div>
         <div class="menu-presets-grid">
-          <button id="preset-candy" class="menu-preset-btn active" data-preset="candy">Candy Mix</button>
-          <button id="preset-cotton" class="menu-preset-btn" data-preset="cotton">Cotton Candy</button>
+          <button id="preset-candy" class="menu-preset-btn active" data-preset="candy">Candy</button>
+          <button id="preset-cotton" class="menu-preset-btn" data-preset="cotton">Cotton</button>
           <button id="preset-lollipop" class="menu-preset-btn" data-preset="lollipop">Lollipop</button>
           <button id="preset-mints" class="menu-preset-btn" data-preset="mints">Mints</button>
           <button id="preset-berry" class="menu-preset-btn" data-preset="berry" style="grid-column: span 2;">Berry</button>
         </div>
         <hr class="menu-divider" />
-        <div class="menu-section-title">Glow & Bloom Editor</div>
+        <div class="menu-section-title">Bioluminescence</div>
         <div class="menu-slider-row">
           <div class="menu-slider-header">
-            <span>Tree Bloom Intensity</span>
-            <span id="tree-bloom-val" class="menu-slider-val">100%</span>
+            <span>Foliage Glow</span>
+            <span id="bioluminescence-val" class="menu-slider-val">80%</span>
           </div>
-          <input type="range" id="tree-bloom-slider" class="menu-slider" min="0" max="300" step="5" value="100" />
-        </div>
-        <div class="menu-slider-row">
-          <div class="menu-slider-header">
-            <span>Canopy Glow (Night/Dusk)</span>
-            <span id="canopy-glow-val" class="menu-slider-val">100%</span>
-          </div>
-          <input type="range" id="canopy-glow-slider" class="menu-slider" min="0" max="200" step="5" value="100" />
-        </div>
-        <div class="menu-slider-row">
-          <div class="menu-slider-header">
-            <span>Base Trunk Glow</span>
-            <span id="trunk-glow-val" class="menu-slider-val">100%</span>
-          </div>
-          <input type="range" id="trunk-glow-slider" class="menu-slider" min="0" max="200" step="5" value="100" />
+          <input type="range" id="bioluminescence-slider" class="menu-slider" min="0" max="100" step="5" value="80" />
         </div>
         <hr class="menu-divider" />
         <div class="menu-section-title">Trees</div>
@@ -1546,483 +1490,669 @@
     </div>
   </div>
 
-  <!-- Minimal 1-Page Biome Studio Developer Editor -->
+  <!-- Minimalist CAD Biome Studio Developer Editor -->
   <div id="dev-editor-panel">
     <!-- Header Bar -->
     <div class="dev-header-bar">
       <div class="dev-header-left">
-        <span class="dev-header-title">Biome Studio</span>
-        <span id="dev-active-biome-title" class="dev-header-badge">Lush Meadow</span>
+        <span class="dev-header-title">BIOME STUDIO & 3D ASSET EDITOR</span>
+        <span id="dev-active-biome-title" class="dev-header-badge">LUSH MEADOW</span>
       </div>
       <div class="dev-header-actions">
-        <button id="dev-biome-tp-btn" class="dev-header-btn primary" title="Teleport to this biome center">Teleport</button>
-        <button id="dev-editor-close" class="dev-header-btn" aria-label="Close Developer Editor">Close</button>
+        <button id="dev-biome-tp-btn" class="cad-btn primary" title="Teleport to this biome center">Teleport</button>
+        <button id="dev-editor-close" class="cad-btn danger" aria-label="Close Developer Editor">Close</button>
       </div>
     </div>
 
     <!-- Biome Selector Strip -->
     <div class="dev-biome-nav">
-      <button class="dev-biome-btn active" data-biome="meadow" title="Lush Meadow">Meadow</button>
+      <button class="dev-biome-btn active" data-biome="candyland" title="Candyland">Candyland</button>
+      <button class="dev-biome-btn" data-biome="meadow" title="Lush Meadow">Meadow</button>
       <button class="dev-biome-btn" data-biome="archipelago" title="Floating Archipelago">Archipelago</button>
       <button class="dev-biome-btn" data-biome="geothermal" title="Geothermal Ridge">Geothermal</button>
       <button class="dev-biome-btn" data-biome="estuary" title="Bioluminescent Estuary">Estuary</button>
       <button class="dev-biome-btn" data-biome="redwood" title="Colossal Redwood">Redwood</button>
+      <button class="dev-biome-btn" data-biome="prism_sanctum" title="Prism Sanctum">Prism Sanctum</button>
+      <button class="dev-biome-btn" data-biome="sky_citadel" title="Floating Cloud Citadel">Sky Citadel</button>
     </div>
 
-    <!-- Continuous 1-Page Scroll Body -->
+    <!-- Top Tab Navigation Bar -->
+    <div class="dev-tabs-nav">
+      <button class="dev-tab-btn active" data-tab="tab-models">Models & Flora</button>
+      <button class="dev-tab-btn" data-tab="tab-props">World Props</button>
+      <button class="dev-tab-btn" data-tab="tab-castles">Sky Castles</button>
+      <button class="dev-tab-btn" data-tab="tab-sky">Sky & Light</button>
+      <button class="dev-tab-btn" data-tab="tab-terrain">Terrain & Water</button>
+      <button class="dev-tab-btn" data-tab="tab-profile">Profile & Export</button>
+    </div>
+
+    <!-- Continuous Tabbed Scroll Body -->
     <div class="dev-scroll-body">
       <div id="dev-status-msg"></div>
 
-      <!-- Section 1: 3D Tree Loader & Foliage -->
-      <div class="dev-section">
-        <div class="dev-section-header">
-          <span class="dev-section-title">1. 3D Tree Picker & Foliage</span>
-          <span id="dev-tree-active-count" class="dev-section-tag">0 Models Active</span>
+      <!-- TAB 1: Models & Flora -->
+      <div id="tab-models" class="dev-tab-pane active">
+        <!-- Model Catalog Section -->
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">3D MODELS CATALOG</span>
+            <span id="dev-tree-active-count" class="dev-section-tag">0 MODELS ACTIVE</span>
+          </div>
+
+          <!-- Search & Filter Bar -->
+          <div class="dev-tree-search-bar">
+            <input type="text" id="dev-tree-search" class="dev-search-input" placeholder="Search models by name..." />
+            <button id="dev-select-all-trees-btn" class="dev-btn" title="Select all catalog models for this biome">Select All</button>
+            <button id="dev-clear-trees-btn" class="dev-btn" title="Clear selected models (no models in world)">Unselect All</button>
+          </div>
+
+          <!-- Category Filter Pills -->
+          <div class="dev-tree-cat-bar">
+            <button class="dev-tree-cat-btn active" data-cat="all">All (23)</button>
+            <button class="dev-tree-cat-btn" data-cat="trees">Trees (16)</button>
+            <button class="dev-tree-cat-btn" data-cat="flowers">Flowers (7)</button>
+          </div>
+
+          <!-- Visual 3D Tree Model Grid with Previews & Direct Toggle -->
+          <div id="dev-tree-models-grid" class="dev-tree-grid"></div>
+
+          <!-- Upload Custom .GLB -->
+          <div class="dev-tree-action-bar" style="margin-top: 4px;">
+            <input type="file" id="dev-tree-file-input" accept=".glb" style="display: none;" />
+            <button id="dev-upload-tree-btn" class="dev-tree-upload-btn" title="Load custom .glb tree model directly into this biome">Upload Custom .GLB</button>
+          </div>
         </div>
 
-        <!-- Tree Loader Action Bar -->
-        <div class="dev-tree-action-bar">
-          <input type="file" id="dev-tree-file-input" accept=".glb" style="display: none;" />
-          <button id="dev-upload-tree-btn" class="dev-tree-upload-btn" title="Load custom .glb tree model directly into this biome">Upload Custom .GLB</button>
-          <button id="dev-select-all-trees-btn" class="dev-btn" style="padding: 6px 8px;" title="Select all catalog trees for this biome">All</button>
-          <button id="dev-clear-trees-btn" class="dev-btn" style="padding: 6px 8px;" title="Clear selected trees (no trees in world)">Clear</button>
+        <!-- Selected Model Inspector -->
+        <div id="dev-model-inspector" class="dev-inspector-card">
+          <div class="dev-inspector-header">
+            <div class="dev-inspector-thumb">
+              <img id="dev-inspector-img" src="" alt="" />
+            </div>
+            <div class="dev-inspector-info">
+              <div id="dev-inspector-title" class="dev-inspector-title">SELECT A MODEL</div>
+              <div id="dev-inspector-cat" class="dev-inspector-meta">Click any model card above to customize</div>
+            </div>
+            <button id="dev-inspector-toggle-btn" class="dev-inspector-toggle-btn">Active in Biome</button>
+          </div>
+
+          <!-- Model Scale -->
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>MODEL SCALE</span>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span id="dev-model-scale-val" class="dev-row-val">6.00x</span>
+                <input type="number" id="dev-model-scale-num" class="dev-num-input" min="0.1" max="50.0" step="0.1" value="6.0" />
+              </div>
+            </div>
+            <input type="range" id="dev-model-scale" class="cad-slider" min="0.1" max="30.0" step="0.1" value="6.0" />
+          </div>
+
+          <!-- Model Density -->
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>MODEL DENSITY / SPAWN RATE</span>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span id="dev-model-density-val" class="dev-row-val">250</span>
+                <input type="number" id="dev-model-density-num" class="dev-num-input" min="0" max="800" step="10" value="250" />
+              </div>
+            </div>
+            <input type="range" id="dev-model-density" class="cad-slider" min="0" max="800" step="10" value="250" />
+          </div>
+
+          <!-- Bioluminescence -->
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>BIOLUMINESCENCE</span>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span id="dev-model-biolum-val" class="dev-row-val">80%</span>
+                <input type="number" id="dev-model-biolum-num" class="dev-num-input" min="0" max="100" step="5" value="80" />
+              </div>
+            </div>
+            <input type="range" id="dev-model-biolum" class="cad-slider" min="0" max="100" step="5" value="80" />
+          </div>
+
+          <!-- Color Mode Toggle -->
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>COLOR MODE</span>
+            </div>
+            <div class="dev-btn-grid">
+              <button id="dev-model-orig-btn" class="dev-btn">Original Colors</button>
+              <button id="dev-model-custom-btn" class="dev-btn active">Custom Colors</button>
+            </div>
+          </div>
+
+          <!-- Custom Color Pickers -->
+          <div id="dev-model-custom-colors-wrap" style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="dev-row">
+              <div class="dev-row-header">
+                <span id="dev-model-canopy-label">CANOPY / BLOSSOM COLORS</span>
+                <span style="font-size: 9px; color: #555555;">Click swatch to edit</span>
+              </div>
+              <div id="dev-model-canopy-swatches" class="dev-chip-grid"></div>
+            </div>
+            <div class="dev-row">
+              <div class="dev-row-header">
+                <span id="dev-model-leaf-label">LEAF / FOLIAGE COLORS</span>
+                <span style="font-size: 9px; color: #555555;">Click swatch to edit</span>
+              </div>
+              <div id="dev-model-leaf-swatches" class="dev-chip-grid"></div>
+            </div>
+            <div class="dev-row">
+              <div class="dev-row-header">
+                <span id="dev-model-trunk-label">TRUNK / STEM COLORS</span>
+                <span style="font-size: 9px; color: #555555;">Click swatch to edit</span>
+              </div>
+              <div id="dev-model-trunk-swatches" class="dev-chip-grid"></div>
+            </div>
+          </div>
         </div>
 
-        <!-- Tree Category Filter Pills -->
-        <div class="dev-tree-cat-bar">
-          <button class="dev-tree-cat-btn active" data-cat="all">All (24)</button>
-          <button class="dev-tree-cat-btn" data-cat="Cartoon">Cartoon (16)</button>
-          <button class="dev-tree-cat-btn" data-cat="Bushy">Bushy (8)</button>
+        <!-- Global Foliage (Bushes) -->
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">GLOBAL UNDERGROWTH (BUSHES)</span>
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>BUSH SCALE</span>
+              <span id="dev-veg-bush-scale-val" class="dev-row-val">1.00x</span>
+            </div>
+            <input type="range" id="dev-veg-bush-scale" class="cad-slider" min="0.2" max="5.0" step="0.05" value="1.0" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>BUSH DENSITY</span>
+              <span id="dev-veg-bush-density-val" class="dev-row-val">250</span>
+            </div>
+            <input type="range" id="dev-veg-bush-density" class="cad-slider" min="0" max="800" step="10" value="250" />
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: World Props & Structures (Manual Placement) -->
+      <div id="tab-props" class="dev-tab-pane">
+        <!-- Placeable Props Catalog -->
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">PLACEABLE STRUCTURES & VESSELS</span>
+            <span class="dev-section-tag">MANUAL INSERTION</span>
+          </div>
+
+          <!-- Search & Filter Bar -->
+          <div class="dev-tree-search-bar" style="margin-bottom: 6px;">
+            <input type="text" id="dev-prop-search" class="dev-search-input" placeholder="Search structures & vessels by name..." />
+          </div>
+
+          <!-- Category Filter Pills -->
+          <div class="dev-tree-cat-bar">
+            <button class="dev-prop-cat-btn active" data-cat="all">All (15)</button>
+            <button class="dev-prop-cat-btn" data-cat="Castles & Towers">Castles (9)</button>
+            <button class="dev-prop-cat-btn" data-cat="Ships & Vessels">Ships & Boats (6)</button>
+          </div>
+
+          <div id="dev-prop-catalog-grid" class="dev-tree-grid"></div>
+          <div class="dev-tree-action-bar" style="margin-top: 4px;">
+            <input type="file" id="dev-prop-file-input" accept=".glb" style="display: none;" />
+            <button id="dev-upload-prop-btn" class="dev-tree-upload-btn" title="Load custom 3D model directly into world">Upload Custom .GLB Structure</button>
+          </div>
         </div>
 
-        <!-- Visual 3D Tree Model Grid with Previews -->
-        <div id="dev-tree-models-grid" class="dev-tree-grid"></div>
-
-        <!-- Scale & Density -->
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Tree Scale</span>
-            <span id="dev-veg-tree-scale-val" class="dev-row-val">6.00x</span>
+        <!-- Active Placed Objects List -->
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">PLACED OBJECTS IN WORLD</span>
+            <span id="dev-placed-props-count" class="dev-section-tag">0 PLACED</span>
           </div>
-          <input type="range" id="dev-veg-tree-scale" class="dev-slider" min="0.5" max="50.0" step="0.1" value="6.0" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Tree Density</span>
-            <span id="dev-veg-tree-density-val" class="dev-row-val">800</span>
-          </div>
-          <input type="range" id="dev-veg-tree-density" class="dev-slider" min="0" max="800" step="10" value="800" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Bush Scale</span>
-            <span id="dev-veg-bush-scale-val" class="dev-row-val">1.00x</span>
-          </div>
-          <input type="range" id="dev-veg-bush-scale" class="dev-slider" min="0.2" max="5.0" step="0.05" value="1.0" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Bush Density</span>
-            <span id="dev-veg-bush-density-val" class="dev-row-val">250</span>
-          </div>
-          <input type="range" id="dev-veg-bush-density" class="dev-slider" min="0" max="800" step="10" value="250" />
+          <div id="dev-placed-props-list" class="dev-placed-list"></div>
+          <button id="dev-clear-props-btn" class="dev-btn" style="margin-top: 4px; border-color: #ff4444; color: #ff4444;">Clear All Placed Objects</button>
         </div>
 
-        <!-- Color Swatches & Presets -->
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Canopy Colors (Click swatch to edit)</span>
+        <!-- Placed Object Inspector -->
+        <div id="dev-prop-inspector" class="dev-inspector-card" style="display: none;">
+          <div class="dev-inspector-header">
+            <div class="dev-inspector-thumb">
+              <img id="dev-prop-inspector-img" src="" alt="" />
+            </div>
+            <div class="dev-inspector-info">
+              <div id="dev-prop-inspector-title" class="dev-inspector-title">SELECTED OBJECT</div>
+              <div id="dev-prop-inspector-cat" class="dev-inspector-meta">Manual World Prop</div>
+            </div>
+            <button id="dev-prop-move-btn" class="dev-inspector-toggle-btn">Move with Mouse</button>
           </div>
-          <div id="dev-canopy-swatches" class="dev-chip-grid"></div>
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Trunk Colors (Click swatch to edit)</span>
-          </div>
-          <div id="dev-trunk-swatches" class="dev-chip-grid"></div>
-        </div>
 
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Color Presets</span>
+          <!-- Keyboard & On-Screen Nudge Controls -->
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>KEYBOARD & MOUSE MOVEMENT</span>
+              <span style="font-size: 8.5px; color: #888888;">Arrows to Move, [ / ] Scale, R Rotate</span>
+            </div>
+            <div class="dev-btn-grid" style="grid-template-columns: repeat(4, 1fr); gap: 4px;">
+              <button id="dev-prop-nudge-n" class="dev-btn" title="Move North (ArrowUp)">+Z</button>
+              <button id="dev-prop-nudge-s" class="dev-btn" title="Move South (ArrowDown)">-Z</button>
+              <button id="dev-prop-nudge-w" class="dev-btn" title="Move West (ArrowLeft)">-X</button>
+              <button id="dev-prop-nudge-e" class="dev-btn" title="Move East (ArrowRight)">+X</button>
+            </div>
+            <div class="dev-btn-grid" style="grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px;">
+              <button id="dev-prop-nudge-up" class="dev-btn" title="Elevate Up (PgUp)">Elev +</button>
+              <button id="dev-prop-nudge-dn" class="dev-btn" title="Elevate Down (PgDn)">Elev -</button>
+              <button id="dev-prop-scale-dn" class="dev-btn" title="Scale Smaller ([)">Scale -</button>
+              <button id="dev-prop-scale-up" class="dev-btn" title="Scale Larger (])">Scale +</button>
+            </div>
           </div>
+
+          <!-- Scale -->
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>OBJECT SCALE</span>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span id="dev-prop-scale-val" class="dev-row-val">2.50x</span>
+                <input type="number" id="dev-prop-scale-num" class="dev-num-input" min="0.1" max="50.0" step="0.1" value="2.5" />
+              </div>
+            </div>
+            <input type="range" id="dev-prop-scale" class="cad-slider" min="0.1" max="30.0" step="0.1" value="2.5" />
+          </div>
+
+          <!-- Ground Elevation Offset (Allows deep in ground or above water) -->
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>GROUND ELEVATION OFFSET</span>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span id="dev-prop-offset-val" class="dev-row-val">0.00m</span>
+                <input type="number" id="dev-prop-offset-num" class="dev-num-input" min="-50.0" max="100.0" step="0.5" value="0.0" />
+              </div>
+            </div>
+            <input type="range" id="dev-prop-offset" class="cad-slider" min="-30.0" max="50.0" step="0.5" value="0.0" />
+          </div>
+
+          <!-- Quick Elevation Snaps -->
           <div class="dev-btn-grid">
-            <button class="dev-btn dev-veg-preset-btn active" data-preset="candy">Candy Mix</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="cotton">Cotton Candy</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="lollipop">Lollipop</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="mints">Spearmint</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="berry">Wild Berry</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="archipelago">Sakura</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="archipelago_crystal">Crystal Cyan</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="archipelago_lavender">Lavender</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="geothermal">Ash & Lava</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="geothermal_magma">Molten</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="estuary">Biolum Coral</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="estuary_neon">Neon Lagoon</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="redwood">Giant Redwood</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="redwood_golden">Golden Forest</button>
+            <button id="dev-prop-snap-ground-btn" class="dev-btn">Snap to Ground (0m)</button>
+            <button id="dev-prop-snap-water-btn" class="dev-btn">Snap to Water Level</button>
           </div>
-        </div>
-      </div>
 
-      <!-- Section 2: Atmosphere, Sky & Illumination -->
-      <div class="dev-section">
-        <div class="dev-section-header">
-          <span class="dev-section-title">2. Atmosphere & Sky</span>
-          <span class="dev-section-tag">Lighting & Fog</span>
-        </div>
+          <!-- Rotation / Heading (Yaw) -->
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>HEADING / ROTATION</span>
+              <span id="dev-prop-yaw-val" class="dev-row-val">0 deg</span>
+            </div>
+            <input type="range" id="dev-prop-yaw" class="cad-slider" min="0" max="360" step="5" value="0" />
+          </div>
 
-        <!-- Phase Switcher -->
-        <div class="dev-btn-grid-3">
-          <button class="dev-btn dev-phase-btn active" data-phase="0">Day</button>
-          <button class="dev-btn dev-phase-btn" data-phase="1">Dusk</button>
-          <button class="dev-btn dev-phase-btn" data-phase="2">Twilight</button>
-        </div>
-
-        <!-- Sky & Fog -->
-        <div class="dev-color-row">
-          <span>Sky Background</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-env-bg-hex" class="dev-color-hex-label">#93d4ff</span>
-            <input type="color" id="dev-env-bg" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-color-row">
-          <span>Fog Color</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-env-fog-hex" class="dev-color-hex-label">#cce9ff</span>
-            <input type="color" id="dev-env-fog" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Fog Near</span>
-            <span id="dev-env-fognear-val" class="dev-row-val">200</span>
-          </div>
-          <input type="range" id="dev-env-fognear" class="dev-slider" min="10" max="600" step="5" value="200" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Fog Far</span>
-            <span id="dev-env-fogfar-val" class="dev-row-val">720</span>
-          </div>
-          <input type="range" id="dev-env-fogfar" class="dev-slider" min="100" max="1500" step="10" value="720" />
-        </div>
-
-        <!-- Illumination -->
-        <div class="dev-color-row">
-          <span>Ambient Light</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-env-amb-color-hex" class="dev-color-hex-label">#ffffff</span>
-            <input type="color" id="dev-env-amb-color" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Ambient Intensity</span>
-            <span id="dev-env-amb-intensity-val" class="dev-row-val">0.75</span>
-          </div>
-          <input type="range" id="dev-env-amb-intensity" class="dev-slider" min="0" max="2.5" step="0.05" value="0.75" />
-        </div>
-        <div class="dev-color-row">
-          <span>Directional Light</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-env-dir-color-hex" class="dev-color-hex-label">#fff8e7</span>
-            <input type="color" id="dev-env-dir-color" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Directional Intensity</span>
-            <span id="dev-env-dir-intensity-val" class="dev-row-val">1.40</span>
-          </div>
-          <input type="range" id="dev-env-dir-intensity" class="dev-slider" min="0" max="3.0" step="0.05" value="1.4" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Hemisphere Intensity</span>
-            <span id="dev-env-hemi-intensity-val" class="dev-row-val">0.60</span>
-          </div>
-          <input type="range" id="dev-env-hemi-intensity" class="dev-slider" min="0" max="2.0" step="0.05" value="0.6" />
-        </div>
-
-        <!-- Sun & Stars -->
-        <div class="dev-color-row">
-          <span>Sun Color</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-env-sun-color-hex" class="dev-color-hex-label">#fffbe8</span>
-            <input type="color" id="dev-env-sun-color" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Sun Intensity</span>
-            <span id="dev-env-sun-intensity-val" class="dev-row-val">1.80</span>
-          </div>
-          <input type="range" id="dev-env-sun-intensity" class="dev-slider" min="0" max="4.0" step="0.1" value="1.8" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Sun Scale</span>
-            <span id="dev-env-sun-scale-val" class="dev-row-val">1.30x</span>
-          </div>
-          <input type="range" id="dev-env-sun-scale" class="dev-slider" min="0.1" max="4.0" step="0.1" value="1.3" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Starfield Opacity</span>
-            <span id="dev-env-star-opacity-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-env-star-opacity" class="dev-slider" min="0" max="1.0" step="0.05" value="0.0" />
-        </div>
-      </div>
-
-      <!-- Section 3: Bloom & Emissive Glow (Biome Locked) -->
-      <div class="dev-section">
-        <div class="dev-section-header">
-          <span class="dev-section-title">3. Bloom & Emissive Glow</span>
-          <span class="dev-section-tag">Locked to Biome</span>
-        </div>
-
-        <!-- UnrealBloom Post Pass -->
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Post Bloom Strength</span>
-            <span id="dev-bloom-strength-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-bloom-strength" class="dev-slider" min="0" max="2.5" step="0.02" value="0.0" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Post Bloom Radius</span>
-            <span id="dev-bloom-radius-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-bloom-radius" class="dev-slider" min="0" max="1.5" step="0.02" value="0.0" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Post Bloom Threshold</span>
-            <span id="dev-bloom-threshold-val" class="dev-row-val">0.70</span>
-          </div>
-          <input type="range" id="dev-bloom-threshold" class="dev-slider" min="0" max="1.0" step="0.02" value="0.70" />
-        </div>
-
-        <!-- Vegetation Glow -->
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Tree Bloom Multiplier</span>
-            <span id="dev-tree-bloom-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-tree-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.0" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Canopy Night Glow</span>
-            <span id="dev-tree-canopy-glow-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-tree-canopy-glow" class="dev-slider" min="0" max="2.5" step="0.05" value="0.0" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Trunk Base Glow</span>
-            <span id="dev-tree-trunk-glow-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-tree-trunk-glow" class="dev-slider" min="0" max="2.5" step="0.05" value="0.0" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Bush Bloom Multiplier</span>
-            <span id="dev-bush-bloom-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-bush-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.0" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Bush Glow Multiplier</span>
-            <span id="dev-bush-glow-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-bush-glow" class="dev-slider" min="0" max="2.5" step="0.05" value="0.0" />
-        </div>
-
-        <!-- Shoreline Foam -->
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Shore Foam Bloom</span>
-            <span id="dev-shore-bloom-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-shore-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.0" />
-        </div>
-        <div class="dev-color-row">
-          <span>Shore Foam Color</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-shore-color-hex" class="dev-color-hex-label">#ffffff</span>
-            <input type="color" id="dev-shore-color" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Shore Band Width</span>
-            <span id="dev-shore-width-val" class="dev-row-val">0.80</span>
-          </div>
-          <input type="range" id="dev-shore-width" class="dev-slider" min="0.1" max="3.0" step="0.05" value="0.8" />
-        </div>
-
-        <!-- Cloud Atmosphere -->
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Cloud Bloom</span>
-            <span id="dev-cloud-bloom-val" class="dev-row-val">0.00</span>
-          </div>
-          <input type="range" id="dev-cloud-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.0" />
-        </div>
-        <div class="dev-color-row">
-          <span>Cloud Base Color</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-cloud-color-hex" class="dev-color-hex-label">#ffffff</span>
-            <input type="color" id="dev-cloud-color" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-color-row">
-          <span>Cloud Emissive Color</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-cloud-emissive-hex" class="dev-color-hex-label">#ffffff</span>
-            <input type="color" id="dev-cloud-emissive" class="dev-color-input" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Section 4: Terrain & Water -->
-      <div class="dev-section">
-        <div class="dev-section-header">
-          <span class="dev-section-title">4. Terrain & Water</span>
-          <span class="dev-section-tag">Surface Shading</span>
-        </div>
-
-        <!-- Terrain Presets -->
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Terrain Palettes</span>
-          </div>
-          <div class="dev-btn-grid">
-            <button class="dev-btn dev-palette-btn active" data-palette="Lush Green">Lush Green</button>
-            <button class="dev-btn dev-palette-btn" data-palette="Autumn Warmth">Autumn Warmth</button>
-            <button class="dev-btn dev-palette-btn" data-palette="Ghibli Pastel">Ghibli Pastel</button>
-            <button class="dev-btn dev-palette-btn" data-palette="Alpine Highlands">Alpine</button>
-            <button class="dev-btn dev-palette-btn" data-palette="Candy Meadow" style="grid-column: span 2;">Candy Meadow</button>
-          </div>
-        </div>
-
-        <!-- Vertex Colors -->
-        <div class="dev-color-row">
-          <span>Lowland Grass</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-terrain-low-hex" class="dev-color-hex-label">#38b000</span>
-            <input type="color" id="dev-terrain-low" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-color-row">
-          <span>Highland Grass</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-terrain-high-hex" class="dev-color-hex-label">#70e000</span>
-            <input type="color" id="dev-terrain-high" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-color-row">
-          <span>Mountain Dirt / Rock</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-terrain-dirt-hex" class="dev-color-hex-label">#936639</span>
-            <input type="color" id="dev-terrain-dirt" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-color-row">
-          <span>Trail Dirt Path</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-terrain-path-hex" class="dev-color-hex-label">#b08968</span>
-            <input type="color" id="dev-terrain-path" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-color-row">
-          <span>Coast Sand</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-terrain-sand-hex" class="dev-color-hex-label">#ede0d4</span>
-            <input type="color" id="dev-terrain-sand" class="dev-color-input" />
-          </div>
-        </div>
-        <button id="dev-terrain-toon-toggle" class="dev-btn" style="margin-top: 4px;">Terrain Style: Painterly Ghibli</button>
-
-        <!-- Water -->
-        <div class="dev-color-row">
-          <span>Water Color</span>
-          <div class="dev-color-picker-wrap">
-            <span id="dev-water-color-hex" class="dev-color-hex-label">#0099ff</span>
-            <input type="color" id="dev-water-color" class="dev-color-input" />
-          </div>
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Water Opacity</span>
-            <span id="dev-water-opacity-val" class="dev-row-val">0.82</span>
-          </div>
-          <input type="range" id="dev-water-opacity" class="dev-slider" min="0" max="1.0" step="0.02" value="0.82" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Reflectivity</span>
-            <span id="dev-water-reflectivity-val" class="dev-row-val">0.65</span>
-          </div>
-          <input type="range" id="dev-water-reflectivity" class="dev-slider" min="0" max="1.0" step="0.02" value="0.65" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Roughness</span>
-            <span id="dev-water-roughness-val" class="dev-row-val">0.18</span>
-          </div>
-          <input type="range" id="dev-water-roughness" class="dev-slider" min="0" max="1.0" step="0.02" value="0.18" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Metalness</span>
-            <span id="dev-water-metalness-val" class="dev-row-val">0.05</span>
-          </div>
-          <input type="range" id="dev-water-metalness" class="dev-slider" min="0" max="1.0" step="0.02" value="0.05" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Clearcoat</span>
-            <span id="dev-water-clearcoat-val" class="dev-row-val">0.80</span>
-          </div>
-          <input type="range" id="dev-water-clearcoat" class="dev-slider" min="0" max="1.0" step="0.02" value="0.80" />
-        </div>
-        <div class="dev-row">
-          <div class="dev-row-header">
-            <span>Clearcoat Roughness</span>
-            <span id="dev-water-clearcoat-roughness-val" class="dev-row-val">0.15</span>
-          </div>
-          <input type="range" id="dev-water-clearcoat-roughness" class="dev-slider" min="0" max="1.0" step="0.02" value="0.15" />
-        </div>
-        <button id="dev-water-toon-toggle" class="dev-btn" style="margin-top: 2px;">Shader Mode: MeshPhysical (Realistic)</button>
-      </div>
-
-      <!-- Section 5: Biome Profiles & Actions -->
-      <div class="dev-section">
-        <div class="dev-section-header">
-          <span class="dev-section-title">5. Profile & Presets</span>
-          <span class="dev-section-tag">Persistence</span>
-        </div>
-
-        <button id="dev-save-biome-btn" class="dev-save-btn">Set As Default for Active Biome</button>
-        <button id="dev-save-all-btn" class="dev-save-btn" style="background: rgba(34, 197, 94, 0.25); border-color: rgba(34, 197, 94, 0.6); color: #4ade80;">Set All Biomes As Default</button>
-        <button id="dev-reset-biome-btn" class="dev-reset-btn">Reset Active Biome to Factory</button>
-        <button id="dev-reset-all-btn" class="dev-reset-btn">Reset All Biomes to Factory</button>
-
-        <div class="dev-row" style="margin-top: 4px;">
-          <div class="dev-row-header">
-            <span>JSON Configuration</span>
-          </div>
-          <textarea id="dev-json-export" class="dev-textarea" spellcheck="false"></textarea>
+          <!-- Navigation & Actions -->
           <div class="dev-btn-grid" style="margin-top: 4px;">
-            <button id="dev-copy-json-btn" class="dev-btn">Copy JSON</button>
-            <button id="dev-apply-json-btn" class="dev-btn">Apply JSON</button>
+            <button id="dev-prop-tp-btn" class="dev-btn">Focus</button>
+            <button id="dev-prop-dup-btn" class="dev-btn">Duplicate</button>
+            <button id="dev-prop-del-btn" class="dev-btn" style="grid-column: span 2; border-color: #ff4444; color: #ff4444;">Delete Object</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Sky Castles Archipelago Editor -->
+      <div id="tab-castles" class="dev-tab-pane">
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">FLOATING CASTLES ARCHIPELAGO</span>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <button id="dev-castle-top-view-btn" class="dev-btn" style="background: #4f46e5; color: #ffffff;" title="Switch to overhead top-down blueprint camera for visual placement">Top-Down Blueprint</button>
+              <button id="dev-castle-lock-all-btn" class="dev-btn" style="background: #eab308; color: #000000;" title="Lock/Unlock all castles against accidental movement">Lock All</button>
+              <span id="dev-castles-count-tag" class="dev-section-tag">9 ISLANDS</span>
+            </div>
+          </div>
+
+          <!-- Island Visual Chips Strip -->
+          <div id="dev-castle-island-chips" class="dev-island-chips" style="margin-bottom: 6px;"></div>
+
+          <!-- Island Selector & Actions Bar -->
+          <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+            <select id="dev-castle-island-select" class="dev-select" style="flex: 2; height: 32px; font-weight: 700;"></select>
+            <button id="dev-castle-tp-btn" class="dev-btn" title="Fly camera directly to selected castle island" style="flex: 1;">Focus</button>
+            <button id="dev-castle-lock-item-btn" class="dev-btn" title="Lock or unlock this specific castle island" style="background: #0284c7; color: #ffffff;">Lock: Off</button>
+            <button id="dev-castle-add-btn" class="dev-btn" title="Add a new floating castle island" style="background: #16a34a; color: #ffffff;">+ New Island</button>
+            <button id="dev-castle-del-btn" class="dev-btn" title="Delete selected floating castle island" style="background: #dc2626; color: #ffffff;">Delete</button>
+          </div>
+
+          <!-- Spacing & Layout Presets -->
+          <div style="display: flex; gap: 4px;">
+            <button id="dev-castle-preset-spacious" class="dev-btn" style="flex: 1;" title="Generous spread layout">Spatial Spread</button>
+            <button id="dev-castle-preset-ring" class="dev-btn" style="flex: 1;" title="Wide circular kingdom layout">Wide Ring</button>
+            <button id="dev-castle-reset-layout" class="dev-btn" style="flex: 1;" title="Reset castles to default positions">Reset Positions</button>
+          </div>
+        </div>
+
+        <!-- Visual 3D Castle Model Picker with Thumbnails -->
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">1. CASTLE MODELS</span>
+            <span class="dev-section-tag">DRAG TO PLACE</span>
+          </div>
+          <div id="dev-castle-model-grid" class="castle-model-grid"></div>
+          <select id="dev-castle-model-select" class="dev-select" style="display: none;"></select>
+        </div>
+
+        <!-- Color Theme Quick Presets Section -->
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">2. COLOR THEME PRESET</span>
+          </div>
+
+          <!-- Color Preset Pills -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-bottom: 6px;">
+            <button class="dev-castle-color-preset-btn dev-btn" data-preset="original">Original</button>
+            <button class="dev-castle-color-preset-btn dev-btn" data-preset="ruby" style="color: #f43f5e;">Ruby</button>
+            <button class="dev-castle-color-preset-btn dev-btn" data-preset="sapphire" style="color: #38bdf8;">Sapphire</button>
+            <button class="dev-castle-color-preset-btn dev-btn" data-preset="amethyst" style="color: #c084fc;">Amethyst</button>
+            <button class="dev-castle-color-preset-btn dev-btn" data-preset="golden" style="color: #fbbf24;">Golden</button>
+            <button class="dev-castle-color-preset-btn dev-btn" data-preset="emerald" style="color: #34d399;">Emerald</button>
+            <button class="dev-castle-color-preset-btn dev-btn" data-preset="pastel" style="color: #f472b6;">Pastel</button>
+            <button id="dev-castle-apply-all-colors-btn" class="dev-btn" title="Apply this color theme to all islands in biome" style="background: #4338ca; color: #ffffff;">Apply to All</button>
+          </div>
+        </div>
+
+        <!-- Permanent Local Disk Persistence & Backup Section -->
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">PERMANENT DISK PERSISTENCE & LOCK</span>
+          </div>
+          <button id="dev-save-castles-disk-btn" class="dev-save-btn" style="background: #16a34a; color: #ffffff; margin-bottom: 4px;" title="Permanently saves this configuration directly to project files on local disk (src/core/saved_biome_config.json)">Save Permanently to Disk</button>
+          <div style="display: flex; gap: 4px;">
+            <button id="dev-save-castles-btn" class="dev-btn" style="flex: 1;" title="Save to local browser cache">Save Browser Cache</button>
+            <button id="dev-copy-castles-json-btn" class="dev-btn" style="flex: 1;" title="Copy configuration JSON to clipboard">Copy Config JSON</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: Atmosphere & Sky -->
+      <div id="tab-sky" class="dev-tab-pane">
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">TIME PHASE & LIGHTING</span>
+            <span class="dev-section-tag">LIGHTING & FOG</span>
+          </div>
+
+          <!-- Phase Switcher -->
+          <div class="dev-btn-grid-3">
+            <button class="dev-btn dev-phase-btn active" data-phase="0">Day</button>
+            <button class="dev-btn dev-phase-btn" data-phase="1">Dusk</button>
+            <button class="dev-btn dev-phase-btn" data-phase="2">Twilight</button>
+          </div>
+
+          <!-- Sky & Fog -->
+          <div class="dev-color-row">
+            <span>SKY BACKGROUND</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-env-bg-hex" class="dev-color-hex-label">#93d4ff</span>
+              <input type="color" id="dev-env-bg" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-color-row">
+            <span>FOG COLOR</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-env-fog-hex" class="dev-color-hex-label">#cce9ff</span>
+              <input type="color" id="dev-env-fog" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>FOG NEAR</span>
+              <span id="dev-env-fognear-val" class="dev-row-val">200</span>
+            </div>
+            <input type="range" id="dev-env-fognear" class="cad-slider" min="10" max="600" step="5" value="200" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>FOG FAR</span>
+              <span id="dev-env-fogfar-val" class="dev-row-val">720</span>
+            </div>
+            <input type="range" id="dev-env-fogfar" class="cad-slider" min="100" max="1500" step="10" value="720" />
+          </div>
+
+          <!-- Illumination -->
+          <div class="dev-color-row">
+            <span>AMBIENT LIGHT</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-env-amb-color-hex" class="dev-color-hex-label">#ffffff</span>
+              <input type="color" id="dev-env-amb-color" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>AMBIENT INTENSITY</span>
+              <span id="dev-env-amb-intensity-val" class="dev-row-val">0.75</span>
+            </div>
+            <input type="range" id="dev-env-amb-intensity" class="cad-slider" min="0" max="2.5" step="0.05" value="0.75" />
+          </div>
+          <div class="dev-color-row">
+            <span>DIRECTIONAL LIGHT</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-env-dir-color-hex" class="dev-color-hex-label">#fff8e7</span>
+              <input type="color" id="dev-env-dir-color" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>DIRECTIONAL INTENSITY</span>
+              <span id="dev-env-dir-intensity-val" class="dev-row-val">1.40</span>
+            </div>
+            <input type="range" id="dev-env-dir-intensity" class="cad-slider" min="0" max="3.0" step="0.05" value="1.4" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>HEMISPHERE INTENSITY</span>
+              <span id="dev-env-hemi-intensity-val" class="dev-row-val">0.60</span>
+            </div>
+            <input type="range" id="dev-env-hemi-intensity" class="cad-slider" min="0" max="2.0" step="0.05" value="0.6" />
+          </div>
+
+          <!-- Sun & Stars -->
+          <div class="dev-color-row">
+            <span>SUN COLOR</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-env-sun-color-hex" class="dev-color-hex-label">#fffbe8</span>
+              <input type="color" id="dev-env-sun-color" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>SUN INTENSITY</span>
+              <span id="dev-env-sun-intensity-val" class="dev-row-val">1.80</span>
+            </div>
+            <input type="range" id="dev-env-sun-intensity" class="cad-slider" min="0" max="4.0" step="0.1" value="1.8" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>SUN SCALE</span>
+              <span id="dev-env-sun-scale-val" class="dev-row-val">1.30x</span>
+            </div>
+            <input type="range" id="dev-env-sun-scale" class="cad-slider" min="0.1" max="4.0" step="0.1" value="1.3" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>STARFIELD OPACITY</span>
+              <span id="dev-env-star-opacity-val" class="dev-row-val">0.00</span>
+            </div>
+            <input type="range" id="dev-env-star-opacity" class="cad-slider" min="0" max="1.0" step="0.05" value="0.0" />
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: Terrain & Water -->
+      <div id="tab-terrain" class="dev-tab-pane">
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">TERRAIN PALETTES & SHADING</span>
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>TERRAIN PALETTES</span>
+            </div>
+            <div class="dev-btn-grid">
+              <button class="dev-btn dev-palette-btn active" data-palette="Marshmallow Pastel" style="grid-column: span 2; color: #f472b6; font-weight: 800;">Marshmallow Pastel</button>
+              <button class="dev-btn dev-palette-btn" data-palette="Lush Green">Lush Green</button>
+              <button class="dev-btn dev-palette-btn" data-palette="Autumn Warmth">Autumn Warmth</button>
+              <button class="dev-btn dev-palette-btn" data-palette="Ghibli Pastel">Ghibli Pastel</button>
+              <button class="dev-btn dev-palette-btn" data-palette="Alpine Highlands">Alpine</button>
+              <button class="dev-btn dev-palette-btn" data-palette="Candy Meadow" style="grid-column: span 2;">Candy Meadow</button>
+            </div>
+          </div>
+
+          <div class="dev-color-row">
+            <span>LOWLAND GRASS</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-terrain-low-hex" class="dev-color-hex-label">#38b000</span>
+              <input type="color" id="dev-terrain-low" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-color-row">
+            <span>HIGHLAND GRASS</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-terrain-high-hex" class="dev-color-hex-label">#70e000</span>
+              <input type="color" id="dev-terrain-high" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-color-row">
+            <span>MOUNTAIN DIRT / ROCK</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-terrain-dirt-hex" class="dev-color-hex-label">#936639</span>
+              <input type="color" id="dev-terrain-dirt" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-color-row">
+            <span>TRAIL DIRT PATH</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-terrain-path-hex" class="dev-color-hex-label">#b08968</span>
+              <input type="color" id="dev-terrain-path" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-color-row">
+            <span>COAST SAND</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-terrain-sand-hex" class="dev-color-hex-label">#ede0d4</span>
+              <input type="color" id="dev-terrain-sand" class="dev-color-input" />
+            </div>
+          </div>
+          <button id="dev-terrain-toon-toggle" class="dev-btn" style="margin-top: 4px;">Terrain Style: Painterly Ghibli</button>
+
+          <div id="dev-crystal-terrain-controls" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div class="dev-section-header" style="margin-bottom: 6px;">
+              <span class="dev-section-title" style="font-size: 10px; color: #38bdf8;">CRYSTAL GLASS TERRAIN CONTROLS</span>
+            </div>
+            <div class="dev-row">
+              <div class="dev-row-header">
+                <span>GLASS TRANSMISSION</span>
+                <span id="dev-crystal-transmission-val" class="dev-row-val">0.65</span>
+              </div>
+              <input type="range" id="dev-crystal-transmission" class="cad-slider" min="0.1" max="1.0" step="0.05" value="0.65" />
+            </div>
+            <div class="dev-row">
+              <div class="dev-row-header">
+                <span>PRISMATIC IRIDESCENCE</span>
+                <span id="dev-crystal-iridescence-val" class="dev-row-val">1.35</span>
+              </div>
+              <input type="range" id="dev-crystal-iridescence" class="cad-slider" min="0" max="3.0" step="0.05" value="1.35" />
+            </div>
+            <div class="dev-row">
+              <div class="dev-row-header">
+                <span>DIAMOND SPECULAR</span>
+                <span id="dev-crystal-specular-val" class="dev-row-val">2.20</span>
+              </div>
+              <input type="range" id="dev-crystal-specular" class="cad-slider" min="0" max="4.0" step="0.1" value="2.20" />
+            </div>
+            <div class="dev-row">
+              <div class="dev-row-header">
+                <span>FACET BEVEL GLEAM</span>
+                <span id="dev-crystal-bevel-val" class="dev-row-val">1.10</span>
+              </div>
+              <input type="range" id="dev-crystal-bevel" class="cad-slider" min="0" max="3.0" step="0.1" value="1.10" />
+            </div>
+            <div class="dev-row">
+              <div class="dev-row-header">
+                <span>CRYSTAL VEIN GLOW</span>
+                <span id="dev-crystal-vein-val" class="dev-row-val">1.00</span>
+              </div>
+              <input type="range" id="dev-crystal-vein" class="cad-slider" min="0" max="3.0" step="0.1" value="1.00" />
+            </div>
+          </div>
+        </div>
+
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">WATER SHADING & PHYSICS</span>
+          </div>
+          <div class="dev-color-row">
+            <span>WATER COLOR</span>
+            <div class="dev-color-picker-wrap">
+              <span id="dev-water-color-hex" class="dev-color-hex-label">#0099ff</span>
+              <input type="color" id="dev-water-color" class="dev-color-input" />
+            </div>
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>WATER OPACITY</span>
+              <span id="dev-water-opacity-val" class="dev-row-val">0.82</span>
+            </div>
+            <input type="range" id="dev-water-opacity" class="cad-slider" min="0" max="1.0" step="0.02" value="0.82" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>REFLECTIVITY</span>
+              <span id="dev-water-reflectivity-val" class="dev-row-val">0.65</span>
+            </div>
+            <input type="range" id="dev-water-reflectivity" class="cad-slider" min="0" max="1.0" step="0.02" value="0.65" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>ROUGHNESS</span>
+              <span id="dev-water-roughness-val" class="dev-row-val">0.18</span>
+            </div>
+            <input type="range" id="dev-water-roughness" class="cad-slider" min="0" max="1.0" step="0.02" value="0.18" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>METALNESS</span>
+              <span id="dev-water-metalness-val" class="dev-row-val">0.05</span>
+            </div>
+            <input type="range" id="dev-water-metalness" class="cad-slider" min="0" max="1.0" step="0.02" value="0.05" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>CLEARCOAT</span>
+              <span id="dev-water-clearcoat-val" class="dev-row-val">0.80</span>
+            </div>
+            <input type="range" id="dev-water-clearcoat" class="cad-slider" min="0" max="1.0" step="0.02" value="0.80" />
+          </div>
+          <div class="dev-row">
+            <div class="dev-row-header">
+              <span>CLEARCOAT ROUGHNESS</span>
+              <span id="dev-water-clearcoat-roughness-val" class="dev-row-val">0.15</span>
+            </div>
+            <input type="range" id="dev-water-clearcoat-roughness" class="cad-slider" min="0" max="1.0" step="0.02" value="0.15" />
+          </div>
+          <button id="dev-water-toon-toggle" class="dev-btn" style="margin-top: 2px;">Shader Mode: MeshPhysical</button>
+        </div>
+      </div>
+
+      <!-- TAB 5: Profile & Persistence -->
+      <div id="tab-profile" class="dev-tab-pane">
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">SAVE & PERSISTENCE</span>
+          </div>
+          <button id="dev-save-biome-btn" class="dev-save-btn">Set As Default for Active Biome</button>
+          <button id="dev-save-all-btn" class="dev-save-btn" style="background: #16a34a; color: #ffffff; border-color: #000000;">Set All Biomes As Default</button>
+          <button id="dev-reset-all-btn" class="dev-reset-btn">Reset All Settings to Factory Default</button>
+        </div>
+
+        <div class="dev-section">
+          <div class="dev-section-header">
+            <span class="dev-section-title">PROFILE JSON IMPORT / EXPORT</span>
+          </div>
+          <button id="dev-export-btn" class="dev-btn" style="width: 100%;">Export Biome JSON Config</button>
+          <div style="display: flex; gap: 4px; margin-top: 4px;">
+            <input type="file" id="dev-import-input" accept=".json" style="display: none;" />
+            <button id="dev-import-btn" class="dev-btn" style="flex: 1;">Import JSON Config</button>
           </div>
         </div>
       </div>
@@ -2032,7 +2162,7 @@
   <!-- Performance Debug Panel -->
   <div id="debug-panel" style="display: none;">
     <div class="debug-header-row">
-      <div class="debug-header">Performance Debug</div>
+      <div class="debug-header">PERFORMANCE DEBUG</div>
       <button id="debug-close-btn" class="debug-close-btn" aria-label="Close Debug">Close</button>
     </div>
     <div class="debug-row">
@@ -2056,35 +2186,30 @@
       <button id="toggle-water" class="debug-btn">MeshPhysical</button>
     </div>
     <div class="debug-row">
-      <span>6. Tree Bloom</span>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <input type="range" id="tree-bloom-debug-slider" min="0" max="3.0" step="0.05" value="1.0" style="width: 75px; accent-color: #ff77a9; cursor: pointer;" />
-        <span id="tree-bloom-debug-val" style="min-width: 28px; font-size: 11px; font-family: monospace; color: rgba(255, 255, 255, 0.9);">1.00</span>
-      </div>
-    </div>
-    <div class="debug-row">
-      <span>7. Global Bloom</span>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <input type="range" id="bloom-slider" min="0" max="1.5" step="0.02" value="0.42" style="width: 75px; accent-color: #4da9e8; cursor: pointer;" />
-        <span id="bloom-val" style="min-width: 28px; font-size: 11px; font-family: monospace; color: rgba(255, 255, 255, 0.9);">0.42</span>
+      <span>6. Bioluminescence</span>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <input type="range" id="tree-biolum-debug-slider" class="cad-slider" min="0" max="100" step="5" value="80" style="width: 70px;" />
+        <span id="tree-biolum-debug-val" style="min-width: 28px; font-size: 10px; font-weight: 800;">80%</span>
       </div>
     </div>
     <hr class="debug-divider"/>
-    <div class="debug-header" style="margin-bottom: 6px;">Biome Fast-Travel</div>
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 8px;">
-      <button class="debug-btn dev-biome-tp-btn" data-x="0" data-z="0">Lush Meadow</button>
+    <div class="debug-header" style="margin-bottom: 4px;">BIOME FAST-TRAVEL</div>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; margin-bottom: 6px;">
+      <button class="debug-btn dev-biome-tp-btn" data-x="0" data-z="0">Meadow</button>
       <button class="debug-btn dev-biome-tp-btn" data-x="2000" data-z="2000">Archipelago</button>
       <button class="debug-btn dev-biome-tp-btn" data-x="2000" data-z="-2000">Geothermal</button>
       <button class="debug-btn dev-biome-tp-btn" data-x="-2000" data-z="2000">Estuary</button>
-      <button class="debug-btn dev-biome-tp-btn" data-x="-2000" data-z="-2000" style="grid-column: span 2;">Colossal Redwood</button>
+      <button class="debug-btn dev-biome-tp-btn" data-x="-2000" data-z="-2000">Redwood</button>
+      <button class="debug-btn dev-biome-tp-btn" data-x="0" data-z="-150" data-y="520">Sky Citadel</button>
     </div>
-    <hr class="debug-divider"/>
-    <button id="toggle-all" class="debug-btn-master">ENABLE ALL (60 FPS MODE)</button>
+    <a href="./terrain_comparison.html" class="debug-btn" style="display: block; text-align: center; text-decoration: none; background: #0284c7; color: #ffffff; margin-bottom: 4px;">Open 4-Way Terrain Comparison Viewer</a>
+    <a href="./rainbow_god_rays.html" class="debug-btn" style="display: block; text-align: center; text-decoration: none; background: #7c3aed; color: #ffffff; margin-bottom: 6px;">Open Magical Rainbow God Rays Studio</a>
+    <button id="toggle-all" class="debug-btn-master">Enable All (60 FPS Mode)</button>
   </div>
 
   <!-- Photo Mode Controls -->
   <div id="photo-mode-ui">
-    <span>Photo Mode</span>
+    <span>PHOTO MODE</span>
     <button id="photo-capture">Capture</button>
     <button id="photo-exit">Exit</button>
   </div>
@@ -2096,6 +2221,110 @@
       <div id="joystick-knob"></div>
     </div>
     <div id="boost-btn">BOOST</div>
+  </div>
+
+  <!-- Streamlined Merged Top-Down Blueprint HUD & Controls -->
+  <div id="top-view-hud" style="display: none;">
+    <!-- Main Toolbar Row -->
+    <div class="top-view-main-row">
+      <!-- Title Badge & Selected Castle -->
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <span style="background: #4f46e5; color: #ffffff; padding: 3px 7px; border-radius: 4px; font-size: 9.5px; font-weight: 900; letter-spacing: 0.04em;">TOP-DOWN BLUEPRINT</span>
+        <select id="top-insp-island-select" class="dev-select" style="height: 26px; font-weight: 700; font-size: 10.5px; min-width: 170px;"></select>
+        <span id="top-insp-lock-badge" style="background: #22c55e; color: #000000; padding: 2px 5px; border-radius: 3px; font-size: 8.5px; font-weight: 900;">UNLOCKED</span>
+        <button id="top-insp-lock-btn" class="dev-btn" style="background: #eab308; color: #000000; font-size: 9px; font-weight: 800; padding: 2px 6px;">Lock</button>
+        <button id="top-insp-del-btn" class="dev-btn" style="background: #dc2626; color: #ffffff; font-size: 9px; font-weight: 800; padding: 2px 6px;">Delete</button>
+        <button id="top-insp-add-btn" class="dev-btn" style="background: #16a34a; color: #ffffff; font-size: 9px; font-weight: 800; padding: 2px 6px;">+ New Island</button>
+      </div>
+
+      <!-- Live Coordinates -->
+      <div style="display: flex; align-items: center; gap: 6px; border-left: 1px solid #334155; border-right: 1px solid #334155; padding: 0 8px;">
+        <span id="top-view-cursor-coords" style="color: #93c5fd; font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap;">X: 0m | Z: 0m | ALT: 1400m</span>
+      </div>
+
+      <!-- Castle Movement D-Pad (Up, Down, Left, Right) -->
+      <div class="top-view-nudge-pad" title="Click buttons or use Arrow Keys to move selected castle on grid">
+        <span style="font-size: 8.5px; color: #94a3b8; font-weight: 800; margin-right: 2px;">MOVE:</span>
+        <button id="top-view-nudge-up" class="top-view-nudge-btn" title="Move North (Arrow Up)">Up</button>
+        <button id="top-view-nudge-left" class="top-view-nudge-btn" title="Move West (Arrow Left)">Left</button>
+        <button id="top-view-nudge-down" class="top-view-nudge-btn" title="Move South (Arrow Down)">Down</button>
+        <button id="top-view-nudge-right" class="top-view-nudge-btn" title="Move East (Arrow Right)">Right</button>
+        <div style="display: flex; gap: 2px; margin-left: 3px;">
+          <button class="top-view-step-btn" data-step="10">10m</button>
+          <button class="top-view-step-btn active" data-step="25">25m</button>
+          <button class="top-view-step-btn" data-step="50">50m</button>
+          <button class="top-view-step-btn" data-step="100">100m</button>
+        </div>
+      </div>
+
+      <!-- Tools & Toggles -->
+      <div style="display: flex; gap: 4px; align-items: center;">
+        <button id="top-view-place-mode-btn" class="dev-btn" style="background: #0284c7; color: #ffffff; padding: 3px 7px; font-weight: 800; font-size: 9.5px;" title="Click model then click anywhere on grid to place">+ Place on Grid</button>
+        <button id="top-view-toggle-drawer-btn" class="dev-btn" style="background: #334155; color: #ffffff; padding: 3px 7px; font-weight: 800; font-size: 9.5px;">Models & Themes</button>
+      </div>
+
+      <!-- Zoom Presets -->
+      <div style="display: flex; gap: 2px; align-items: center; border-left: 1px solid #334155; padding-left: 6px;">
+        <button id="top-view-zoom-in" class="dev-btn" style="background: #1e293b; color: #ffffff; padding: 3px 6px; font-weight: 800; font-size: 9.5px;" title="Zoom In">+</button>
+        <button id="top-view-zoom-out" class="dev-btn" style="background: #1e293b; color: #ffffff; padding: 3px 6px; font-weight: 800; font-size: 9.5px;" title="Zoom Out">-</button>
+        <button id="top-view-zoom-500" class="dev-btn" style="background: #1e293b; color: #94a3b8; font-size: 9px; padding: 3px 4px;">500m</button>
+        <button id="top-view-zoom-1500" class="dev-btn" style="background: #1e293b; color: #94a3b8; font-size: 9px; padding: 3px 4px;">1500m</button>
+        <button id="top-view-zoom-3500" class="dev-btn" style="background: #1e293b; color: #94a3b8; font-size: 9px; padding: 3px 4px;">3500m</button>
+        <button id="top-view-zoom-7500" class="dev-btn" style="background: #4338ca; color: #ffffff; font-size: 9px; padding: 3px 4px; font-weight: 800;">7500m</button>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; gap: 4px; align-items: center;">
+        <button id="top-view-save-disk-btn" class="dev-btn" style="background: #16a34a; color: #ffffff; font-size: 9.5px; font-weight: 800; padding: 3px 7px;">Save to Disk</button>
+        <button id="top-view-exit-btn" class="dev-btn" style="background: #ef4444; color: #ffffff; font-size: 9.5px; font-weight: 800; padding: 3px 7px;">3D Exploration View</button>
+        <button id="top-view-min-btn" class="dev-btn" style="background: #1e293b; color: #94a3b8; font-size: 9px; padding: 3px 5px;" title="Collapse/Expand toolbar for maximum view">Min View</button>
+      </div>
+    </div>
+
+    <!-- Collapsible Drawer: Models, Colors & Layout Presets -->
+    <div id="top-view-drawer">
+      <!-- 3D Castle Models Strip -->
+      <div class="top-view-drawer-section" style="flex: 2; min-width: 320px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="top-view-drawer-title">3D CASTLE MODELS (CLICK TO ASSIGN | DRAG TO DROP)</span>
+          <span id="top-insp-nearest-val" style="color: #38bdf8; font-size: 9px; font-weight: 800;">Nearest: None</span>
+        </div>
+        <div id="top-insp-model-grid" class="castle-model-grid" style="grid-template-columns: repeat(5, 1fr); max-height: 105px; gap: 4px; padding: 2px;"></div>
+      </div>
+
+      <!-- Color Themes -->
+      <div class="top-view-drawer-section" style="flex: 1; min-width: 180px;">
+        <span class="top-view-drawer-title">COLOR THEME</span>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;">
+          <button class="top-insp-color-btn dev-btn" data-preset="original" style="font-size: 9px;">Original</button>
+          <button class="top-insp-color-btn dev-btn" data-preset="ruby" style="font-size: 9px; color: #f43f5e;">Ruby</button>
+          <button class="top-insp-color-btn dev-btn" data-preset="sapphire" style="font-size: 9px; color: #38bdf8;">Sapphire</button>
+          <button class="top-insp-color-btn dev-btn" data-preset="golden" style="font-size: 9px; color: #fbbf24;">Golden</button>
+          <button class="top-insp-color-btn dev-btn" data-preset="emerald" style="font-size: 9px; color: #34d399;">Emerald</button>
+          <button class="top-insp-color-btn dev-btn" data-preset="pastel" style="font-size: 9px; color: #f472b6;">Pastel</button>
+        </div>
+        <!-- Rotation & Fine Tuning -->
+        <div style="display: flex; gap: 3px; margin-top: 4px;">
+          <button id="top-view-rot-ccw" class="dev-btn" style="flex: 1; font-size: 8.5px;" title="Rotate 15 degrees counter-clockwise (Q key)">Rot -15 deg</button>
+          <button id="top-view-rot-cw" class="dev-btn" style="flex: 1; font-size: 8.5px;" title="Rotate 15 degrees clockwise (E key)">Rot +15 deg</button>
+        </div>
+      </div>
+
+      <!-- Layout Presets -->
+      <div class="top-view-drawer-section" style="flex: 1; min-width: 140px;">
+        <span class="top-view-drawer-title">LAYOUT PRESETS</span>
+        <div style="display: flex; flex-direction: column; gap: 3px;">
+          <button id="top-view-preset-spacious" class="dev-btn" style="font-size: 9px;">Spatial Spread</button>
+          <button id="top-view-preset-ring" class="dev-btn" style="font-size: 9px;">Wide Ring</button>
+          <button id="top-view-preset-reset" class="dev-btn" style="font-size: 9px; color: #f87171;">Reset Defaults</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-time Top View Toast / Instructions -->
+  <div id="top-view-toast" style="display: none; position: fixed; top: 68px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #0284c7; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-family: inherit; font-size: 11px; font-weight: 800; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6); pointer-events: none;">
+    CLICK ON THE GRID TO PLACE CASTLE
   </div>
 
   <script type="module" src="/src/main.ts"></script>
