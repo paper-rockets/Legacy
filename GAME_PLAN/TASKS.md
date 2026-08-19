@@ -64,14 +64,18 @@ Forbidden: everything under `src/`.
 
 Do:
 Write a Node script using the already installed `puppeteer-core` that starts nothing itself but
-attaches to `http://localhost:8080` (the developer runs `npm run dev` first). For each of the 7
-entries in `BIOME_LOCATIONS`, teleport via `window.__game.player.teleportTo(x, z, 50, y)`, then
-for each of the 3 time phases set through `window.__game.lighting`, wait 1500 ms for material
-and terrain settling, and screenshot at 1280x720 into
-`GAME_PLAN/baseline/<biomeId>_<phase>.png`. 21 files total.
+attaches to `http://localhost:8080` (the developer runs `npm run dev` first). Read the biome list
+from `BIOME_LOCATIONS` at runtime rather than hard coding it, because biomes are actively being
+added; there were 8 when this plan was written. For each entry, teleport via
+`window.__game.player.teleportTo(x, z, 50, y)`, then for each of the 3 time phases set through
+`window.__game.lighting`, wait 1500 ms for material and terrain settling, and screenshot at
+1280x720 into `GAME_PLAN/baseline/<biomeId>_<phase>.png`.
 
-Accept when: 21 PNGs exist, each is a rendered frame and not a blank canvas, and the script
-prints the list of files it wrote.
+Also capture, at each biome, one frame immediately after crossing a terrain grid line, because
+the performance workstream changes that code path and the parity gate must cover it.
+
+Accept when: three PNGs exist per biome in `BIOME_LOCATIONS`, each is a rendered frame and not a
+blank canvas, and the script prints the list of files it wrote.
 
 Verify: `node GAME_PLAN/tools/capture_baseline.mjs` with the dev server running.
 
@@ -1184,6 +1188,297 @@ Verify: open the device simulator and play through one ring chain.
 
 ---
 
+## J. Performance workstream
+
+Read `GAME_PLAN/PERFORMANCE.md` before dispatching any of these. They run alongside the phases
+above, not after them. TP.1, TP.2, TP.3, TP.6 and TP.7 are safe to run early and will resolve the
+current stutter on their own.
+
+File ownership warning: TP.1, TP.2 and TP.9 all touch `src/world/terrain.ts`. TP.4, TP.5, TP.6 and
+TP.8 all touch `src/world/trees.ts`. Never dispatch two tasks that share a file at the same time.
+
+---
+
+### TP.1 - Terrain: remove the six times duplicated vertex work
+
+Depends on: T0.0 baseline exists. Do not run together with TP.9.
+
+Read first: `src/world/terrain.ts` `update()` from line 535, and
+`setupFacetedBarycentricGeometry` in `src/world/volumetricClouds.ts`.
+
+Modify: `src/world/terrain.ts`, only inside `update()`.
+
+Forbidden: the colour constants, `TERRAIN_PALETTES`, the height maths itself, the geometry
+construction at line 394, `src/world/volumetricClouds.ts`, all other files.
+
+Do:
+The geometry is non indexed, so `pos.count` is 98,304 while there are only 129 x 129 = 16,641
+distinct lattice positions. Each interior point is recomputed six times with identical inputs and
+identical outputs.
+
+Build a lattice cache sized 129 x 129 holding the height and the final blended RGB for each
+distinct position, fill it once per rebuild, then write the 98,304 vertex entries by looking up
+the lattice rather than recomputing. Map a vertex to its lattice index from its local X and Z,
+which are on an exact 12.5 metre grid, so the index is arithmetic and needs no search.
+
+Preallocate the cache arrays once in the constructor and reuse them. Do not allocate per rebuild.
+
+The output must be bit identical to the current behaviour. This is a pure deduplication. If your
+output differs anywhere, your lattice mapping is wrong, not the maths.
+
+Accept when: terrain is pixel identical to the baseline in all biomes and all phases, and the
+measured rebuild time drops by at least 4x.
+
+Verify: log rebuild duration before and after; compare all baseline frames.
+
+---
+
+### TP.2 - Terrain: amortise the rebuild across frames
+
+Depends on: TP.1.
+
+Read first: `src/world/terrain.ts` `update()`, `src/main.ts` animate loop.
+
+Modify: `src/world/terrain.ts` only.
+
+Forbidden: `src/main.ts`, everything else.
+
+Do:
+Split the rebuild into 4 slices. On a grid crossing, compute the lattice for slice 0 and schedule
+slices 1 to 3 on the following frames, committing the geometry only when the last slice lands.
+Keep the previous geometry visible until then, because a partially updated terrain is far worse
+than a terrain that lags by three frames.
+
+If the player crosses another grid line mid slice, restart the slicing from the new centre.
+Never queue two rebuilds.
+
+Under boost at 75 m/s the player crosses a grid line every 0.17 seconds, so the restart path is
+the common case, not the edge case. Make sure it is correct and allocation free.
+
+Accept when: the 99th percentile frame time during sustained boosted flight improves measurably
+and no partially updated terrain is ever visible.
+
+Verify: record 600 frame deltas while flying under boost and report the 99th percentile before
+and after.
+
+---
+
+### TP.3 - Adaptive pixel ratio
+
+Depends on: T0.1.
+
+Read first: `src/core/renderer.ts` `basePixelRatio`, `setPixelRatioCap`, `handleResize`.
+
+Modify: `src/core/renderer.ts` only.
+
+Forbidden: `src/ui/ui.ts`, `src/ui/devEditor.ts`, everything else.
+
+Do:
+Change the `basePixelRatio` default from 2.0 to 1.5. Then add an adaptive rule: sample frame time
+over a rolling 120 frame window and step the cap down to 1.25 and then 1.0 when the 99th
+percentile exceeds 22 ms, stepping back up only after 600 consecutive good frames so the
+resolution never oscillates visibly.
+
+Do not change `setPixelRatioCap`, because the developer editor calls it and must keep manual
+override authority. A manual call disables the adaptive rule for the rest of the session.
+
+Accept when: a slow machine settles at a lower ratio and stays there without flicker, and the
+developer editor override still works.
+
+Verify: `window.__game.pipeline.setPixelRatioCap(2.0)` still applies immediately.
+
+---
+
+### TP.4 - Trees: per cell chunk cache
+
+Depends on: T0.3 and T0.4 complete, so the material port is not fighting this edit.
+
+Read first: `src/world/trees.ts` `rebuild()` from line 1051, and `update()` at line 1019.
+
+Modify: `src/world/trees.ts`, only `rebuild()` and its supporting private state.
+
+Forbidden: the material setup, `updateGlow`, every public setter, all other files.
+
+Do:
+`rebuild()` recomputes all roughly 7,921 cells in the 1400 metre box even though a 20 metre move
+changes about 3 percent of them.
+
+Introduce a cache keyed by cell coordinate holding the placement result for that cell: which model
+was chosen, the transform, and the colour values. On rebuild, reuse cached cells and compute only
+cells that entered the radius. Evict cells that left it.
+
+The cache must be invalidated wholesale when any biome vegetation setting changes, because the
+developer editor mutates density, scale and model selection live. `forceRebuild()` is the existing
+entry point for that and must clear the cache.
+
+Determinism is required: a cell must produce the same placement whether it came from the cache or
+was freshly computed. Seed the per cell RNG from the cell coordinates, never from an accumulating
+sequence.
+
+Accept when: tree placement is visually identical, flying in a straight line shows no popping, the
+developer editor sliders still apply immediately, and rebuild time drops by at least 10x.
+
+Verify: log rebuild duration; fly a loop and return to the origin, confirming identical placement.
+
+---
+
+### TP.5 - Trees: near field shadow casters
+
+Depends on: TP.4.
+
+Read first: `src/world/trees.ts` `setupInstMesh`, `src/world/lighting.ts` lines 116 to 127 and
+the dynamic shadow box near line 324.
+
+Modify: `src/world/trees.ts` only.
+
+Forbidden: `src/world/lighting.ts` and every shadow constant in it, all other files.
+
+Do:
+The shadow camera covers plus or minus 120 metres, tightening to 60 to 90 when `shadowTuned` is
+on. Trees spawn to 700 metres and every tree mesh has `castShadow = true`. An `InstancedMesh` is
+culled as one object, so its 1400 metre bounding sphere always intersects the shadow frustum and
+every instance is transformed in the shadow pass. About 95 percent of that work cannot produce a
+visible shadow.
+
+Set `castShadow = false` on the existing per model tree meshes and add one dedicated shadow caster
+`InstancedMesh` with a capacity of 400, filled during rebuild with only the trees inside 150
+metres, using the simplest available geometry. It renders into the shadow map only, so set
+`material.colorWrite = false` or keep it out of the main pass by whatever mechanism is cleanest
+under the node material stack, and document which you chose.
+
+Do not change any shadow camera bound, bias, or map size. Those are protected constants.
+
+Accept when: shadows under and near the player are unchanged to the eye, and shadow pass geometry
+drops by roughly an order of magnitude.
+
+Verify: compare baseline frames at phase 0, where shadows are strongest, in meadow and redwood.
+
+---
+
+### TP.6 - Instance buffers: partial upload
+
+Depends on: TP.4.
+
+Read first: `src/world/trees.ts` the commit block near line 1205.
+
+Modify: `src/world/trees.ts` only.
+
+Forbidden: everything else.
+
+Do:
+The commit block sets `needsUpdate = true` on instanceMatrix, instanceColor and four custom
+attributes for every visible mesh, which uploads the full 800 slot buffer each time even when 30
+slots are used.
+
+Three 0.185 supports `addUpdateRange(start, count)` together with clearing the previous ranges.
+Upload only the used range for each attribute. Note that instance stride differs per attribute:
+matrices are 16 floats, colours 3, scalars 1. Get the arithmetic right or you will upload garbage.
+
+Accept when: trees render identically and the uploaded byte count per rebuild drops in proportion
+to the used fraction.
+
+Verify: compare baseline frames in meadow and candyland.
+
+---
+
+### TP.7 - Bloom at half resolution
+
+Depends on: T0.2.
+
+Read first: `src/core/renderer.ts` after T0.2,
+`node_modules/three/examples/jsm/tsl/display/BloomNode.js`.
+
+Modify: `src/core/renderer.ts` only.
+
+Forbidden: everything else.
+
+Do:
+Run the bloom node at half the render resolution. Bloom is a wide blur, so half resolution is
+close to free visually and saves a meaningful share of fragment cost, especially at the pixel
+ratios this project uses.
+
+The four public bloom setters and their clamps must not change. The zero strength fast path from
+T0.2 must be preserved.
+
+Accept when: twilight baseline frames still match, with any difference confined to a very slight
+softening of the glow falloff and no change in glow extent or brightness.
+
+Verify: compare all `*_2.png` twilight baseline frames.
+
+---
+
+### TP.8 - Trees: flatten draw calls with BatchedMesh
+
+Depends on: TP.4, TP.5, TP.6, and a stable game layer. This is a scaling task, not a fix. Attempt
+it only when the catalog actually outgrows the 12 visible mesh budget.
+
+Read first: `src/world/trees.ts` in full, `THREE.BatchedMesh` in
+`node_modules/three/build/three.core.js`.
+
+Modify: `src/world/trees.ts` only.
+
+Forbidden: everything else.
+
+Do:
+Today each active catalog model is its own draw call. As the catalog grows, the number of models
+active across a 1400 metre box that can span several biomes grows with it.
+
+`THREE.BatchedMesh` draws many distinct geometries in one call with per instance geometry
+selection. Move the tree meshes onto a single BatchedMesh keyed by catalog entry, keeping the
+existing per instance colour and colour mode data as instance attributes.
+
+This is the highest risk task in the performance workstream because it interacts with the node
+material port from T0.3 and with the custom per instance attributes. Prototype it behind a flag,
+compare frames, and only then remove the old path.
+
+Accept when: draw calls stay flat as catalog entries are added, and frames match the baseline.
+
+Verify: `window.__game.pipeline.renderer.info.render.drawCalls` with 5 and then 20 models active.
+
+---
+
+### TP.9 - Terrain height and colour on the GPU
+
+Depends on: all of Phase 0 complete and parity signed off. Supersedes TP.1 and TP.2. Assign to
+your strongest agent, or keep this one for a human.
+
+Read first: `src/world/terrain.ts` in full, `src/world/noise.ts` in full,
+`E:\GAME FINAL RUN\WEBGPU\src\shaders\materials\TerrainNodeMaterial.js` as a working reference,
+and `GAME_PLAN/PERFORMANCE.md` section 6.
+
+Modify: `src/world/terrain.ts`. A new file `src/world/terrainNodes.ts` is permitted for the TSL
+noise port.
+
+Forbidden: `src/world/noise.ts`. The JS functions there are used by gameplay, by the player, and
+by the tree system, and must keep working exactly as they do now. You are adding a GPU port
+alongside them, never replacing them.
+
+Do:
+Evaluate terrain height in a vertex node and the biome colour blend in a fragment node, removing
+the 98,304 iteration JS loop entirely.
+
+Two things must be preserved exactly, and they are the whole difficulty of this task:
+
+1. The colour result. The current blend is a five way weighted mix across up to 8 biomes followed
+   by three smoothstep transitions for grass, dirt and sand, plus a macro noise term. Port it
+   term for term. Do not simplify it, do not reorder it, do not "improve" it.
+2. The faceted flat shaded look, which currently comes from `toNonIndexed`. On the GPU, derive
+   flat normals from screen space derivatives instead. That lets the geometry return to indexed
+   and cuts vertex count from 98,304 to 16,641 as a bonus.
+
+The GPU height function must agree with `terrainHeightJS` closely enough that the player, the
+trees and the game layer, which all still call the JS version, do not visibly float or sink.
+Verify this explicitly by sampling both at 200 random points and reporting the maximum error.
+
+If you cannot reach agreement within 0.25 metres, stop and report. Do not ship a mismatch.
+
+Accept when: all baseline frames match, the maximum height disagreement is under 0.25 metres,
+terrain rebuild CPU is under 1 ms, and TP.1 and TP.2 dead code is removed.
+
+Verify: full baseline comparison plus the sampling report.
+
+---
+
 ## I. Assignment guidance
 
 - Give Phase 0 to your most capable agents. T0.7 is the single riskiest task in the plan.
@@ -1195,3 +1490,16 @@ Verify: open the device simulator and play through one ring chain.
   the contract.
 - If an agent reports that it needed to change a frozen contract, do not accept the work. Rework
   the contract yourself, then re dispatch every affected task.
+
+Performance workstream scheduling:
+
+- Run TP.1, TP.2, TP.3 and TP.7 as early as you can. They are low risk and they address the
+  stutter that is present today, which otherwise makes every later gameplay verification harder
+  to judge.
+- TP.1 and TP.9 are mutually exclusive. TP.9 supersedes TP.1 and TP.2 and deletes them.
+- Shared file conflicts, never dispatch together:
+  `src/world/terrain.ts` is claimed by T0.7, T0.8, TP.1, TP.2 and TP.9.
+  `src/world/trees.ts` is claimed by T0.3, T0.4, TP.4, TP.5, TP.6 and TP.8.
+  `src/core/renderer.ts` is claimed by T0.1, T0.2, TP.3 and TP.7.
+- TP.8 and TP.9 are the two tasks most likely to come back wrong from a lower power agent. Both
+  have a defined stop condition in their brief. Enforce it rather than accepting a partial result.

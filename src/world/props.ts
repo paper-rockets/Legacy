@@ -13,7 +13,7 @@ const COTTON_CANDY_COLORS = [
 export class PropsSystem {
     public instClouds: THREE.InstancedMesh;
     public cloudCount = 50;
-    public propSpawnDist = 550;
+    public propSpawnDist = 420;
 
     // Prism Sanctum Ground Formations
     public groundCrystals: GroundCrystalFormations;
@@ -153,9 +153,9 @@ export class PropsSystem {
 
     public setOptimizedMode(optimized: boolean) {
         if (optimized) {
-            this.propSpawnDist = 350;
+            this.propSpawnDist = 280;
         } else {
-            this.propSpawnDist = 550;
+            this.propSpawnDist = 420;
         }
     }
 

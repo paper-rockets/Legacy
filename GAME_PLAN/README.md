@@ -6,9 +6,14 @@ Design pillars: fun, simple, lightweight, WebGPU based, future biome friendly, c
 
 This folder is the complete delegation package. Three documents:
 
-1. README.md      - what we are building and why (this file)
-2. CONTRACTS.md   - frozen interfaces. Written first, then never changed without an owner sign off.
-3. TASKS.md       - one brief per delegated agent, with acceptance criteria.
+1. README.md       - what we are building and why (this file)
+2. CONTRACTS.md    - frozen interfaces. Written first, then never changed without an owner sign off.
+3. PERFORMANCE.md  - measured findings and the ranked fix list. Read before starting Phase 0.
+4. TASKS.md        - one brief per delegated agent, with acceptance criteria.
+
+Note on biome count: `BIOME_LOCATIONS` contained 8 entries when this plan was written, the most
+recent being `prism_sanctum`. Nothing in this plan hard codes that number. Wherever a count
+appears it is illustrative; always read the current list from `src/world/noise.ts`.
 
 ---
 
@@ -70,7 +75,12 @@ These exist and must be reused rather than reinvented. This is where most of the
 ### 1.4 Known problems to respect
 
 - Frame rate was observed at 18 FPS with the developer editor open on the reference machine.
-  The game layer therefore gets a hard budget, see section 5.
+  The game layer therefore gets a hard budget, see section 5. Separately, a measured review of the
+  existing hot paths found that the terrain rebuild loop runs over 98,304 vertices with roughly 83
+  percent of that work duplicated, and that it fires every 12.5 metres of movement. That is a
+  pre existing cost, not something the game layer introduces, and it is very likely the main cause
+  of the observed frame rate. It is addressed by the performance workstream in PERFORMANCE.md,
+  which runs alongside these phases rather than after them.
 - `RULES.md` and `.agents/rules.md` mandate pinpoint edits, a visual invariant lock, and a
   strict no icon and no emoji rule. Every delegated task inherits these. See the TASKS.md preamble.
 - Assets are served from `public/Assets`, base path is `./`, deployment is GitHub Pages.
@@ -287,6 +297,7 @@ different agents at the same time.
 | 4 | Cloud castles | T4.1 - T4.5 | T4.5 alongside T4.3 | Phase 5 |
 | 5 | Rewards and polish | T5.1 - T5.5 | T5.1 - T5.3 | none |
 | 6 | Extensibility and perf | T6.1 - T6.3 | all three | none |
+| P | Performance workstream | TP.1 - TP.9 | see PERFORMANCE.md | runs alongside |
 
 Suggested ordering for a small agent pool: run Phase 0 to completion and verify parity before
 opening Phase 1, because a broken renderer makes every later verification ambiguous.

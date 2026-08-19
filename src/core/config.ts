@@ -209,7 +209,7 @@ function createDefaultPhases(
     return [
         {
             // Day
-            bg: dayBg, fog: dayFog, fogNear: 350, fogFar: 1000,
+            bg: dayBg, fog: dayFog, fogNear: 60, fogFar: 420,
             amb: dayAmb, ambI: 0.6,
             dir: dayDir, dirI: 0.9,
             dirPos: { x: 250, y: 350, z: -200 },
@@ -221,7 +221,7 @@ function createDefaultPhases(
         },
         {
             // Dusk
-            bg: duskBg, fog: duskFog, fogNear: 300, fogFar: 950,
+            bg: duskBg, fog: duskFog, fogNear: 50, fogFar: 380,
             amb: duskAmb, ambI: 0.5,
             dir: duskDir, dirI: 0.85,
             dirPos: { x: 0, y: 45, z: -600 },
@@ -233,7 +233,7 @@ function createDefaultPhases(
         },
         {
             // Twilight
-            bg: twiBg, fog: twiFog, fogNear: 300, fogFar: 980,
+            bg: twiBg, fog: twiFog, fogNear: 40, fogFar: 360,
             amb: twiAmb, ambI: 0.7,
             dir: twiDir, dirI: 0.6,
             dirPos: { x: 100, y: 250, z: -100 },
@@ -247,7 +247,7 @@ function createDefaultPhases(
 }
 
 export const FACTORY_CONFIG: AppConfig = {
-    version: 15,
+    version: 17,
     activeBiomeId: 'candyland',
     placedProps: [],
     globalBloom: {
@@ -713,7 +713,7 @@ export const FACTORY_CONFIG: AppConfig = {
     }
 };
 
-const STORAGE_KEY = 'ghibli_flight_biome_editor_v16';
+const STORAGE_KEY = 'ghibli_flight_biome_editor_v17';
 
 export class ConfigManager {
     public config: AppConfig;

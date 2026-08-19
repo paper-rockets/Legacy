@@ -9,7 +9,7 @@ import { globalConfigManager, ModelVegetationConfig, getDefaultModelConfig } fro
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const SPAWN_RADIUS = 700;
+const SPAWN_RADIUS = 420;
 const REBUILD_THRESHOLD = 20;
 const MAX_CAPACITY = 800;
 const MIN_TREE_HEIGHT = 4.5;
