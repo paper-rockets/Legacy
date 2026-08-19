@@ -350,14 +350,15 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 0.8
             },
             vegetation: {
-                treeScale: 6.0,
-                treeDensity: 0,
+                treeScale: 15.0,
+                treeDensity: 200,
                 bushScale: 1.0,
                 bushDensity: 0,
+                bioluminescence: 0.35,
                 canopyColors: ['#ff1493', '#ff69b4', '#b026ff', '#8a2be2', '#00d2ff', '#00ff88', '#ffe600', '#ff7700', '#ff1744'],
                 trunkColors: ['#ffffff', '#fff3e0', '#ffe4e6', '#e0f7fa'],
                 activePreset: 'candy',
-                selectedTreeModelIds: []
+                selectedTreeModelIds: ['veg_cartoon_1', 'veg_cartoon_2', 'veg_bigtree_1', 'veg_tree_broadleaf_1']
             },
             phases: createDefaultPhases(
                 '#8cbce6', '#8cbce6', '#dcf2ff', '#fffaeb',
@@ -404,14 +405,15 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 1.0
             },
             vegetation: {
-                treeScale: 4.8,
-                treeDensity: 0,
+                treeScale: 15.0,
+                treeDensity: 200,
                 bushScale: 1.1,
                 bushDensity: 0,
+                bioluminescence: 0.35,
                 canopyColors: ['#ff69b4', '#ffb6c1', '#fbcfe8', '#c4b5fd', '#93c5fd', '#ffffff'],
                 trunkColors: ['#fff3e0', '#ffe4e6', '#d6d3d1'],
                 activePreset: 'archipelago',
-                selectedTreeModelIds: []
+                selectedTreeModelIds: ['veg_cherry_blossom', 'veg_palm_a', 'veg_cartoon_7', 'veg_clover_2']
             },
             phases: createDefaultPhases(
                 '#7dd3fc', '#7dd3fc', '#e0f2fe', '#fffbeb',
@@ -458,14 +460,15 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 1.1
             },
             vegetation: {
-                treeScale: 5.2,
-                treeDensity: 0,
+                treeScale: 15.0,
+                treeDensity: 200,
                 bushScale: 0.95,
                 bushDensity: 0,
+                bioluminescence: 0.35,
                 canopyColors: ['#ff3300', '#ff7700', '#ffaa00', '#cc1100', '#f59e0b'],
                 trunkColors: ['#27272a', '#3f3f46', '#1c1917'],
                 activePreset: 'geothermal',
-                selectedTreeModelIds: []
+                selectedTreeModelIds: ['veg_cartoon_8', 'veg_cartoon_10', 'veg_tree_var4']
             },
             phases: createDefaultPhases(
                 '#fdba74', '#fdba74', '#ffedd5', '#fff7ed',
@@ -512,14 +515,15 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 1.2
             },
             vegetation: {
-                treeScale: 4.2,
-                treeDensity: 0,
+                treeScale: 15.0,
+                treeDensity: 200,
                 bushScale: 1.25,
                 bushDensity: 0,
+                bioluminescence: 0.35,
                 canopyColors: ['#00f5d4', '#00bbf9', '#f72585', '#7209b7', '#4cc9f0', '#10b981'],
                 trunkColors: ['#ffffff', '#e0f2fe', '#fce7f3'],
                 activePreset: 'estuary',
-                selectedTreeModelIds: []
+                selectedTreeModelIds: ['veg_palm_a', 'veg_palm_c', 'veg_fantasy_jungle', 'veg_clover_2']
             },
             phases: createDefaultPhases(
                 '#34d399', '#34d399', '#a7f3d0', '#ecfdf5',
@@ -566,14 +570,15 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 0.8
             },
             vegetation: {
-                treeScale: 8.5,
-                treeDensity: 0,
+                treeScale: 15.0,
+                treeDensity: 200,
                 bushScale: 1.15,
                 bushDensity: 0,
+                bioluminescence: 0.35,
                 canopyColors: ['#15803d', '#166534', '#14532d', '#22c55e', '#4ade80'],
                 trunkColors: ['#78350f', '#451a03', '#522e18'],
                 activePreset: 'redwood',
-                selectedTreeModelIds: []
+                selectedTreeModelIds: ['veg_cartoon_11', 'veg_cartoon_12', 'veg_bigtree_1', 'veg_tree_var4']
             },
             phases: createDefaultPhases(
                 '#64748b', '#64748b', '#cbd5e1', '#f8fafc',

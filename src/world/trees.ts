@@ -685,11 +685,11 @@ export const TREE_CATALOG: TreeCatalogItem[] = [
 
 export const DEFAULT_BIOME_TREE_IDS: Record<BiomeId, string[]> = {
     candyland: ['candy_lollipop_spiral', 'candy_lollipop_sphere', 'candy_cane_single', 'candy_cane_cluster'],
-    meadow: [],
-    archipelago: [],
-    geothermal: [],
-    estuary: [],
-    redwood: [],
+    meadow: ['veg_cartoon_1', 'veg_cartoon_2', 'veg_bigtree_1', 'veg_tree_broadleaf_1'],
+    archipelago: ['veg_cherry_blossom', 'veg_palm_a', 'veg_cartoon_7', 'veg_clover_2'],
+    geothermal: ['veg_cartoon_8', 'veg_cartoon_10', 'veg_tree_var4'],
+    estuary: ['veg_palm_a', 'veg_palm_c', 'veg_fantasy_jungle', 'veg_clover_2'],
+    redwood: ['veg_cartoon_11', 'veg_cartoon_12', 'veg_bigtree_1', 'veg_tree_var4'],
     sky_citadel: [],
     prism_sanctum: []
 };
@@ -778,6 +778,8 @@ export class TreeSystem {
         inst.geometry.setAttribute('aLeafColor', leafColorAttr);
         const colorModeAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1);
         inst.geometry.setAttribute('aColorMode', colorModeAttr);
+        const glowFactorAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1);
+        inst.geometry.setAttribute('aGlowFactor', glowFactorAttr);
         this.scene.add(inst);
         return inst;
     }
@@ -811,12 +813,14 @@ export class TreeSystem {
                 attribute vec3 aTrunkColor;
                 attribute vec3 aLeafColor;
                 attribute float aColorMode;
+                attribute float aGlowFactor;
                 varying float vPartType;
                 varying vec3 vOriginalColor;
                 varying vec3 vTrunkColor;
                 varying vec3 vLeafColor;
                 varying vec3 vCanopyColor;
                 varying float vColorMode;
+                varying float vGlowFactor;
                 varying vec2 vTreeUv;
             ` + shader.vertexShader;
 
@@ -829,6 +833,7 @@ export class TreeSystem {
                 vTrunkColor = aTrunkColor;
                 vLeafColor = aLeafColor;
                 vColorMode = aColorMode;
+                vGlowFactor = aGlowFactor;
                 #ifdef USE_UV
                     vTreeUv = uv;
                 #else
@@ -852,6 +857,7 @@ export class TreeSystem {
                 varying vec3 vLeafColor;
                 varying vec3 vCanopyColor;
                 varying float vColorMode;
+                varying float vGlowFactor;
                 varying vec2 vTreeUv;
             ` + shader.fragmentShader;
 
@@ -890,7 +896,7 @@ export class TreeSystem {
                 vec3 glowCol = (vColorMode > 0.5) ? vOriginalColor : ((vPartType > 1.5) ? vCanopyColor : ((vPartType > 0.5) ? vLeafColor : vTrunkColor));
                 float maxC = max(glowCol.r, max(glowCol.g, glowCol.b));
                 vec3 normCol = maxC > 0.01 ? (glowCol / maxC) : glowCol;
-                float glow = uBioluminescence * uTimePhaseGlow * 2.2;
+                float glow = uBioluminescence * uTimePhaseGlow * vGlowFactor * 2.2;
                 totalEmissiveRadiance += normCol * glow;
                 `
             );
@@ -1183,6 +1189,14 @@ export class TreeSystem {
                         colorModeAttr.setX(currentCount, isOriginal);
                     }
 
+                    // Low night glow for 10% of trees
+                    const isGlowTree = modelRng() < 0.10;
+                    const glowVal = isGlowTree ? 0.45 : 0.0;
+                    const glowAttr = selectedModel.treeInst.geometry.getAttribute('aGlowFactor') as THREE.InstancedBufferAttribute;
+                    if (glowAttr) {
+                        glowAttr.setX(currentCount, glowVal);
+                    }
+
                     modelCounts.set(modelKey, currentCount + 1);
                 }
             }
@@ -1203,6 +1217,8 @@ export class TreeSystem {
                 if (leafAttr) leafAttr.needsUpdate = true;
                 const colorModeAttr = entry.treeInst.geometry.getAttribute('aColorMode');
                 if (colorModeAttr) colorModeAttr.needsUpdate = true;
+                const glowAttr = entry.treeInst.geometry.getAttribute('aGlowFactor');
+                if (glowAttr) glowAttr.needsUpdate = true;
             }
         }
 

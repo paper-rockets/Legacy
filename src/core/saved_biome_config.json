@@ -229,8 +229,8 @@
         "shoreWidth": 0.8
       },
       "vegetation": {
-        "treeScale": 6,
-        "treeDensity": 0,
+        "treeScale": 15,
+        "treeDensity": 200,
         "bushScale": 1,
         "bushDensity": 0,
         "canopyColors": [
@@ -251,7 +251,12 @@
           "#e0f7fa"
         ],
         "activePreset": "candy",
-        "selectedTreeModelIds": [],
+        "selectedTreeModelIds": [
+          "veg_cartoon_1",
+          "veg_cartoon_2",
+          "veg_bigtree_1",
+          "veg_tree_broadleaf_1"
+        ],
         "models": {
           "candy_lollipop_spiral": {
             "modelId": "candy_lollipop_spiral",
@@ -283,7 +288,8 @@
             ],
             "activePreset": "candy"
           }
-        }
+        },
+        "bioluminescence": 0.35
       },
       "phases": [
         {
@@ -402,8 +408,8 @@
         "shoreWidth": 1
       },
       "vegetation": {
-        "treeScale": 4.8,
-        "treeDensity": 0,
+        "treeScale": 15,
+        "treeDensity": 200,
         "bushScale": 1.1,
         "bushDensity": 0,
         "canopyColors": [
@@ -421,7 +427,12 @@
           "#e0f2fe"
         ],
         "activePreset": "cotton",
-        "selectedTreeModelIds": [],
+        "selectedTreeModelIds": [
+          "veg_cherry_blossom",
+          "veg_palm_a",
+          "veg_cartoon_7",
+          "veg_clover_2"
+        ],
         "models": {
           "candy_lollipop_spiral": {
             "modelId": "candy_lollipop_spiral",
@@ -453,7 +464,8 @@
             ],
             "activePreset": "candy"
           }
-        }
+        },
+        "bioluminescence": 0.35
       },
       "phases": [
         {
@@ -572,8 +584,8 @@
         "shoreWidth": 1.1
       },
       "vegetation": {
-        "treeScale": 5.2,
-        "treeDensity": 220,
+        "treeScale": 15,
+        "treeDensity": 200,
         "bushScale": 0.95,
         "bushDensity": 0,
         "canopyColors": [
@@ -589,7 +601,11 @@
           "#1c1917"
         ],
         "activePreset": "geothermal",
-        "selectedTreeModelIds": [],
+        "selectedTreeModelIds": [
+          "veg_cartoon_8",
+          "veg_cartoon_10",
+          "veg_tree_var4"
+        ],
         "models": {
           "candy_lollipop_spiral": {
             "modelId": "candy_lollipop_spiral",
@@ -621,7 +637,8 @@
             ],
             "activePreset": "candy"
           }
-        }
+        },
+        "bioluminescence": 0.35
       },
       "phases": [
         {
@@ -740,8 +757,8 @@
         "shoreWidth": 1.2
       },
       "vegetation": {
-        "treeScale": 4.2,
-        "treeDensity": 0,
+        "treeScale": 15,
+        "treeDensity": 200,
         "bushScale": 1.25,
         "bushDensity": 0,
         "canopyColors": [
@@ -758,7 +775,12 @@
           "#fce7f3"
         ],
         "activePreset": "estuary",
-        "selectedTreeModelIds": [],
+        "selectedTreeModelIds": [
+          "veg_palm_a",
+          "veg_palm_c",
+          "veg_fantasy_jungle",
+          "veg_clover_2"
+        ],
         "models": {
           "candy_lollipop_spiral": {
             "modelId": "candy_lollipop_spiral",
@@ -790,7 +812,8 @@
             ],
             "activePreset": "candy"
           }
-        }
+        },
+        "bioluminescence": 0.35
       },
       "phases": [
         {
@@ -909,8 +932,8 @@
         "shoreWidth": 0.8
       },
       "vegetation": {
-        "treeScale": 8.5,
-        "treeDensity": 0,
+        "treeScale": 15,
+        "treeDensity": 200,
         "bushScale": 1.15,
         "bushDensity": 0,
         "canopyColors": [
@@ -926,7 +949,12 @@
           "#522e18"
         ],
         "activePreset": "redwood",
-        "selectedTreeModelIds": [],
+        "selectedTreeModelIds": [
+          "veg_cartoon_11",
+          "veg_cartoon_12",
+          "veg_bigtree_1",
+          "veg_tree_var4"
+        ],
         "models": {
           "candy_lollipop_spiral": {
             "modelId": "candy_lollipop_spiral",
@@ -958,7 +986,8 @@
             ],
             "activePreset": "candy"
           }
-        }
+        },
+        "bioluminescence": 0.35
       },
       "phases": [
         {
