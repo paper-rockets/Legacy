@@ -102,8 +102,6 @@ export class TerrainSystem {
         this.currentRes = initialRes;
         this.gridStride = initialStride ?? (1600 / initialRes);
 
-        this.reloadColorsFromConfig();
-
         const activeBiome = globalConfigManager.getActiveBiomeConfig();
         this.shoreBloomUniform.value = activeBiome.bloom.shoreBloom;
         this.shoreColorUniform.value.set(activeBiome.bloom.shoreColor);
@@ -117,7 +115,7 @@ export class TerrainSystem {
                 shader.uniforms.uShoreWidth = this.shoreWidthUniform;
 
                 shader.vertexShader = `
-                    varying float vCustomWorldY;
+                    varying highp float vCustomWorldY;
                 ` + shader.vertexShader;
                 shader.vertexShader = shader.vertexShader.replace(
                     '#include <worldpos_vertex>',
@@ -132,16 +130,16 @@ export class TerrainSystem {
                     uniform vec3 uShoreColor;
                     uniform float uShoreWaterY;
                     uniform float uShoreWidth;
-                    varying float vCustomWorldY;
+                    varying highp float vCustomWorldY;
                 ` + shader.fragmentShader;
                 shader.fragmentShader = shader.fragmentShader.replace(
                     '#include <emissivemap_fragment>',
                     `
                     #include <emissivemap_fragment>
                     if (uShoreBloom > 0.001) {
-                        float diff = abs(vCustomWorldY - uShoreWaterY);
-                        if (diff < uShoreWidth) {
-                            float shoreFactor = smoothstep(uShoreWidth, 0.0, diff);
+                        float shoreDiff = abs(vCustomWorldY - uShoreWaterY);
+                        if (shoreDiff < uShoreWidth) {
+                            float shoreFactor = smoothstep(uShoreWidth, 0.0, shoreDiff);
                             totalEmissiveRadiance += uShoreColor * (uShoreBloom * shoreFactor * 2.0);
                         }
                     }
@@ -166,6 +164,8 @@ export class TerrainSystem {
             dithering: true
         });
         attachShoreShader(this.standardMat);
+
+        this.reloadColorsFromConfig(false);
 
         this.isToonMode = activeBiome.terrain.isToonMode ?? true;
         this.terrainMat = this.isToonMode ? this.toonMat : this.standardMat;
