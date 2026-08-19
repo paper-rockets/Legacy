@@ -82,7 +82,7 @@ export class PlayerSystem {
         // Setup loader with Draco support
         this.gltfLoader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('/draco/gltf/');
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
         this.gltfLoader.setDRACOLoader(dracoLoader);
 
         this.setModel(0);
@@ -130,16 +130,14 @@ export class PlayerSystem {
         const modelDef = FLIGHT_MODELS[targetIndex];
 
         const filename = modelDef.file.split('/').pop() || modelDef.file;
+        const cleanFile = modelDef.file.replace(/^\.?\//, '');
         const candidatePaths = [
-            modelDef.file,
-            './' + modelDef.file.replace(/^\.?\//, ''),
-            '/' + modelDef.file.replace(/^\.?\//, ''),
-            'Assets/Flight/' + filename,
-            './Assets/Flight/' + filename,
-            '/Assets/Flight/' + filename,
-            'assets/Flight/' + filename,
-            './assets/Flight/' + filename,
-            '/assets/Flight/' + filename
+            `./${cleanFile}`,
+            cleanFile,
+            `./Assets/Flight/${filename}`,
+            `./assets/Flight/${filename}`,
+            `Assets/Flight/${filename}`,
+            `assets/Flight/${filename}`
         ];
 
         let pathIdx = 0;

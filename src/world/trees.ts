@@ -138,7 +138,9 @@ async function loadTreeGeometries(
 ): Promise<{ trunkGeo: THREE.BufferGeometry; canopyGeo: THREE.BufferGeometry; treeGeo: THREE.BufferGeometry }> {
     let gltf: any;
     if (typeof source === 'string') {
-        gltf = await loader.loadAsync(encodeURI(source));
+        const cleanPath = source.replace(/^\.?\//, '');
+        const finalPath = source.startsWith('http') ? source : `./${cleanPath}`;
+        gltf = await loader.loadAsync(encodeURI(finalPath));
     } else {
         gltf = await new Promise<any>((resolve, reject) => {
             loader.parse(source, '', (g) => resolve(g), (err) => reject(err));
@@ -387,32 +389,32 @@ export interface TreeCatalogItem {
 
 export const TREE_CATALOG: TreeCatalogItem[] = [
     // Cartoon Trees (16 models)
-    { id: 'cartoon_1', name: 'Cartoon Oak 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_1.glb', previewImage: '/Assets/TreePreviews/cartoon_1.png', scaleMultiplier: 1.0, description: 'Lush round canopy oak' },
-    { id: 'cartoon_2', name: 'Cartoon Oak 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_2.glb', previewImage: '/Assets/TreePreviews/cartoon_2.png', scaleMultiplier: 1.0, description: 'Branching stylized oak' },
-    { id: 'cartoon_3', name: 'Cone Canopy', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_3.glb', previewImage: '/Assets/TreePreviews/cartoon_3.png', scaleMultiplier: 1.0, description: 'Tapered conical tree' },
-    { id: 'cartoon_4', name: 'Tall Columnar', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_4.glb', previewImage: '/Assets/TreePreviews/cartoon_4.png', scaleMultiplier: 1.0, description: 'Tall pillar tree' },
-    { id: 'cartoon_5', name: 'Cloud Canopy', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_5.glb', previewImage: '/Assets/TreePreviews/cartoon_5.png', scaleMultiplier: 1.0, description: 'Triple cloud cluster tree' },
-    { id: 'cartoon_6', name: 'Round Canopy 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_6.glb', previewImage: '/Assets/TreePreviews/cartoon_6.png', scaleMultiplier: 1.0, description: 'Compact spherical tree' },
-    { id: 'cartoon_7', name: 'Round Canopy 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_7.glb', previewImage: '/Assets/TreePreviews/cartoon_7.png', scaleMultiplier: 1.0, description: 'Medium spherical tree' },
-    { id: 'cartoon_8', name: 'Tall Oval', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_8.glb', previewImage: '/Assets/TreePreviews/cartoon_8.png', scaleMultiplier: 1.0, description: 'Elongated oval canopy' },
-    { id: 'cartoon_9', name: 'Bent Trunk', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_9.glb', previewImage: '/Assets/TreePreviews/cartoon_9.png', scaleMultiplier: 1.0, description: 'Curved trunk stylized tree' },
-    { id: 'cartoon_10', name: 'Slender Spire', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_10.glb', previewImage: '/Assets/TreePreviews/cartoon_10.png', scaleMultiplier: 1.0, description: 'Slender tapered canopy' },
-    { id: 'cartoon_11', name: 'Poplar Tree', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_11.glb', previewImage: '/Assets/TreePreviews/cartoon_11.png', scaleMultiplier: 1.0, description: 'Tall slender poplar' },
-    { id: 'cartoon_12', name: 'Wide Spire', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_12.glb', previewImage: '/Assets/TreePreviews/cartoon_12.png', scaleMultiplier: 1.0, description: 'Wide flared stylized tree' },
-    { id: 'cartoon_13', name: 'Stylized Broadleaf 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_1.glb', previewImage: '/Assets/TreePreviews/cartoon_13.png', scaleMultiplier: 1.0, description: 'Classic stylized broadleaf' },
-    { id: 'cartoon_14', name: 'Stylized Broadleaf 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_2.glb', previewImage: '/Assets/TreePreviews/cartoon_14.png', scaleMultiplier: 1.0, description: 'Curved stylized broadleaf' },
-    { id: 'cartoon_15', name: 'Stylized Broadleaf 3', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_3.glb', previewImage: '/Assets/TreePreviews/cartoon_15.png', scaleMultiplier: 1.0, description: 'Flowering stylized tree' },
-    { id: 'cartoon_16', name: 'Cherry Blossom', category: 'Cartoon', path: '/Assets/Tree/Cartoon/tree_Tree_10.glb', previewImage: '/Assets/TreePreviews/cartoon_16.png', scaleMultiplier: 1.0, description: 'Delicate blossom tree' },
+    { id: 'cartoon_1', name: 'Cartoon Oak 1', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_1.glb', previewImage: './Assets/TreePreviews/cartoon_1.png', scaleMultiplier: 1.0, description: 'Lush round canopy oak' },
+    { id: 'cartoon_2', name: 'Cartoon Oak 2', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_2.glb', previewImage: './Assets/TreePreviews/cartoon_2.png', scaleMultiplier: 1.0, description: 'Branching stylized oak' },
+    { id: 'cartoon_3', name: 'Cone Canopy', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_3.glb', previewImage: './Assets/TreePreviews/cartoon_3.png', scaleMultiplier: 1.0, description: 'Tapered conical tree' },
+    { id: 'cartoon_4', name: 'Tall Columnar', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_4.glb', previewImage: './Assets/TreePreviews/cartoon_4.png', scaleMultiplier: 1.0, description: 'Tall pillar tree' },
+    { id: 'cartoon_5', name: 'Cloud Canopy', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_5.glb', previewImage: './Assets/TreePreviews/cartoon_5.png', scaleMultiplier: 1.0, description: 'Triple cloud cluster tree' },
+    { id: 'cartoon_6', name: 'Round Canopy 1', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_6.glb', previewImage: './Assets/TreePreviews/cartoon_6.png', scaleMultiplier: 1.0, description: 'Compact spherical tree' },
+    { id: 'cartoon_7', name: 'Round Canopy 2', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_7.glb', previewImage: './Assets/TreePreviews/cartoon_7.png', scaleMultiplier: 1.0, description: 'Medium spherical tree' },
+    { id: 'cartoon_8', name: 'Tall Oval', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_8.glb', previewImage: './Assets/TreePreviews/cartoon_8.png', scaleMultiplier: 1.0, description: 'Elongated oval canopy' },
+    { id: 'cartoon_9', name: 'Bent Trunk', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_9.glb', previewImage: './Assets/TreePreviews/cartoon_9.png', scaleMultiplier: 1.0, description: 'Curved trunk stylized tree' },
+    { id: 'cartoon_10', name: 'Slender Spire', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_10.glb', previewImage: './Assets/TreePreviews/cartoon_10.png', scaleMultiplier: 1.0, description: 'Slender tapered canopy' },
+    { id: 'cartoon_11', name: 'Poplar Tree', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_11.glb', previewImage: './Assets/TreePreviews/cartoon_11.png', scaleMultiplier: 1.0, description: 'Tall slender poplar' },
+    { id: 'cartoon_12', name: 'Wide Spire', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_12.glb', previewImage: './Assets/TreePreviews/cartoon_12.png', scaleMultiplier: 1.0, description: 'Wide flared stylized tree' },
+    { id: 'cartoon_13', name: 'Stylized Broadleaf 1', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Tree_1.glb', previewImage: './Assets/TreePreviews/cartoon_13.png', scaleMultiplier: 1.0, description: 'Classic stylized broadleaf' },
+    { id: 'cartoon_14', name: 'Stylized Broadleaf 2', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Tree_2.glb', previewImage: './Assets/TreePreviews/cartoon_14.png', scaleMultiplier: 1.0, description: 'Curved stylized broadleaf' },
+    { id: 'cartoon_15', name: 'Stylized Broadleaf 3', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Tree_3.glb', previewImage: './Assets/TreePreviews/cartoon_15.png', scaleMultiplier: 1.0, description: 'Flowering stylized tree' },
+    { id: 'cartoon_16', name: 'Cherry Blossom', category: 'Cartoon', path: './Assets/Tree/Cartoon/tree_Tree_10.glb', previewImage: './Assets/TreePreviews/cartoon_16.png', scaleMultiplier: 1.0, description: 'Delicate blossom tree' },
 
     // Bushy Trees (8 models)
-    { id: 'bushy_1', name: 'Umbrella Canopy', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type0_04_Model_balanced_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_1.png', scaleMultiplier: 1.0, description: 'Flat-topped umbrella tree' },
-    { id: 'bushy_2', name: 'Tall Bushy Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_01_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_2.png', scaleMultiplier: 1.0, description: 'Tall branching bushy tree' },
-    { id: 'bushy_3', name: 'Sprawling Savanna Acacia', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_02_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_3.png', scaleMultiplier: 1.0, description: 'Wide sprawling savanna acacia' },
-    { id: 'bushy_4', name: 'Angular Bushy Pine', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_4.png', scaleMultiplier: 1.0, description: 'Geometric faceted bushy pine' },
-    { id: 'bushy_5', name: 'Tiered Flat Canopy', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l2.glb', previewImage: '/Assets/TreePreviews/bushy_5.png', scaleMultiplier: 1.0, description: 'Tiered horizontal plate canopy' },
-    { id: 'bushy_6', name: 'Branching Bushy Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_6.png', scaleMultiplier: 1.0, description: 'Wide dual-branch bushy tree' },
-    { id: 'bushy_7', name: 'Slender Grove Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l2.glb', previewImage: '/Assets/TreePreviews/bushy_7.png', scaleMultiplier: 1.0, description: 'Slender trunk crown tree' },
-    { id: 'bushy_8', name: 'Multi-Stem Birch Shrub', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type5_04_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_8.png', scaleMultiplier: 1.0, description: 'Multi-stem white birch shrub' },
+    { id: 'bushy_1', name: 'Umbrella Canopy', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type0_04_Model_balanced_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_1.png', scaleMultiplier: 1.0, description: 'Flat-topped umbrella tree' },
+    { id: 'bushy_2', name: 'Tall Bushy Tree', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_01_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_2.png', scaleMultiplier: 1.0, description: 'Tall branching bushy tree' },
+    { id: 'bushy_3', name: 'Sprawling Savanna Acacia', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_02_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_3.png', scaleMultiplier: 1.0, description: 'Wide sprawling savanna acacia' },
+    { id: 'bushy_4', name: 'Angular Bushy Pine', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_4.png', scaleMultiplier: 1.0, description: 'Geometric faceted bushy pine' },
+    { id: 'bushy_5', name: 'Tiered Flat Canopy', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l2.glb', previewImage: './Assets/TreePreviews/bushy_5.png', scaleMultiplier: 1.0, description: 'Tiered horizontal plate canopy' },
+    { id: 'bushy_6', name: 'Branching Bushy Tree', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_6.png', scaleMultiplier: 1.0, description: 'Wide dual-branch bushy tree' },
+    { id: 'bushy_7', name: 'Slender Grove Tree', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l2.glb', previewImage: './Assets/TreePreviews/bushy_7.png', scaleMultiplier: 1.0, description: 'Slender trunk crown tree' },
+    { id: 'bushy_8', name: 'Multi-Stem Birch Shrub', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type5_04_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_8.png', scaleMultiplier: 1.0, description: 'Multi-stem white birch shrub' },
 ];
 
 export const DEFAULT_BIOME_TREE_IDS: Record<BiomeId, string[]> = {
@@ -510,9 +512,16 @@ export class TreeSystem {
     async init(): Promise<void> {
         this.loader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('/draco/gltf/');
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
         this.loader.setDRACOLoader(dracoLoader);
-        this.loader.setMeshoptDecoder(MeshoptDecoder);
+        try {
+            if (MeshoptDecoder && typeof (MeshoptDecoder as any).ready !== 'undefined') {
+                await (MeshoptDecoder as any).ready;
+            }
+            this.loader.setMeshoptDecoder(MeshoptDecoder);
+        } catch (err) {
+            console.warn('[TreeSystem] MeshoptDecoder init warning:', err);
+        }
 
         // ── 1. Unified 1-Mesh Tree MeshToonMaterial ────────────────────────────
         this.treeMat = new THREE.MeshToonMaterial({

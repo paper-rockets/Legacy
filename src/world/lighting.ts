@@ -98,15 +98,20 @@ export class LightingSystem {
         this.sunLight.castShadow = false;
         scene.add(this.sunLight);
 
-        const textureLoader = new THREE.TextureLoader();
-        const textureFlare0 = textureLoader.load('https://threejs.org/examples/textures/lensflare/lensflare0.png');
-        const textureFlare3 = textureLoader.load('https://threejs.org/examples/textures/lensflare/lensflare3.png');
+        try {
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.setCrossOrigin('anonymous');
+            const textureFlare0 = textureLoader.load('https://threejs.org/examples/textures/lensflare/lensflare0.png');
+            const textureFlare3 = textureLoader.load('https://threejs.org/examples/textures/lensflare/lensflare3.png');
 
-        const lensflare = new Lensflare();
-        lensflare.addElement(new LensflareElement(textureFlare0, 400, 0, this.sunLight.color));
-        lensflare.addElement(new LensflareElement(textureFlare3, 60, 0.6));
-        lensflare.addElement(new LensflareElement(textureFlare3, 70, 0.7));
-        this.sunLight.add(lensflare);
+            const lensflare = new Lensflare();
+            lensflare.addElement(new LensflareElement(textureFlare0, 400, 0, this.sunLight.color));
+            lensflare.addElement(new LensflareElement(textureFlare3, 60, 0.6));
+            lensflare.addElement(new LensflareElement(textureFlare3, 70, 0.7));
+            this.sunLight.add(lensflare);
+        } catch (err) {
+            console.warn('[LightingSystem] Lensflare init warning:', err);
+        }
 
         // Sunlight casting shadows
         this.dirLight = new THREE.DirectionalLight(initialTarget.dir, initialTarget.dirI);
