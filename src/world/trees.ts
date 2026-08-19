@@ -253,7 +253,7 @@ async function loadTreeGeometries(
             // 2. Material color check
             const col = (mat as THREE.MeshStandardMaterial)?.color;
             if (col) {
-                if (col.r > col.g * 1.18 && col.b < col.r * 0.85) {
+                if (col.r > col.g * 1.15 && col.b < col.r * 0.85) {
                     trunkGeos.push(sp.geo);
                     continue;
                 } else if (col.g > col.r * 1.05 || (col.g > 0.35 && col.b > col.r)) {
@@ -267,7 +267,7 @@ async function loadTreeGeometries(
             const bb = sp.geo.boundingBox!;
             const meshCenterY = (bb.min.y + bb.max.y) / 2;
             const relY = (meshCenterY - modelMinY) / modelHeight;
-            if (relY < 0.42 || (bb.min.y <= modelMinY + 0.05 * modelHeight && bb.max.y < modelMinY + 0.65 * modelHeight)) {
+            if (relY < 0.35 || (bb.min.y <= modelMinY + 0.05 * modelHeight && bb.max.y < modelMinY + 0.55 * modelHeight)) {
                 trunkGeos.push(sp.geo);
             } else {
                 canopyGeos.push(sp.geo);
@@ -285,7 +285,7 @@ async function loadTreeGeometries(
         const nonIndexed = mergedAll.toNonIndexed ? mergedAll.toNonIndexed() : mergedAll;
         const pos = nonIndexed.attributes.position as THREE.BufferAttribute;
         const norm = nonIndexed.attributes.normal as THREE.BufferAttribute | undefined;
-        const splitY = modelMinY + modelHeight * 0.38;
+        const splitY = modelMinY + modelHeight * 0.30;
 
         const trunkPositions: number[] = [];
         const canopyPositions: number[] = [];
@@ -325,15 +325,29 @@ async function loadTreeGeometries(
         }
     }
 
-    const mergedTrunk = trunkGeos.length > 0 ? (trunkGeos.length === 1 ? trunkGeos[0] : (mergeGeometries(trunkGeos, false) || trunkGeos[0])) : new THREE.BufferGeometry();
-    const mergedCanopy = canopyGeos.length > 0 ? (canopyGeos.length === 1 ? canopyGeos[0] : (mergeGeometries(canopyGeos, false) || canopyGeos[0])) : new THREE.BufferGeometry();
+    // Helper to sanitize geometry attributes to only position and normal
+    function sanitizeGeo(geo: THREE.BufferGeometry): THREE.BufferGeometry {
+        const clean = new THREE.BufferGeometry();
+        if (geo.attributes.position) {
+            clean.setAttribute('position', geo.attributes.position);
+        }
+        if (geo.attributes.normal) {
+            clean.setAttribute('normal', geo.attributes.normal);
+        } else {
+            clean.computeVertexNormals();
+        }
+        return clean;
+    }
 
-    const combinedGeos: THREE.BufferGeometry[] = [];
-    if (trunkGeos.length > 0) combinedGeos.push(mergedTrunk);
-    if (canopyGeos.length > 0) combinedGeos.push(mergedCanopy);
-    const combined = mergeGeometries(combinedGeos, false);
+    const sanitizedTrunks = trunkGeos.map(g => sanitizeGeo(g));
+    const sanitizedCanopies = canopyGeos.map(g => sanitizeGeo(g));
 
-    if (combined) {
+    const mergedTrunk = sanitizedTrunks.length > 0 ? (sanitizedTrunks.length === 1 ? sanitizedTrunks[0] : (mergeGeometries(sanitizedTrunks, false) || sanitizedTrunks[0])) : new THREE.BufferGeometry();
+    const mergedCanopy = sanitizedCanopies.length > 0 ? (sanitizedCanopies.length === 1 ? sanitizedCanopies[0] : (mergeGeometries(sanitizedCanopies, false) || sanitizedCanopies[0])) : new THREE.BufferGeometry();
+
+    const combined = mergeGeometries([sanitizeGeo(mergedTrunk), sanitizeGeo(mergedCanopy)], false);
+
+    if (combined && combined.attributes.position) {
         combined.computeBoundingBox();
         const box = combined.boundingBox!;
         const size = new THREE.Vector3();
@@ -372,9 +386,20 @@ async function loadTreeGeometries(
     mergedTrunk.setAttribute('aIsCanopy', new THREE.Float32BufferAttribute(new Float32Array(trunkVertexCount).fill(0.0), 1));
     mergedCanopy.setAttribute('aIsCanopy', new THREE.Float32BufferAttribute(new Float32Array(canopyVertexCount).fill(1.0), 1));
 
-    const mergedTree = mergeGeometries([mergedTrunk, mergedCanopy], false) || mergedTrunk;
+    // Ensure clean attribute set on both before final merge
+    const finalTrunk = new THREE.BufferGeometry();
+    finalTrunk.setAttribute('position', mergedTrunk.attributes.position);
+    finalTrunk.setAttribute('normal', mergedTrunk.attributes.normal);
+    finalTrunk.setAttribute('aIsCanopy', mergedTrunk.attributes.aIsCanopy);
 
-    return { treeGeo: mergedTree, trunkGeo: mergedTrunk, canopyGeo: mergedCanopy };
+    const finalCanopy = new THREE.BufferGeometry();
+    finalCanopy.setAttribute('position', mergedCanopy.attributes.position);
+    finalCanopy.setAttribute('normal', mergedCanopy.attributes.normal);
+    finalCanopy.setAttribute('aIsCanopy', mergedCanopy.attributes.aIsCanopy);
+
+    const mergedTree = mergeGeometries([finalTrunk, finalCanopy], false) || finalTrunk;
+
+    return { treeGeo: mergedTree, trunkGeo: finalTrunk, canopyGeo: finalCanopy };
 }
 
 export interface TreeCatalogItem {
@@ -389,32 +414,32 @@ export interface TreeCatalogItem {
 
 export const TREE_CATALOG: TreeCatalogItem[] = [
     // Cartoon Trees (16 models)
-    { id: 'cartoon_1', name: 'Cartoon Oak 1', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_1.glb', previewImage: './Assets/TreePreviews/cartoon_1.png', scaleMultiplier: 1.0, description: 'Lush round canopy oak' },
-    { id: 'cartoon_2', name: 'Cartoon Oak 2', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_2.glb', previewImage: './Assets/TreePreviews/cartoon_2.png', scaleMultiplier: 1.0, description: 'Branching stylized oak' },
-    { id: 'cartoon_3', name: 'Cone Canopy', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_3.glb', previewImage: './Assets/TreePreviews/cartoon_3.png', scaleMultiplier: 1.0, description: 'Tapered conical tree' },
-    { id: 'cartoon_4', name: 'Tall Columnar', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_4.glb', previewImage: './Assets/TreePreviews/cartoon_4.png', scaleMultiplier: 1.0, description: 'Tall pillar tree' },
-    { id: 'cartoon_5', name: 'Cloud Canopy', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_5.glb', previewImage: './Assets/TreePreviews/cartoon_5.png', scaleMultiplier: 1.0, description: 'Triple cloud cluster tree' },
-    { id: 'cartoon_6', name: 'Round Canopy 1', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_6.glb', previewImage: './Assets/TreePreviews/cartoon_6.png', scaleMultiplier: 1.0, description: 'Compact spherical tree' },
-    { id: 'cartoon_7', name: 'Round Canopy 2', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_7.glb', previewImage: './Assets/TreePreviews/cartoon_7.png', scaleMultiplier: 1.0, description: 'Medium spherical tree' },
-    { id: 'cartoon_8', name: 'Tall Oval', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_8.glb', previewImage: './Assets/TreePreviews/cartoon_8.png', scaleMultiplier: 1.0, description: 'Elongated oval canopy' },
-    { id: 'cartoon_9', name: 'Bent Trunk', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_9.glb', previewImage: './Assets/TreePreviews/cartoon_9.png', scaleMultiplier: 1.0, description: 'Curved trunk stylized tree' },
-    { id: 'cartoon_10', name: 'Slender Spire', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_10.glb', previewImage: './Assets/TreePreviews/cartoon_10.png', scaleMultiplier: 1.0, description: 'Slender tapered canopy' },
-    { id: 'cartoon_11', name: 'Poplar Tree', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_11.glb', previewImage: './Assets/TreePreviews/cartoon_11.png', scaleMultiplier: 1.0, description: 'Tall slender poplar' },
-    { id: 'cartoon_12', name: 'Wide Spire', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_12.glb', previewImage: './Assets/TreePreviews/cartoon_12.png', scaleMultiplier: 1.0, description: 'Wide flared stylized tree' },
-    { id: 'cartoon_13', name: 'Stylized Broadleaf 1', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Tree_1.glb', previewImage: './Assets/TreePreviews/cartoon_13.png', scaleMultiplier: 1.0, description: 'Classic stylized broadleaf' },
-    { id: 'cartoon_14', name: 'Stylized Broadleaf 2', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Tree_2.glb', previewImage: './Assets/TreePreviews/cartoon_14.png', scaleMultiplier: 1.0, description: 'Curved stylized broadleaf' },
-    { id: 'cartoon_15', name: 'Stylized Broadleaf 3', category: 'Cartoon', path: './Assets/Tree/Cartoon/Cartoon_Trees_Tree_3.glb', previewImage: './Assets/TreePreviews/cartoon_15.png', scaleMultiplier: 1.0, description: 'Flowering stylized tree' },
-    { id: 'cartoon_16', name: 'Cherry Blossom', category: 'Cartoon', path: './Assets/Tree/Cartoon/tree_Tree_10.glb', previewImage: './Assets/TreePreviews/cartoon_16.png', scaleMultiplier: 1.0, description: 'Delicate blossom tree' },
+    { id: 'cartoon_1', name: 'Cartoon Oak 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_1.glb', previewImage: '/Assets/TreePreviews/cartoon_1.png', scaleMultiplier: 1.0, description: 'Lush round canopy oak' },
+    { id: 'cartoon_2', name: 'Cartoon Oak 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_2.glb', previewImage: '/Assets/TreePreviews/cartoon_2.png', scaleMultiplier: 1.0, description: 'Branching stylized oak' },
+    { id: 'cartoon_3', name: 'Cone Canopy', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_3.glb', previewImage: '/Assets/TreePreviews/cartoon_3.png', scaleMultiplier: 1.0, description: 'Tapered conical tree' },
+    { id: 'cartoon_4', name: 'Tall Columnar', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_4.glb', previewImage: '/Assets/TreePreviews/cartoon_4.png', scaleMultiplier: 1.0, description: 'Tall pillar tree' },
+    { id: 'cartoon_5', name: 'Cloud Canopy', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_5.glb', previewImage: '/Assets/TreePreviews/cartoon_5.png', scaleMultiplier: 1.0, description: 'Triple cloud cluster tree' },
+    { id: 'cartoon_6', name: 'Round Canopy 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_6.glb', previewImage: '/Assets/TreePreviews/cartoon_6.png', scaleMultiplier: 1.0, description: 'Compact spherical tree' },
+    { id: 'cartoon_7', name: 'Round Canopy 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_7.glb', previewImage: '/Assets/TreePreviews/cartoon_7.png', scaleMultiplier: 1.0, description: 'Medium spherical tree' },
+    { id: 'cartoon_8', name: 'Tall Oval', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_8.glb', previewImage: '/Assets/TreePreviews/cartoon_8.png', scaleMultiplier: 1.0, description: 'Elongated oval canopy' },
+    { id: 'cartoon_9', name: 'Bent Trunk', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_9.glb', previewImage: '/Assets/TreePreviews/cartoon_9.png', scaleMultiplier: 1.0, description: 'Curved trunk stylized tree' },
+    { id: 'cartoon_10', name: 'Slender Spire', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_10.glb', previewImage: '/Assets/TreePreviews/cartoon_10.png', scaleMultiplier: 1.0, description: 'Slender tapered canopy' },
+    { id: 'cartoon_11', name: 'Poplar Tree', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_11.glb', previewImage: '/Assets/TreePreviews/cartoon_11.png', scaleMultiplier: 1.0, description: 'Tall slender poplar' },
+    { id: 'cartoon_12', name: 'Wide Spire', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_12.glb', previewImage: '/Assets/TreePreviews/cartoon_12.png', scaleMultiplier: 1.0, description: 'Wide flared stylized tree' },
+    { id: 'cartoon_13', name: 'Stylized Broadleaf 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_1.glb', previewImage: '/Assets/TreePreviews/cartoon_13.png', scaleMultiplier: 1.0, description: 'Classic stylized broadleaf' },
+    { id: 'cartoon_14', name: 'Stylized Broadleaf 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_2.glb', previewImage: '/Assets/TreePreviews/cartoon_14.png', scaleMultiplier: 1.0, description: 'Curved stylized broadleaf' },
+    { id: 'cartoon_15', name: 'Stylized Broadleaf 3', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_3.glb', previewImage: '/Assets/TreePreviews/cartoon_15.png', scaleMultiplier: 1.0, description: 'Flowering stylized tree' },
+    { id: 'cartoon_16', name: 'Cherry Blossom', category: 'Cartoon', path: '/Assets/Tree/Cartoon/tree_Tree_10.glb', previewImage: '/Assets/TreePreviews/cartoon_16.png', scaleMultiplier: 1.0, description: 'Delicate blossom tree' },
 
     // Bushy Trees (8 models)
-    { id: 'bushy_1', name: 'Umbrella Canopy', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type0_04_Model_balanced_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_1.png', scaleMultiplier: 1.0, description: 'Flat-topped umbrella tree' },
-    { id: 'bushy_2', name: 'Tall Bushy Tree', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_01_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_2.png', scaleMultiplier: 1.0, description: 'Tall branching bushy tree' },
-    { id: 'bushy_3', name: 'Sprawling Savanna Acacia', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_02_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_3.png', scaleMultiplier: 1.0, description: 'Wide sprawling savanna acacia' },
-    { id: 'bushy_4', name: 'Angular Bushy Pine', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_4.png', scaleMultiplier: 1.0, description: 'Geometric faceted bushy pine' },
-    { id: 'bushy_5', name: 'Tiered Flat Canopy', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l2.glb', previewImage: './Assets/TreePreviews/bushy_5.png', scaleMultiplier: 1.0, description: 'Tiered horizontal plate canopy' },
-    { id: 'bushy_6', name: 'Branching Bushy Tree', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_6.png', scaleMultiplier: 1.0, description: 'Wide dual-branch bushy tree' },
-    { id: 'bushy_7', name: 'Slender Grove Tree', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l2.glb', previewImage: './Assets/TreePreviews/bushy_7.png', scaleMultiplier: 1.0, description: 'Slender trunk crown tree' },
-    { id: 'bushy_8', name: 'Multi-Stem Birch Shrub', category: 'Bushy', path: './Assets/Tree/Bushy/LPTree_Tree_Type5_04_Model_instanced_l1.glb', previewImage: './Assets/TreePreviews/bushy_8.png', scaleMultiplier: 1.0, description: 'Multi-stem white birch shrub' },
+    { id: 'bushy_1', name: 'Umbrella Canopy', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type0_04_Model_balanced_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_1.png', scaleMultiplier: 1.0, description: 'Flat-topped umbrella tree' },
+    { id: 'bushy_2', name: 'Tall Bushy Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_01_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_2.png', scaleMultiplier: 1.0, description: 'Tall branching bushy tree' },
+    { id: 'bushy_3', name: 'Sprawling Savanna Acacia', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_02_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_3.png', scaleMultiplier: 1.0, description: 'Wide sprawling savanna acacia' },
+    { id: 'bushy_4', name: 'Angular Bushy Pine', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_4.png', scaleMultiplier: 1.0, description: 'Geometric faceted bushy pine' },
+    { id: 'bushy_5', name: 'Tiered Flat Canopy', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l2.glb', previewImage: '/Assets/TreePreviews/bushy_5.png', scaleMultiplier: 1.0, description: 'Tiered horizontal plate canopy' },
+    { id: 'bushy_6', name: 'Branching Bushy Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_6.png', scaleMultiplier: 1.0, description: 'Wide dual-branch bushy tree' },
+    { id: 'bushy_7', name: 'Slender Grove Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l2.glb', previewImage: '/Assets/TreePreviews/bushy_7.png', scaleMultiplier: 1.0, description: 'Slender trunk crown tree' },
+    { id: 'bushy_8', name: 'Multi-Stem Birch Shrub', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type5_04_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_8.png', scaleMultiplier: 1.0, description: 'Multi-stem white birch shrub' },
 ];
 
 export const DEFAULT_BIOME_TREE_IDS: Record<BiomeId, string[]> = {
@@ -512,16 +537,9 @@ export class TreeSystem {
     async init(): Promise<void> {
         this.loader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+        dracoLoader.setDecoderPath('/draco/gltf/');
         this.loader.setDRACOLoader(dracoLoader);
-        try {
-            if (MeshoptDecoder && typeof (MeshoptDecoder as any).ready !== 'undefined') {
-                await (MeshoptDecoder as any).ready;
-            }
-            this.loader.setMeshoptDecoder(MeshoptDecoder);
-        } catch (err) {
-            console.warn('[TreeSystem] MeshoptDecoder init warning:', err);
-        }
+        this.loader.setMeshoptDecoder(MeshoptDecoder);
 
         // ── 1. Unified 1-Mesh Tree MeshToonMaterial ────────────────────────────
         this.treeMat = new THREE.MeshToonMaterial({
@@ -539,6 +557,7 @@ export class TreeSystem {
                 attribute vec3 aTrunkColor;
                 varying float vIsCanopy;
                 varying vec3 vTrunkColor;
+                varying vec3 vCanopyColor;
             ` + shader.vertexShader;
 
             shader.vertexShader = shader.vertexShader.replace(
@@ -547,6 +566,11 @@ export class TreeSystem {
                 #include <begin_vertex>
                 vIsCanopy = aIsCanopy;
                 vTrunkColor = aTrunkColor;
+                #ifdef USE_INSTANCING_COLOR
+                    vCanopyColor = instanceColor;
+                #else
+                    vCanopyColor = vec3(1.0);
+                #endif
                 `
             );
 
@@ -556,16 +580,15 @@ export class TreeSystem {
                 uniform float uTreeBloom;
                 varying float vIsCanopy;
                 varying vec3 vTrunkColor;
+                varying vec3 vCanopyColor;
             ` + shader.fragmentShader;
 
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <color_fragment>',
                 `
                 #include <color_fragment>
-                #ifdef USE_INSTANCING_COLOR
-                    vec3 finalCol = mix(vTrunkColor, vInstanceColor.rgb, clamp(vIsCanopy, 0.0, 1.0));
-                    diffuseColor.rgb = finalCol;
-                #endif
+                vec3 finalTreeColor = mix(vTrunkColor, vCanopyColor, clamp(vIsCanopy, 0.0, 1.0));
+                diffuseColor.rgb = finalTreeColor;
                 `
             );
 
@@ -573,16 +596,11 @@ export class TreeSystem {
                 '#include <emissivemap_fragment>',
                 `
                 #include <emissivemap_fragment>
-                #ifdef USE_INSTANCING_COLOR
-                    vec3 col = mix(vTrunkColor, vInstanceColor.rgb, clamp(vIsCanopy, 0.0, 1.0));
-                    float maxC = max(col.r, max(col.g, col.b));
-                    vec3 normCol = maxC > 0.01 ? (col / maxC) : col;
-                    float glow = mix(uTrunkGlow * 0.45, uCanopyGlow * 1.5, clamp(vIsCanopy, 0.0, 1.0));
-                    totalEmissiveRadiance += normCol * (glow * uTreeBloom);
-                #else
-                    float glow = mix(uTrunkGlow * 0.45, uCanopyGlow * 1.5, clamp(vIsCanopy, 0.0, 1.0));
-                    totalEmissiveRadiance += diffuseColor.rgb * (glow * uTreeBloom);
-                #endif
+                vec3 glowCol = mix(vTrunkColor, vCanopyColor, clamp(vIsCanopy, 0.0, 1.0));
+                float maxC = max(glowCol.r, max(glowCol.g, glowCol.b));
+                vec3 normCol = maxC > 0.01 ? (glowCol / maxC) : glowCol;
+                float glow = mix(uTrunkGlow * 0.45, uCanopyGlow * 1.5, clamp(vIsCanopy, 0.0, 1.0));
+                totalEmissiveRadiance += normCol * (glow * uTreeBloom);
                 `
             );
         };
@@ -1054,10 +1072,10 @@ export class TreeSystem {
         if (this.rebuildRafId === null) {
             this.rebuildRafId = requestAnimationFrame(() => {
                 this.rebuildRafId = null;
-                if (this.lastX !== -99999) {
-                    this.rebuild(this.lastX, this.lastZ);
-                    this.dirty = false;
-                }
+                const px = this.lastX !== -99999 ? this.lastX : 0;
+                const pz = this.lastZ !== -99999 ? this.lastZ : 0;
+                this.rebuild(px, pz);
+                this.dirty = false;
             });
         }
     }

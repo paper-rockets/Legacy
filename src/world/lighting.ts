@@ -126,6 +126,7 @@ export class LightingSystem {
         this.dirLight.shadow.bias = -0.0001;
         this.dirLight.shadow.normalBias = 0.05;
         scene.add(this.dirLight);
+        scene.add(this.dirLight.target);
 
         // Celestial Dome Starfield
         const starCount = 1200;
