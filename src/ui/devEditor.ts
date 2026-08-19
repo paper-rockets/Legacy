@@ -1390,6 +1390,9 @@ export class DevEditor {
         bindSlider('dev-crystal-specular', 'dev-crystal-specular-val', (v) => this.terrain.setCrystalParams({ specularGlint: v }, this.activeBiomeId));
         bindSlider('dev-crystal-bevel', 'dev-crystal-bevel-val', (v) => this.terrain.setCrystalParams({ bevelGleam: v }, this.activeBiomeId));
         bindSlider('dev-crystal-vein', 'dev-crystal-vein-val', (v) => this.terrain.setCrystalParams({ veinGlow: v }, this.activeBiomeId));
+        bindSlider('dev-crystal-refraction', 'dev-crystal-refraction-val', (v) => this.terrain.setCrystalParams({ glassRefraction: v }, this.activeBiomeId));
+        bindSlider('dev-crystal-tint', 'dev-crystal-tint-val', (v) => this.terrain.setCrystalParams({ glassTint: v }, this.activeBiomeId));
+        bindSlider('dev-crystal-vein-scale', 'dev-crystal-vein-scale-val', (v) => this.terrain.setCrystalParams({ veinScale: v }, this.activeBiomeId));
 
         const waterToonToggle = document.getElementById('dev-water-toon-toggle');
         if (waterToonToggle) {
