@@ -247,7 +247,7 @@ function createDefaultPhases(
 }
 
 export const FACTORY_CONFIG: AppConfig = {
-    version: 17,
+    version: 18,
     activeBiomeId: 'candyland',
     placedProps: [],
     globalBloom: {
@@ -300,7 +300,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 1.1
             },
             vegetation: {
-                treeScale: 5.5,
+                treeScale: 8.25,
                 treeDensity: 280,
                 bushScale: 1.1,
                 bushDensity: 180,
@@ -355,7 +355,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 0.8
             },
             vegetation: {
-                treeScale: 15.0,
+                treeScale: 22.5,
                 treeDensity: 200,
                 bushScale: 1.0,
                 bushDensity: 0,
@@ -410,7 +410,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 1.0
             },
             vegetation: {
-                treeScale: 15.0,
+                treeScale: 22.5,
                 treeDensity: 200,
                 bushScale: 1.1,
                 bushDensity: 0,
@@ -465,7 +465,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 1.1
             },
             vegetation: {
-                treeScale: 15.0,
+                treeScale: 22.5,
                 treeDensity: 200,
                 bushScale: 0.95,
                 bushDensity: 0,
@@ -520,7 +520,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 1.2
             },
             vegetation: {
-                treeScale: 15.0,
+                treeScale: 22.5,
                 treeDensity: 200,
                 bushScale: 1.25,
                 bushDensity: 0,
@@ -575,7 +575,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 shoreWidth: 0.8
             },
             vegetation: {
-                treeScale: 15.0,
+                treeScale: 22.5,
                 treeDensity: 200,
                 bushScale: 1.15,
                 bushDensity: 0,
@@ -713,7 +713,7 @@ export const FACTORY_CONFIG: AppConfig = {
     }
 };
 
-const STORAGE_KEY = 'ghibli_flight_biome_editor_v17';
+const STORAGE_KEY = 'ghibli_flight_biome_editor_v18';
 
 export class ConfigManager {
     public config: AppConfig;

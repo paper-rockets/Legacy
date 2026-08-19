@@ -1133,7 +1133,7 @@ export class TreeSystem {
                     if (!isVegetationAllowed(instX, instZ, instY, biome)) continue;
 
                     // Independent Scale per model
-                    const mScale = mCfg.scale !== undefined ? mCfg.scale : (veg.treeScale || 6.0);
+                    const mScale = (mCfg.enabled && mCfg.scale !== undefined) ? mCfg.scale : (veg.treeScale || 6.0);
                     let baseScale = mScale * 0.16;
                     if (biome === 'redwood') baseScale *= 1.35;
                     if (biome === 'estuary') baseScale *= 0.85;
