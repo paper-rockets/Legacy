@@ -61,6 +61,11 @@ export interface TerrainColorsSettings {
     specularGlint?: number;
     bevelGleam?: number;
     veinGlow?: number;
+    glassRefraction?: number;
+    glassTint?: number;
+    veinScale?: number;
+    spireScale?: number;
+    shardSpeed?: number;
     showGroundCrystals?: boolean;
 }
 

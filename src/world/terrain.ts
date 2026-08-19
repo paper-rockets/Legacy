@@ -21,7 +21,8 @@ export const TERRAIN_PALETTES: Record<string, TerrainColorsSettings> = {
         colorDirt: '#e9d5ff',
         colorPath: '#fed7aa',
         colorSand: '#ffffff',
-        presetName: 'Marshmallow Pastel'
+        presetName: 'Marshmallow Pastel',
+        isToonMode: true
     },
     'Lush Green': {
         colorLow: '#76d149',
@@ -29,39 +30,70 @@ export const TERRAIN_PALETTES: Record<string, TerrainColorsSettings> = {
         colorDirt: '#dcb58a',
         colorPath: '#bd9973',
         colorSand: '#f2e1b8',
-        presetName: 'Lush Green'
-    },
-    'Autumn Warmth': {
-        colorLow: '#d97706',
-        colorHigh: '#f59e0b',
-        colorDirt: '#9a3412',
-        colorPath: '#7c2d12',
-        colorSand: '#fde68a',
-        presetName: 'Autumn Warmth'
+        presetName: 'Lush Green',
+        isToonMode: true
     },
     'Ghibli Pastel': {
         colorLow: '#6ee7b7',
         colorHigh: '#93c5fd',
-        colorDirt: '#fbcfe8',
+        colorDirt: '#e2e8f0',
         colorPath: '#c4b5fd',
         colorSand: '#fef08a',
-        presetName: 'Ghibli Pastel'
+        presetName: 'Ghibli Pastel',
+        isToonMode: true
     },
-    'Alpine Highlands': {
-        colorLow: '#15803d',
-        colorHigh: '#22c55e',
-        colorDirt: '#64748b',
-        colorPath: '#475569',
-        colorSand: '#e2e8f0',
-        presetName: 'Alpine Highlands'
+    'Autumn Warmth': {
+        colorLow: '#d97706',
+        colorHigh: '#f59e0b',
+        colorDirt: '#27272a',
+        colorPath: '#9a3412',
+        colorSand: '#fde68a',
+        presetName: 'Autumn Warmth',
+        isToonMode: true
     },
     'Candy Meadow': {
         colorLow: '#10b981',
-        colorHigh: '#f43f5e',
-        colorDirt: '#a855f7',
-        colorPath: '#ec4899',
+        colorHigh: '#06b6d4',
+        colorDirt: '#ec4899',
+        colorPath: '#a855f7',
         colorSand: '#fed7aa',
-        presetName: 'Candy Meadow'
+        presetName: 'Candy Meadow',
+        isToonMode: true
+    },
+    'Alpine Highlands': {
+        colorLow: '#15803d',
+        colorHigh: '#166534',
+        colorDirt: '#78350f',
+        colorPath: '#522e18',
+        colorSand: '#cbd5e1',
+        presetName: 'Alpine Highlands',
+        isToonMode: true
+    },
+    'Celestial Haven': {
+        colorLow: '#e0e7ff',
+        colorHigh: '#f3e8ff',
+        colorDirt: '#ddd6fe',
+        colorPath: '#c084fc',
+        colorSand: '#fae8ff',
+        presetName: 'Celestial Haven',
+        isToonMode: true
+    },
+    'Crystal Prism': {
+        colorLow: '#0b0f19',
+        colorHigh: '#1e1b4b',
+        colorDirt: '#38bdf8',
+        colorPath: '#f472b6',
+        colorSand: '#a855f7',
+        presetName: 'Crystal Prism',
+        isToonMode: false,
+        terrainStyle: 'crystal',
+        isCrystalMode: true,
+        glassTransmission: 0.65,
+        iridescence: 1.35,
+        specularGlint: 2.2,
+        bevelGleam: 1.1,
+        veinGlow: 1.5,
+        showGroundCrystals: true
     }
 };
 
@@ -88,6 +120,9 @@ export class TerrainSystem {
         specularGlint: 2.2,
         bevelGleam: 1.1,
         veinGlow: 1.0,
+        glassRefraction: 1.52,
+        glassTint: 1.0,
+        veinScale: 1.0,
         showGroundCrystals: true
     };
 
@@ -196,6 +231,9 @@ export class TerrainSystem {
             uSpecularGlint: { value: this.crystalParams.specularGlint },
             uFacetBevelGleam: { value: this.crystalParams.bevelGleam },
             uCrystalVeinGlow: { value: this.crystalParams.veinGlow },
+            uGlassRefraction: { value: this.crystalParams.glassRefraction },
+            uGlassTint: { value: this.crystalParams.glassTint },
+            uVeinScale: { value: this.crystalParams.veinScale },
             uShoreBloom: this.shoreBloomUniform,
             uShoreColor: this.shoreColorUniform,
             uShoreWaterY: this.shoreWaterYUniform,
@@ -232,6 +270,9 @@ export class TerrainSystem {
             uniform float uSpecularGlint;
             uniform float uFacetBevelGleam;
             uniform float uCrystalVeinGlow;
+            uniform float uGlassRefraction;
+            uniform float uGlassTint;
+            uniform float uVeinScale;
             uniform float uShoreBloom;
             uniform vec3 uShoreColor;
             uniform float uShoreWaterY;
@@ -263,10 +304,10 @@ export class TerrainSystem {
                 vec3 H = normalize(sunDir + V);
 
                 // 1. Crystal Glass Body Tint from Biome & Vertex Colors
-                vec3 glassBodyTint = vColor;
+                vec3 glassBodyTint = vColor * uGlassTint;
 
                 // 2. Optical Glass Refraction & Transmission
-                vec3 refractRay = refract(-V, faceNormal, 1.0 / 1.52);
+                vec3 refractRay = refract(-V, faceNormal, 1.0 / max(1.0, uGlassRefraction));
                 float refractSkyH = clamp(refractRay.y * 0.5 + 0.5, 0.0, 1.0);
                 vec3 transmittedSky = mix(uSkyHorizonColor, uSkyTopColor, pow(refractSkyH, 0.7));
 
@@ -299,11 +340,11 @@ export class TerrainSystem {
                 vec3 edgeBevel = (vec3(0.85, 0.95, 1.0) + spectralRainbow * 0.5) * edgeFactor * uFacetBevelGleam * 1.25;
 
                 // 7. Glowing Subsurface Crystal Veins & Strata
-                float veinNoise1 = sin(vWorldPos.x * 0.045 + vWorldPos.z * 0.035);
-                float veinNoise2 = cos(vWorldPos.x * 0.025 - vWorldPos.z * 0.055);
+                float veinNoise1 = sin((vWorldPos.x * 0.045 + vWorldPos.z * 0.035) * uVeinScale);
+                float veinNoise2 = cos((vWorldPos.x * 0.025 - vWorldPos.z * 0.055) * uVeinScale);
                 float veinPattern = abs(veinNoise1 + veinNoise2);
                 float veinMask = smoothstep(0.32, 0.0, veinPattern);
-                vec3 veinColor = mix(vec3(0.22, 0.74, 0.97), vec3(0.96, 0.45, 0.71), sin(vWorldPos.x * 0.015) * 0.5 + 0.5);
+                vec3 veinColor = mix(vec3(0.22, 0.74, 0.97), vec3(0.96, 0.45, 0.71), sin(vWorldPos.x * 0.015 * uVeinScale) * 0.5 + 0.5);
                 vec3 crystalVeins = veinColor * veinMask * uCrystalVeinGlow * 2.8;
 
                 // 8. Surface Reflections
@@ -398,6 +439,9 @@ export class TerrainSystem {
         if (activeCfg.specularGlint !== undefined) this.crystalParams.specularGlint = activeCfg.specularGlint;
         if (activeCfg.bevelGleam !== undefined) this.crystalParams.bevelGleam = activeCfg.bevelGleam;
         if (activeCfg.veinGlow !== undefined) this.crystalParams.veinGlow = activeCfg.veinGlow;
+        if (activeCfg.glassRefraction !== undefined) this.crystalParams.glassRefraction = activeCfg.glassRefraction;
+        if (activeCfg.glassTint !== undefined) this.crystalParams.glassTint = activeCfg.glassTint;
+        if (activeCfg.veinScale !== undefined) this.crystalParams.veinScale = activeCfg.veinScale;
 
         this.syncCrystalUniforms();
         this.updateActiveMaterial();
@@ -414,6 +458,9 @@ export class TerrainSystem {
         this.crystalUniforms.uSpecularGlint.value = this.crystalParams.specularGlint;
         this.crystalUniforms.uFacetBevelGleam.value = this.crystalParams.bevelGleam;
         this.crystalUniforms.uCrystalVeinGlow.value = this.crystalParams.veinGlow;
+        this.crystalUniforms.uGlassRefraction.value = this.crystalParams.glassRefraction;
+        this.crystalUniforms.uGlassTint.value = this.crystalParams.glassTint;
+        this.crystalUniforms.uVeinScale.value = this.crystalParams.veinScale;
     }
 
     public setTerrainStyle(style: 'toon' | 'standard' | 'crystal', biomeId?: BiomeId): void {
@@ -439,6 +486,9 @@ export class TerrainSystem {
             if (params.specularGlint !== undefined) bCfg.terrain.specularGlint = params.specularGlint;
             if (params.bevelGleam !== undefined) bCfg.terrain.bevelGleam = params.bevelGleam;
             if (params.veinGlow !== undefined) bCfg.terrain.veinGlow = params.veinGlow;
+            if (params.glassRefraction !== undefined) bCfg.terrain.glassRefraction = params.glassRefraction;
+            if (params.glassTint !== undefined) bCfg.terrain.glassTint = params.glassTint;
+            if (params.veinScale !== undefined) bCfg.terrain.veinScale = params.veinScale;
             if (params.showGroundCrystals !== undefined) bCfg.terrain.showGroundCrystals = params.showGroundCrystals;
         }
         this.syncCrystalUniforms();

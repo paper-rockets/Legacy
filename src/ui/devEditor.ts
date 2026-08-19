@@ -297,6 +297,9 @@ export class DevEditor {
         this.setSliderAndLabel('dev-crystal-specular', 'dev-crystal-specular-val', ter.specularGlint ?? 2.20, '');
         this.setSliderAndLabel('dev-crystal-bevel', 'dev-crystal-bevel-val', ter.bevelGleam ?? 1.10, '');
         this.setSliderAndLabel('dev-crystal-vein', 'dev-crystal-vein-val', ter.veinGlow ?? 1.00, '');
+        this.setSliderAndLabel('dev-crystal-refraction', 'dev-crystal-refraction-val', ter.glassRefraction ?? 1.52, '');
+        this.setSliderAndLabel('dev-crystal-tint', 'dev-crystal-tint-val', ter.glassTint ?? 1.00, '');
+        this.setSliderAndLabel('dev-crystal-vein-scale', 'dev-crystal-vein-scale-val', ter.veinScale ?? 1.00, 'x');
 
         const wat = biomeCfg.water;
         this.setInputValueAndHex('dev-water-color', 'dev-water-color-hex', wat.color);

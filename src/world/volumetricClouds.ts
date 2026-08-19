@@ -769,8 +769,8 @@ export class GroundCrystalFormations {
             this.group.add(mesh);
         });
 
-        // 2. Procedural Dense Crystal Fields (320+ Crystals scattered across 900m radius)
-        const totalProcedural = 340;
+        // 2. Procedural Dense Crystal Fields (720+ Crystals scattered across 900m radius)
+        const totalProcedural = 720;
         for (let i = 0; i < totalProcedural; i++) {
             const seed1 = Math.sin(i * 12.9898 + 43.12) * 43758.5453;
             const rng1 = seed1 - Math.floor(seed1);
@@ -827,15 +827,15 @@ export class GroundCrystalFormations {
             this.group.add(mesh);
         }
 
-        // 3. 120 Floating Resonant Shards Orbiting and Hovering over the land
-        for (let i = 0; i < 120; i++) {
+        // 3. 280 Floating Resonant Shards Orbiting and Hovering over the land
+        for (let i = 0; i < 280; i++) {
             const seed = i * 7.31 + 13.9;
             const rSeed = Math.sin(seed) * 0.5 + 0.5;
             const shardGeo = (i % 3 === 0) ? dodecaGeo : octaGeo;
             const shard = new THREE.Mesh(shardGeo, material);
 
-            const baseAngle = (i / 120) * Math.PI * 2;
-            const radius = 20 + (i % 12) * 38 + rSeed * 18;
+            const baseAngle = (i / 280) * Math.PI * 2;
+            const radius = 20 + (i % 16) * 42 + rSeed * 22;
             const scale = 2.2 + (i % 5) * 1.6;
             const baseHeight = 12 + (i % 8) * 7.5;
             const speed = 0.08 + (i % 4) * 0.06;
