@@ -24,7 +24,7 @@ async function bootstrap() {
     await globalConfigManager.syncFromDisk();
 
     const lighting = new LightingSystem(pipeline.scene);
-    const terrain = new TerrainSystem(pipeline.scene);
+    const terrain = new TerrainSystem(pipeline.scene, 128);
     const water = new WaterSystem(pipeline.scene);
     const props = new PropsSystem(pipeline.scene);
     const skyCastles = new SkyCastleSystem(pipeline.scene);

@@ -663,6 +663,9 @@ export const FACTORY_CONFIG: AppConfig = {
                 specularGlint: 2.2,
                 bevelGleam: 1.1,
                 veinGlow: 1.5,
+                glassRefraction: 1.52,
+                glassTint: 1.0,
+                veinScale: 1.0,
                 showGroundCrystals: true
             },
             water: {

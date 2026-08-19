@@ -1254,7 +1254,10 @@
         "specularGlint": 2.2,
         "bevelGleam": 1.1,
         "veinGlow": 1.5,
-        "showGroundCrystals": true
+        "showGroundCrystals": true,
+        "glassRefraction": 1.52,
+        "glassTint": 1,
+        "veinScale": 1
       },
       "water": {
         "color": "#38bdf8",
