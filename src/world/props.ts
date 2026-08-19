@@ -8,7 +8,7 @@ export class PropsSystem {
     public propSpawnDist = 550;
 
     private matCloud: THREE.MeshToonMaterial;
-    private cloudBloomUniform = { value: 0.45 };
+    private cloudBloomUniform = { value: 0.0 };
     private cloudEmissiveUniform = { value: new THREE.Color(0xfff6ea) };
 
     private dummy = new THREE.Object3D();

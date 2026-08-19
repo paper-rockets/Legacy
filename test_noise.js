@@ -31,3 +31,4 @@ for (let i=0; i<10000; i++) {
   if (v > max) max = v;
 }
 console.log({min, max});
+

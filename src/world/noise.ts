@@ -184,21 +184,19 @@ function heightArchipelago(x: number, z: number): number {
     return Math.max(2.8, y);
 }
 
-// 3. Geothermal Ridge: Multi-tiered stepped basalt terraces, cliff edges, and sunken caldera pits
+// 3. Geothermal Ridge: Rolling volcanic ridges, smooth basalt crests, and gentle sunken caldera valleys
 function heightGeothermal(x: number, z: number): number {
     const broad = snoise(x * 0.0025, z * 0.0025) * 44.0 + 36.0;
-    const stepHeight = 13.0;
-    const frac = ((broad % stepHeight) + stepHeight) % stepHeight / stepHeight;
-    const stepped = Math.floor(broad / stepHeight) * stepHeight + Math.pow(frac, 4.0) * stepHeight;
+    const ridgeNoise = snoise(x * 0.006 + 200, z * 0.006 - 200) * 12.0;
+    const smoothDetail = snoise(x * 0.012, z * 0.012) * 3.5;
+
+    let y = broad + ridgeNoise + smoothDetail;
 
     const calderaNoise = snoise(x * 0.0018 + 700, z * 0.0018 - 700);
-    let y = stepped;
     if (calderaNoise < -0.22) {
-        const calderaDepth = smoothstep(-0.22, -0.65, calderaNoise) * 32.0;
+        const calderaDepth = smoothstep(-0.22, -0.65, calderaNoise) * 28.0;
         y -= calderaDepth;
     }
-    const microRidges = Math.abs(snoise(x * 0.014, z * 0.014)) * 5.0;
-    y += microRidges;
     return Math.max(3.0, y);
 }
 

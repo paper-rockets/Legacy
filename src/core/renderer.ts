@@ -23,13 +23,17 @@ export class RenderPipeline {
 
         this.renderer = new THREE.WebGLRenderer({
             antialias: true,
-            preserveDrawingBuffer: true
+            preserveDrawingBuffer: false,
+            powerPreference: 'high-performance',
+            precision: 'highp',
+            depth: true,
+            stencil: false
         });
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.basePixelRatio));
         this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.1;
 
@@ -119,6 +123,12 @@ export class RenderPipeline {
     }
 
     public render() {
-        this.composer.render();
+        if (this.bloomPass.strength > 0.001) {
+            this.bloomPass.enabled = true;
+            this.composer.render();
+        } else {
+            this.bloomPass.enabled = false;
+            this.renderer.render(this.scene, this.camera);
+        }
     }
 }

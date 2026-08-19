@@ -274,6 +274,25 @@ export class UIManager {
             });
         }
 
+        // Terrain Shading Style Toggle in settings menu
+        const terrainShadingBtn = document.getElementById('terrain-shading-toggle');
+        if (terrainShadingBtn) {
+            const updateTerrainShadingBtn = () => {
+                const isToon = this.terrain.isToonMode;
+                terrainShadingBtn.innerText = isToon ? 'Style: Painterly Ghibli' : 'Style: Modern Soft PBR';
+            };
+            updateTerrainShadingBtn();
+
+            terrainShadingBtn.addEventListener('click', () => {
+                const next = !this.terrain.isToonMode;
+                this.terrain.setToonMode(next);
+                updateTerrainShadingBtn();
+                if (this.devEditor && this.devEditor.isOpen) {
+                    this.devEditor.refreshUI();
+                }
+            });
+        }
+
         // Vegetation Preset Buttons
         const presetBtns = document.querySelectorAll('.menu-preset-btn');
         presetBtns.forEach((btn) => {
@@ -541,7 +560,7 @@ export class UIManager {
         const btnWater = document.getElementById('toggle-water');
         const btnMaster = document.getElementById('toggle-all');
 
-        let isTerrainFast = false;
+        let isTerrainFast = true;
         let isPropsFast = false;
         let isDpiFast = false;
         let isShadowsFast = false;

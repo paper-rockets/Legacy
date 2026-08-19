@@ -53,6 +53,7 @@ export interface TerrainColorsSettings {
     colorPath: string;
     colorSand: string;
     presetName?: string;
+    isToonMode?: boolean;
 }
 
 export interface VegetationBiomeSettings {
@@ -138,15 +139,15 @@ function createDefaultPhases(
 }
 
 export const FACTORY_CONFIG: AppConfig = {
-    version: 4,
+    version: 6,
     activeBiomeId: 'meadow',
     globalBloom: {
-        strength: 0.28,
-        radius: 0.40,
+        strength: 0.0,
+        radius: 0.0,
         threshold: 0.70
     },
     cloud: {
-        bloom: 0.35,
+        bloom: 0.0,
         color: '#ffffff',
         emissive: '#fff6ea'
     },
@@ -160,7 +161,8 @@ export const FACTORY_CONFIG: AppConfig = {
                 colorDirt: '#dcb58a',
                 colorPath: '#bd9973',
                 colorSand: '#f2e1b8',
-                presetName: 'Lush Green'
+                presetName: 'Lush Green',
+                isToonMode: true
             },
             water: {
                 color: '#4da9e8',
@@ -173,18 +175,18 @@ export const FACTORY_CONFIG: AppConfig = {
                 isToonMode: false
             },
             bloom: {
-                globalStrength: 0.28,
-                globalRadius: 0.40,
+                globalStrength: 0.0,
+                globalRadius: 0.0,
                 globalThreshold: 0.70,
-                cloudBloom: 0.35,
+                cloudBloom: 0.0,
                 cloudColor: '#ffffff',
                 cloudEmissive: '#fff6ea',
-                treeBloom: 1.0,
-                treeCanopyGlow: 1.0,
-                treeTrunkGlow: 1.0,
-                bushBloom: 1.0,
-                bushGlow: 1.0,
-                shoreBloom: 0.60,
+                treeBloom: 0.0,
+                treeCanopyGlow: 0.0,
+                treeTrunkGlow: 0.0,
+                bushBloom: 0.0,
+                bushGlow: 0.0,
+                shoreBloom: 0.0,
                 shoreColor: '#ffffff',
                 shoreWidth: 0.8
             },
@@ -196,7 +198,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 canopyColors: ['#ff1493', '#ff69b4', '#b026ff', '#8a2be2', '#00d2ff', '#00ff88', '#ffe600', '#ff7700', '#ff1744'],
                 trunkColors: ['#ffffff', '#fff3e0', '#ffe4e6', '#e0f7fa'],
                 activePreset: 'candy',
-                selectedTreeModelIds: ['cartoon_1', 'cartoon_2', 'cartoon_3']
+                selectedTreeModelIds: ['cartoon_1', 'cartoon_2', 'cartoon_5', 'cartoon_6', 'bushy_1', 'bushy_2']
             },
             phases: createDefaultPhases(
                 '#8cbce6', '#8cbce6', '#dcf2ff', '#fffaeb',
@@ -213,7 +215,8 @@ export const FACTORY_CONFIG: AppConfig = {
                 colorDirt: '#e2e8f0',
                 colorPath: '#c4b5fd',
                 colorSand: '#fef08a',
-                presetName: 'Ghibli Pastel'
+                presetName: 'Ghibli Pastel',
+                isToonMode: true
             },
             water: {
                 color: '#38bdf8',
@@ -226,18 +229,18 @@ export const FACTORY_CONFIG: AppConfig = {
                 isToonMode: false
             },
             bloom: {
-                globalStrength: 0.42,
-                globalRadius: 0.50,
-                globalThreshold: 0.60,
-                cloudBloom: 0.50,
+                globalStrength: 0.0,
+                globalRadius: 0.0,
+                globalThreshold: 0.70,
+                cloudBloom: 0.0,
                 cloudColor: '#ffffff',
                 cloudEmissive: '#f0f9ff',
-                treeBloom: 1.25,
-                treeCanopyGlow: 1.20,
-                treeTrunkGlow: 1.0,
-                bushBloom: 1.10,
-                bushGlow: 1.10,
-                shoreBloom: 0.85,
+                treeBloom: 0.0,
+                treeCanopyGlow: 0.0,
+                treeTrunkGlow: 0.0,
+                bushBloom: 0.0,
+                bushGlow: 0.0,
+                shoreBloom: 0.0,
                 shoreColor: '#bae6fd',
                 shoreWidth: 1.0
             },
@@ -249,7 +252,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 canopyColors: ['#ff69b4', '#ffb6c1', '#fbcfe8', '#c4b5fd', '#93c5fd', '#ffffff'],
                 trunkColors: ['#fff3e0', '#ffe4e6', '#d6d3d1'],
                 activePreset: 'archipelago',
-                selectedTreeModelIds: ['bubble_4', 'bubble_5', 'bubble_6']
+                selectedTreeModelIds: ['cartoon_16', 'cartoon_13', 'cartoon_14', 'bushy_3', 'bushy_6']
             },
             phases: createDefaultPhases(
                 '#7dd3fc', '#7dd3fc', '#e0f2fe', '#fffbeb',
@@ -266,7 +269,8 @@ export const FACTORY_CONFIG: AppConfig = {
                 colorDirt: '#27272a',
                 colorPath: '#9a3412',
                 colorSand: '#fde68a',
-                presetName: 'Autumn Warmth'
+                presetName: 'Autumn Warmth',
+                isToonMode: true
             },
             water: {
                 color: '#0284c7',
@@ -279,18 +283,18 @@ export const FACTORY_CONFIG: AppConfig = {
                 isToonMode: false
             },
             bloom: {
-                globalStrength: 0.48,
-                globalRadius: 0.55,
-                globalThreshold: 0.55,
-                cloudBloom: 0.60,
+                globalStrength: 0.0,
+                globalRadius: 0.0,
+                globalThreshold: 0.70,
+                cloudBloom: 0.0,
                 cloudColor: '#fed7aa',
                 cloudEmissive: '#ffedd5',
-                treeBloom: 1.30,
-                treeCanopyGlow: 1.25,
-                treeTrunkGlow: 1.40,
-                bushBloom: 1.20,
-                bushGlow: 1.20,
-                shoreBloom: 0.90,
+                treeBloom: 0.0,
+                treeCanopyGlow: 0.0,
+                treeTrunkGlow: 0.0,
+                bushBloom: 0.0,
+                bushGlow: 0.0,
+                shoreBloom: 0.0,
                 shoreColor: '#fed7aa',
                 shoreWidth: 1.1
             },
@@ -302,7 +306,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 canopyColors: ['#ff3300', '#ff7700', '#ffaa00', '#cc1100', '#f59e0b'],
                 trunkColors: ['#27272a', '#3f3f46', '#1c1917'],
                 activePreset: 'geothermal',
-                selectedTreeModelIds: ['geo_1', 'geo_9']
+                selectedTreeModelIds: ['cartoon_9', 'cartoon_10', 'bushy_4', 'bushy_5']
             },
             phases: createDefaultPhases(
                 '#fdba74', '#fdba74', '#ffedd5', '#fff7ed',
@@ -319,7 +323,8 @@ export const FACTORY_CONFIG: AppConfig = {
                 colorDirt: '#ec4899',
                 colorPath: '#a855f7',
                 colorSand: '#fed7aa',
-                presetName: 'Candy Meadow'
+                presetName: 'Candy Meadow',
+                isToonMode: true
             },
             water: {
                 color: '#06b6d4',
@@ -332,18 +337,18 @@ export const FACTORY_CONFIG: AppConfig = {
                 isToonMode: false
             },
             bloom: {
-                globalStrength: 0.62,
-                globalRadius: 0.65,
-                globalThreshold: 0.48,
-                cloudBloom: 0.75,
+                globalStrength: 0.0,
+                globalRadius: 0.0,
+                globalThreshold: 0.70,
+                cloudBloom: 0.0,
                 cloudColor: '#a7f3d0',
                 cloudEmissive: '#ccfbf1',
-                treeBloom: 1.60,
-                treeCanopyGlow: 1.50,
-                treeTrunkGlow: 1.30,
-                bushBloom: 1.50,
-                bushGlow: 1.40,
-                shoreBloom: 1.40,
+                treeBloom: 0.0,
+                treeCanopyGlow: 0.0,
+                treeTrunkGlow: 0.0,
+                bushBloom: 0.0,
+                bushGlow: 0.0,
+                shoreBloom: 0.0,
                 shoreColor: '#00f5d4',
                 shoreWidth: 1.2
             },
@@ -355,12 +360,12 @@ export const FACTORY_CONFIG: AppConfig = {
                 canopyColors: ['#00f5d4', '#00bbf9', '#f72585', '#7209b7', '#4cc9f0', '#10b981'],
                 trunkColors: ['#ffffff', '#e0f2fe', '#fce7f3'],
                 activePreset: 'estuary',
-                selectedTreeModelIds: ['estuary_1', 'estuary_4', 'estuary_7']
+                selectedTreeModelIds: ['cartoon_3', 'cartoon_4', 'cartoon_15', 'bushy_7', 'bushy_8']
             },
             phases: createDefaultPhases(
-                '#5eead4', '#5eead4', '#ccfbf1', '#ecfdf5',
-                '#c026d3', '#c026d3', '#4a044e', '#d946ef',
-                '#09090b', '#09090b', '#06b6d4', '#ec4899'
+                '#34d399', '#34d399', '#a7f3d0', '#ecfdf5',
+                '#8b5cf6', '#8b5cf6', '#4c1d95', '#c084fc',
+                '#064e3b', '#064e3b', '#047857', '#00f5d4'
             )
         },
         redwood: {
@@ -370,9 +375,10 @@ export const FACTORY_CONFIG: AppConfig = {
                 colorLow: '#15803d',
                 colorHigh: '#166534',
                 colorDirt: '#78350f',
-                colorPath: '#451a03',
-                colorSand: '#d6d3d1',
-                presetName: 'Alpine Highlands'
+                colorPath: '#522e18',
+                colorSand: '#cbd5e1',
+                presetName: 'Alpine Highlands',
+                isToonMode: true
             },
             water: {
                 color: '#0369a1',
@@ -385,18 +391,18 @@ export const FACTORY_CONFIG: AppConfig = {
                 isToonMode: false
             },
             bloom: {
-                globalStrength: 0.25,
-                globalRadius: 0.35,
-                globalThreshold: 0.75,
-                cloudBloom: 0.30,
+                globalStrength: 0.0,
+                globalRadius: 0.0,
+                globalThreshold: 0.70,
+                cloudBloom: 0.0,
                 cloudColor: '#ffffff',
                 cloudEmissive: '#f1f5f9',
-                treeBloom: 0.85,
-                treeCanopyGlow: 0.90,
-                treeTrunkGlow: 0.90,
-                bushBloom: 0.80,
-                bushGlow: 0.80,
-                shoreBloom: 0.50,
+                treeBloom: 0.0,
+                treeCanopyGlow: 0.0,
+                treeTrunkGlow: 0.0,
+                bushBloom: 0.0,
+                bushGlow: 0.0,
+                shoreBloom: 0.0,
                 shoreColor: '#e2e8f0',
                 shoreWidth: 0.8
             },
@@ -408,7 +414,7 @@ export const FACTORY_CONFIG: AppConfig = {
                 canopyColors: ['#15803d', '#166534', '#14532d', '#22c55e', '#4ade80'],
                 trunkColors: ['#78350f', '#451a03', '#522e18'],
                 activePreset: 'redwood',
-                selectedTreeModelIds: ['redwood_04', 'redwood_03', 'redwood_05', 'yellow_poly']
+                selectedTreeModelIds: ['cartoon_8', 'cartoon_11', 'cartoon_12', 'bushy_1', 'bushy_2']
             },
             phases: createDefaultPhases(
                 '#64748b', '#64748b', '#cbd5e1', '#f8fafc',
@@ -419,7 +425,7 @@ export const FACTORY_CONFIG: AppConfig = {
     }
 };
 
-const STORAGE_KEY = 'ghibli_flight_biome_editor_v4';
+const STORAGE_KEY = 'ghibli_flight_biome_editor_v7';
 
 export class ConfigManager {
     public config: AppConfig;

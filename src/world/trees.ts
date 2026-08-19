@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { terrainHeightJS, getDominantBiome, BiomeId } from './noise';
 import { gradientMap } from './terrain';
@@ -131,11 +132,18 @@ function cellSeed(cx: number, cz: number, offset: number = 0): number {
 // ── GLB Geometry Loader (Split Trunk vs Canopy) ────────────────────────────────
 
 async function loadTreeGeometries(
-    url: string,
+    source: string | ArrayBuffer,
     loader: GLTFLoader,
     customScale: number = 1.0
-): Promise<{ trunkGeo: THREE.BufferGeometry; canopyGeo: THREE.BufferGeometry }> {
-    const gltf = await loader.loadAsync(encodeURI(url));
+): Promise<{ trunkGeo: THREE.BufferGeometry; canopyGeo: THREE.BufferGeometry; treeGeo: THREE.BufferGeometry }> {
+    let gltf: any;
+    if (typeof source === 'string') {
+        gltf = await loader.loadAsync(encodeURI(source));
+    } else {
+        gltf = await new Promise<any>((resolve, reject) => {
+            loader.parse(source, '', (g) => resolve(g), (err) => reject(err));
+        });
+    }
     const trunkGeos: THREE.BufferGeometry[] = [];
     const canopyGeos: THREE.BufferGeometry[] = [];
     gltf.scene.updateMatrixWorld(true);
@@ -356,7 +364,15 @@ async function loadTreeGeometries(
         mergedCanopy.setAttribute('normal', new THREE.BufferAttribute(new Float32Array([0,1,0, 0,1,0, 0,1,0]), 3));
     }
 
-    return { trunkGeo: mergedTrunk, canopyGeo: mergedCanopy };
+    const trunkVertexCount = mergedTrunk.attributes.position.count;
+    const canopyVertexCount = mergedCanopy.attributes.position.count;
+
+    mergedTrunk.setAttribute('aIsCanopy', new THREE.Float32BufferAttribute(new Float32Array(trunkVertexCount).fill(0.0), 1));
+    mergedCanopy.setAttribute('aIsCanopy', new THREE.Float32BufferAttribute(new Float32Array(canopyVertexCount).fill(1.0), 1));
+
+    const mergedTree = mergeGeometries([mergedTrunk, mergedCanopy], false) || mergedTrunk;
+
+    return { treeGeo: mergedTree, trunkGeo: mergedTrunk, canopyGeo: mergedCanopy };
 }
 
 export interface TreeCatalogItem {
@@ -364,40 +380,47 @@ export interface TreeCatalogItem {
     name: string;
     category: string;
     path: string;
+    previewImage: string;
     scaleMultiplier?: number;
     description: string;
 }
 
 export const TREE_CATALOG: TreeCatalogItem[] = [
-    { id: 'cartoon_1', name: 'Cartoon Oak 1', category: 'Stylized', path: '/Assets/Cartoon/Cartoon_Trees_Tree_1.glb', scaleMultiplier: 1.0, description: 'Lush round canopy oak' },
-    { id: 'cartoon_2', name: 'Cartoon Oak 2', category: 'Stylized', path: '/Assets/Cartoon/Cartoon_Trees_Tree_2.glb', scaleMultiplier: 1.0, description: 'Branching stylized tree' },
-    { id: 'cartoon_3', name: 'Cartoon Oak 3', category: 'Stylized', path: '/Assets/Cartoon/Cartoon_Trees_Tree_3.glb', scaleMultiplier: 1.0, description: 'Compact flowering tree' },
-    { id: 'bubble_4', name: 'Bubble Blossom A', category: 'Bubble', path: '/Assets/Bubble/TreeAsset_4_instanced_l2_superhigh.glb', scaleMultiplier: 1.0, description: 'Spherical cloud blossom tree' },
-    { id: 'bubble_5', name: 'Bubble Blossom B', category: 'Bubble', path: '/Assets/Bubble/TreeAsset_5_instanced_l2_superhigh.glb', scaleMultiplier: 1.0, description: 'Triple bubble canopy tree' },
-    { id: 'bubble_6', name: 'Bubble Blossom C', category: 'Bubble', path: '/Assets/Bubble/TreeAsset_6_instanced_l2_superhigh.glb', scaleMultiplier: 1.0, description: 'Clustered bubble canopy' },
-    { id: 'redwood_04', name: 'Giant Redwood Spire', category: 'Conifer', path: '/Assets/Cartoon 4/LPTree_Tree_Type0_04_Model_balanced_instanced_l1_superhigh.glb', scaleMultiplier: 1.25, description: 'Colossal ancient sequoia' },
-    { id: 'redwood_03', name: 'Towering Pine', category: 'Conifer', path: '/Assets/Cartoon 4/LPTree_Tree_Type3_03_Model_instanced_l2_superhigh.glb', scaleMultiplier: 1.0, description: 'Alpine high-altitude pine' },
-    { id: 'redwood_05', name: 'Ancient Sequoia', category: 'Conifer', path: '/Assets/Cartoon 4/LPTree_Tree_Type3_05_Model_balanced_instanced_l1_superhigh.glb', scaleMultiplier: 1.0, description: 'Dense tiered pine' },
-    { id: 'yellow_poly', name: 'Golden Conifer', category: 'Conifer', path: '/Assets/Cartoon 4/Lowpolytree_6_yellow_superhigh.glb', scaleMultiplier: 1.0, description: 'Golden tapered pine' },
-    { id: 'estuary_1', name: 'Coral Palm 1', category: 'Tropical', path: '/Assets/Cartoon 5/LowPoly-Tree-02_Tree_1_instanced.glb', scaleMultiplier: 1.0, description: 'Flared coral mangrove palm' },
-    { id: 'estuary_4', name: 'Coral Palm 2', category: 'Tropical', path: '/Assets/Cartoon 5/LowPoly-Tree-02_Tree_4_instanced.glb', scaleMultiplier: 1.0, description: 'Twin branching lagoon palm' },
-    { id: 'estuary_7', name: 'Coral Shrub', category: 'Tropical', path: '/Assets/Cartoon 5/LowPoly-Tree-02_Tree_7_instanced.glb', scaleMultiplier: 1.0, description: 'Low coastal coral shrub' },
-    { id: 'geo_1', name: 'Ash Pine', category: 'Volcanic', path: '/Assets/Cartoon 3/low_poly_tree_1_Tree_1.glb', scaleMultiplier: 1.0, description: 'Charred ridge pine' },
-    { id: 'geo_9', name: 'Basalt Spire', category: 'Volcanic', path: '/Assets/Cartoon 3/tree_Tree_9.glb', scaleMultiplier: 1.0, description: 'Hardy geothermal canopy' },
-    { id: 'pack_1', name: 'Low Poly Oak', category: 'Low Poly', path: '/Separated_Trees/Cartoon_Trees_Pack_Tree_1.glb', scaleMultiplier: 1.0, description: 'Minimalist low-poly oak' },
-    { id: 'pack_5', name: 'Low Poly Pine', category: 'Low Poly', path: '/Separated_Trees/Cartoon_Trees_Pack_Tree_5.glb', scaleMultiplier: 1.0, description: 'Layered polygonal pine' },
-    { id: 'pack_8', name: 'Low Poly Bush Tree', category: 'Low Poly', path: '/Separated_Trees/Cartoon_Trees_Pack_Tree_8.glb', scaleMultiplier: 1.0, description: 'Rounded low-poly tree' },
-    { id: 'cherry_1', name: 'Cherry Blossom', category: 'Blossom', path: '/Separated_Trees/Cherry+Blossom-Tree_Pack+JSGraphics_CGTrader_Tree_1.glb', scaleMultiplier: 1.0, description: 'Delicate blossom branch tree' },
-    { id: 'rock_tree_2', name: 'Rock Cedar', category: 'Alpine', path: '/Separated_Trees/tree_X12_+X1_Rock_Pack_Tree_2.glb', scaleMultiplier: 1.0, description: 'Rugged cliffside cedar' },
-    { id: 'rock_tree_6', name: 'Highland Juniper', category: 'Alpine', path: '/Separated_Trees/tree_X12_+X1_Rock_Pack_Tree_6.glb', scaleMultiplier: 1.0, description: 'Twisted highland juniper' },
+    // Cartoon Trees (16 models)
+    { id: 'cartoon_1', name: 'Cartoon Oak 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_1.glb', previewImage: '/Assets/TreePreviews/cartoon_1.png', scaleMultiplier: 1.0, description: 'Lush round canopy oak' },
+    { id: 'cartoon_2', name: 'Cartoon Oak 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_2.glb', previewImage: '/Assets/TreePreviews/cartoon_2.png', scaleMultiplier: 1.0, description: 'Branching stylized oak' },
+    { id: 'cartoon_3', name: 'Cone Canopy', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_3.glb', previewImage: '/Assets/TreePreviews/cartoon_3.png', scaleMultiplier: 1.0, description: 'Tapered conical tree' },
+    { id: 'cartoon_4', name: 'Tall Columnar', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_4.glb', previewImage: '/Assets/TreePreviews/cartoon_4.png', scaleMultiplier: 1.0, description: 'Tall pillar tree' },
+    { id: 'cartoon_5', name: 'Cloud Canopy', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_5.glb', previewImage: '/Assets/TreePreviews/cartoon_5.png', scaleMultiplier: 1.0, description: 'Triple cloud cluster tree' },
+    { id: 'cartoon_6', name: 'Round Canopy 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_6.glb', previewImage: '/Assets/TreePreviews/cartoon_6.png', scaleMultiplier: 1.0, description: 'Compact spherical tree' },
+    { id: 'cartoon_7', name: 'Round Canopy 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_7.glb', previewImage: '/Assets/TreePreviews/cartoon_7.png', scaleMultiplier: 1.0, description: 'Medium spherical tree' },
+    { id: 'cartoon_8', name: 'Tall Oval', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_8.glb', previewImage: '/Assets/TreePreviews/cartoon_8.png', scaleMultiplier: 1.0, description: 'Elongated oval canopy' },
+    { id: 'cartoon_9', name: 'Bent Trunk', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_9.glb', previewImage: '/Assets/TreePreviews/cartoon_9.png', scaleMultiplier: 1.0, description: 'Curved trunk stylized tree' },
+    { id: 'cartoon_10', name: 'Slender Spire', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_10.glb', previewImage: '/Assets/TreePreviews/cartoon_10.png', scaleMultiplier: 1.0, description: 'Slender tapered canopy' },
+    { id: 'cartoon_11', name: 'Poplar Tree', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_11.glb', previewImage: '/Assets/TreePreviews/cartoon_11.png', scaleMultiplier: 1.0, description: 'Tall slender poplar' },
+    { id: 'cartoon_12', name: 'Wide Spire', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Pack_Tree_12.glb', previewImage: '/Assets/TreePreviews/cartoon_12.png', scaleMultiplier: 1.0, description: 'Wide flared stylized tree' },
+    { id: 'cartoon_13', name: 'Stylized Broadleaf 1', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_1.glb', previewImage: '/Assets/TreePreviews/cartoon_13.png', scaleMultiplier: 1.0, description: 'Classic stylized broadleaf' },
+    { id: 'cartoon_14', name: 'Stylized Broadleaf 2', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_2.glb', previewImage: '/Assets/TreePreviews/cartoon_14.png', scaleMultiplier: 1.0, description: 'Curved stylized broadleaf' },
+    { id: 'cartoon_15', name: 'Stylized Broadleaf 3', category: 'Cartoon', path: '/Assets/Tree/Cartoon/Cartoon_Trees_Tree_3.glb', previewImage: '/Assets/TreePreviews/cartoon_15.png', scaleMultiplier: 1.0, description: 'Flowering stylized tree' },
+    { id: 'cartoon_16', name: 'Cherry Blossom', category: 'Cartoon', path: '/Assets/Tree/Cartoon/tree_Tree_10.glb', previewImage: '/Assets/TreePreviews/cartoon_16.png', scaleMultiplier: 1.0, description: 'Delicate blossom tree' },
+
+    // Bushy Trees (8 models)
+    { id: 'bushy_1', name: 'Umbrella Canopy', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type0_04_Model_balanced_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_1.png', scaleMultiplier: 1.0, description: 'Flat-topped umbrella tree' },
+    { id: 'bushy_2', name: 'Tall Bushy Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_01_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_2.png', scaleMultiplier: 1.0, description: 'Tall branching bushy tree' },
+    { id: 'bushy_3', name: 'Sprawling Savanna Acacia', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_02_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_3.png', scaleMultiplier: 1.0, description: 'Wide sprawling savanna acacia' },
+    { id: 'bushy_4', name: 'Angular Bushy Pine', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_4.png', scaleMultiplier: 1.0, description: 'Geometric faceted bushy pine' },
+    { id: 'bushy_5', name: 'Tiered Flat Canopy', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_03_Model_instanced_l2.glb', previewImage: '/Assets/TreePreviews/bushy_5.png', scaleMultiplier: 1.0, description: 'Tiered horizontal plate canopy' },
+    { id: 'bushy_6', name: 'Branching Bushy Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_6.png', scaleMultiplier: 1.0, description: 'Wide dual-branch bushy tree' },
+    { id: 'bushy_7', name: 'Slender Grove Tree', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type3_04_Model_instanced_l2.glb', previewImage: '/Assets/TreePreviews/bushy_7.png', scaleMultiplier: 1.0, description: 'Slender trunk crown tree' },
+    { id: 'bushy_8', name: 'Multi-Stem Birch Shrub', category: 'Bushy', path: '/Assets/Tree/Bushy/LPTree_Tree_Type5_04_Model_instanced_l1.glb', previewImage: '/Assets/TreePreviews/bushy_8.png', scaleMultiplier: 1.0, description: 'Multi-stem white birch shrub' },
 ];
 
 export const DEFAULT_BIOME_TREE_IDS: Record<BiomeId, string[]> = {
-    meadow: ['cartoon_1', 'cartoon_2', 'cartoon_3'],
-    archipelago: ['bubble_4', 'bubble_5', 'bubble_6'],
-    geothermal: ['geo_1', 'geo_9'],
-    estuary: ['estuary_1', 'estuary_4', 'estuary_7'],
-    redwood: ['redwood_04', 'redwood_03', 'redwood_05', 'yellow_poly']
+    meadow: ['cartoon_1', 'cartoon_2', 'cartoon_5', 'cartoon_6', 'bushy_1', 'bushy_2'],
+    archipelago: ['cartoon_16', 'cartoon_13', 'cartoon_14', 'bushy_3', 'bushy_6'],
+    geothermal: ['cartoon_9', 'cartoon_10', 'bushy_4', 'bushy_5'],
+    estuary: ['cartoon_3', 'cartoon_4', 'cartoon_15', 'bushy_7', 'bushy_8'],
+    redwood: ['cartoon_8', 'cartoon_11', 'cartoon_12', 'bushy_1', 'bushy_2']
 };
 
 function isVegetationAllowed(x: number, z: number, y: number, biome: BiomeId): boolean {
@@ -425,10 +448,8 @@ function isVegetationAllowed(x: number, z: number, y: number, biome: BiomeId): b
 
 interface LoadedCatalogEntry {
     item: TreeCatalogItem;
-    trunkGeo: THREE.BufferGeometry;
-    canopyGeo: THREE.BufferGeometry;
-    trunkInst: THREE.InstancedMesh;
-    canopyInst: THREE.InstancedMesh;
+    treeGeo: THREE.BufferGeometry;
+    treeInst: THREE.InstancedMesh;
 }
 
 // ── TreeSystem ─────────────────────────────────────────────────────────────────
@@ -441,20 +462,19 @@ export class TreeSystem {
     private bushInsts: THREE.InstancedMesh[] = [];
 
     // Materials
-    private trunkMat!: THREE.MeshToonMaterial;
-    private canopyMat!: THREE.MeshToonMaterial;
+    private treeMat!: THREE.MeshToonMaterial;
     private bushMat!: THREE.MeshToonMaterial;
 
     // Emissive Glow & Bloom Uniforms
-    private canopyGlowUniform = { value: 0.35 };
-    private trunkGlowUniform = { value: 0.75 };
-    private bushGlowUniform = { value: 0.35 };
-    private treeBloomUniform = { value: 1.0 };
-    private bushBloomUniform = { value: 1.0 };
+    private canopyGlowUniform = { value: 0.0 };
+    private trunkGlowUniform = { value: 0.0 };
+    private bushGlowUniform = { value: 0.0 };
+    private treeBloomUniform = { value: 0.0 };
+    private bushBloomUniform = { value: 0.0 };
 
     // Glow State
     private currentCanopyGlow = 0.0;
-    private currentTrunkGlow = 0.75;
+    private currentTrunkGlow = 0.0;
     private currentBushGlow = 0.0;
 
     // Spatial & Loading State
@@ -469,60 +489,90 @@ export class TreeSystem {
     private tempColor = new THREE.Color();
     private tempHSL = { h: 0, s: 0, l: 0 };
 
+    public loader!: GLTFLoader;
+
     constructor(private scene: THREE.Scene) {}
 
+    public setupInstMesh(geo: THREE.BufferGeometry, mat: THREE.Material, capacity: number, castShadow: boolean = true): THREE.InstancedMesh {
+        const inst = new THREE.InstancedMesh(geo, mat, capacity);
+        inst.count = 0;
+        inst.visible = false;
+        inst.castShadow = castShadow;
+        inst.receiveShadow = true;
+        inst.frustumCulled = false;
+        inst.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+        const trunkColorAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+        inst.geometry.setAttribute('aTrunkColor', trunkColorAttr);
+        this.scene.add(inst);
+        return inst;
+    }
+
     async init(): Promise<void> {
-        const loader = new GLTFLoader();
+        this.loader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('/draco/gltf/');
-        loader.setDRACOLoader(dracoLoader);
+        this.loader.setDRACOLoader(dracoLoader);
+        this.loader.setMeshoptDecoder(MeshoptDecoder);
 
-        // ── 1. Separate Trunk & Canopy MeshToonMaterials ───────────────────────
-        this.trunkMat = new THREE.MeshToonMaterial({
+        // ── 1. Unified 1-Mesh Tree MeshToonMaterial ────────────────────────────
+        this.treeMat = new THREE.MeshToonMaterial({
             color: 0xffffff,
             gradientMap,
             dithering: true,
         });
-        this.trunkMat.onBeforeCompile = (shader) => {
+        this.treeMat.onBeforeCompile = (shader) => {
             shader.uniforms.uTrunkGlow = this.trunkGlowUniform;
+            shader.uniforms.uCanopyGlow = this.canopyGlowUniform;
             shader.uniforms.uTreeBloom = this.treeBloomUniform;
-            shader.fragmentShader = `uniform float uTrunkGlow;\nuniform float uTreeBloom;\n` + shader.fragmentShader;
-            shader.fragmentShader = shader.fragmentShader.replace(
-                '#include <emissivemap_fragment>',
+
+            shader.vertexShader = `
+                attribute float aIsCanopy;
+                attribute vec3 aTrunkColor;
+                varying float vIsCanopy;
+                varying vec3 vTrunkColor;
+            ` + shader.vertexShader;
+
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <begin_vertex>',
                 `
-                #include <emissivemap_fragment>
+                #include <begin_vertex>
+                vIsCanopy = aIsCanopy;
+                vTrunkColor = aTrunkColor;
+                `
+            );
+
+            shader.fragmentShader = `
+                uniform float uTrunkGlow;
+                uniform float uCanopyGlow;
+                uniform float uTreeBloom;
+                varying float vIsCanopy;
+                varying vec3 vTrunkColor;
+            ` + shader.fragmentShader;
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <color_fragment>',
+                `
+                #include <color_fragment>
                 #ifdef USE_INSTANCING_COLOR
-                    vec3 col = vInstanceColor.rgb;
-                    float maxC = max(col.r, max(col.g, col.b));
-                    vec3 normCol = maxC > 0.01 ? (col / maxC) : col;
-                    totalEmissiveRadiance += normCol * (uTrunkGlow * 0.45 * uTreeBloom);
-                #else
-                    totalEmissiveRadiance += diffuseColor.rgb * (uTrunkGlow * 0.45 * uTreeBloom);
+                    vec3 finalCol = mix(vTrunkColor, vInstanceColor.rgb, clamp(vIsCanopy, 0.0, 1.0));
+                    diffuseColor.rgb = finalCol;
                 #endif
                 `
             );
-        };
 
-        this.canopyMat = new THREE.MeshToonMaterial({
-            color: 0xffffff,
-            gradientMap,
-            dithering: true,
-        });
-        this.canopyMat.onBeforeCompile = (shader) => {
-            shader.uniforms.uGlowIntensity = this.canopyGlowUniform;
-            shader.uniforms.uTreeBloom = this.treeBloomUniform;
-            shader.fragmentShader = `uniform float uGlowIntensity;\nuniform float uTreeBloom;\n` + shader.fragmentShader;
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <emissivemap_fragment>',
                 `
                 #include <emissivemap_fragment>
                 #ifdef USE_INSTANCING_COLOR
-                    vec3 col = vInstanceColor.rgb;
+                    vec3 col = mix(vTrunkColor, vInstanceColor.rgb, clamp(vIsCanopy, 0.0, 1.0));
                     float maxC = max(col.r, max(col.g, col.b));
                     vec3 normCol = maxC > 0.01 ? (col / maxC) : col;
-                    totalEmissiveRadiance += normCol * (uGlowIntensity * 1.5 * uTreeBloom);
+                    float glow = mix(uTrunkGlow * 0.45, uCanopyGlow * 1.5, clamp(vIsCanopy, 0.0, 1.0));
+                    totalEmissiveRadiance += normCol * (glow * uTreeBloom);
                 #else
-                    totalEmissiveRadiance += diffuseColor.rgb * (uGlowIntensity * 1.5 * uTreeBloom);
+                    float glow = mix(uTrunkGlow * 0.45, uCanopyGlow * 1.5, clamp(vIsCanopy, 0.0, 1.0));
+                    totalEmissiveRadiance += diffuseColor.rgb * (glow * uTreeBloom);
                 #endif
                 `
             );
@@ -554,29 +604,15 @@ export class TreeSystem {
             );
         };
 
-        const setupInstMesh = (geo: THREE.BufferGeometry, mat: THREE.Material, capacity: number, castShadow: boolean = true) => {
-            const inst = new THREE.InstancedMesh(geo, mat, capacity);
-            inst.count = 0;
-            inst.castShadow = castShadow;
-            inst.receiveShadow = true;
-            inst.frustumCulled = false;
-            inst.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
-            this.scene.add(inst);
-            return inst;
-        };
-
-        // ── 2. Pre-Load Entire Tree Catalog ────────────────────────────────────
+        // ── 2. Pre-Load Entire Tree Catalog (1 InstancedMesh per Archetype) ────
         const loadPromises = TREE_CATALOG.map(async (item) => {
             try {
-                const geo = await loadTreeGeometries(item.path, loader, item.scaleMultiplier ?? 1.0);
-                const trunkInst = setupInstMesh(geo.trunkGeo, this.trunkMat, MAX_CAPACITY, true);
-                const canopyInst = setupInstMesh(geo.canopyGeo, this.canopyMat, MAX_CAPACITY, true);
+                const geo = await loadTreeGeometries(item.path, this.loader, item.scaleMultiplier ?? 1.0);
+                const treeInst = this.setupInstMesh(geo.treeGeo, this.treeMat, MAX_CAPACITY, true);
                 const entry: LoadedCatalogEntry = {
                     item,
-                    trunkGeo: geo.trunkGeo,
-                    canopyGeo: geo.canopyGeo,
-                    trunkInst,
-                    canopyInst
+                    treeGeo: geo.treeGeo,
+                    treeInst
                 };
                 this.catalogModelMap.set(item.id, entry);
                 this.catalogKeys.push(item.id);
@@ -594,12 +630,49 @@ export class TreeSystem {
         bushFlatGeo.translate(0, 0.3, 0);
 
         for (const geo of [bushRoundGeo, bushFlatGeo]) {
-            const inst = setupInstMesh(geo, this.bushMat, MAX_CAPACITY, false);
+            const inst = this.setupInstMesh(geo, this.bushMat, MAX_CAPACITY, false);
             this.bushInsts.push(inst);
         }
 
         this.ready = true;
         this.dirty = true;
+    }
+
+    public async loadCustomTreeModel(
+        name: string,
+        source: string | ArrayBuffer,
+        scaleMultiplier: number = 1.0
+    ): Promise<TreeCatalogItem> {
+        const cleanName = name.replace(/\.glb$/i, '').trim() || 'Custom Tree';
+        const id = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        const geo = await loadTreeGeometries(source, this.loader, scaleMultiplier);
+        const treeInst = this.setupInstMesh(geo.treeGeo, this.treeMat, MAX_CAPACITY, true);
+        const item: TreeCatalogItem = {
+            id,
+            name: cleanName,
+            category: 'Custom / Loaded',
+            path: typeof source === 'string' ? source : 'Uploaded Custom File',
+            previewImage: '/Assets/TreePreviews/cartoon_1.png',
+            scaleMultiplier,
+            description: 'Custom loaded 3D tree asset'
+        };
+        const entry: LoadedCatalogEntry = {
+            item,
+            treeGeo: geo.treeGeo,
+            treeInst
+        };
+        this.catalogModelMap.set(id, entry);
+        this.catalogKeys.push(id);
+        TREE_CATALOG.push(item);
+
+        // Also add to active biome's selected models and rebuild
+        const bCfg = globalConfigManager.getActiveBiomeConfig();
+        if (bCfg && bCfg.vegetation) {
+            const cur = bCfg.vegetation.selectedTreeModelIds || [];
+            bCfg.vegetation.selectedTreeModelIds = [...cur, id];
+        }
+        this.forceRebuild();
+        return item;
     }
 
     update(playerX: number, playerZ: number): void {
@@ -645,23 +718,23 @@ export class TreeSystem {
 
     // ── Rebuild Instanced Meshes ───────────────────────────────────────────────
 
-    public rebuild(px: number, pz: number): void {
+    rebuild(playerX: number, playerZ: number): void {
         if (!this.ready) return;
 
-        // Model instance count map
-        const modelCounts: Map<string, number> = new Map();
-        for (const key of this.catalogKeys) {
-            modelCounts.set(key, 0);
-        }
-
         const treeGridSpacing = 16.0;
+        const px = playerX;
+        const pz = playerZ;
 
         const minCX = Math.floor((px - SPAWN_RADIUS) / treeGridSpacing);
         const maxCX = Math.ceil((px + SPAWN_RADIUS) / treeGridSpacing);
         const minCZ = Math.floor((pz - SPAWN_RADIUS) / treeGridSpacing);
         const maxCZ = Math.ceil((pz + SPAWN_RADIUS) / treeGridSpacing);
 
-        // Precompute active model entries per biome for ultra-fast loop
+        const modelCounts: Map<string, number> = new Map();
+        for (const key of this.catalogKeys) {
+            modelCounts.set(key, 0);
+        }
+
         const allBiomes: BiomeId[] = ['meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
         const biomeActiveModels: Record<BiomeId, LoadedCatalogEntry[]> = {
             meadow: [],
@@ -673,21 +746,15 @@ export class TreeSystem {
 
         for (const b of allBiomes) {
             const bCfg = globalConfigManager.getBiomeConfig(b);
-            const userModelIds = bCfg.vegetation.selectedTreeModelIds && bCfg.vegetation.selectedTreeModelIds.length > 0 
-                ? bCfg.vegetation.selectedTreeModelIds 
-                : DEFAULT_BIOME_TREE_IDS[b];
+            let userModelIds = bCfg.vegetation.selectedTreeModelIds;
+            if (!userModelIds || userModelIds.length === 0) {
+                userModelIds = DEFAULT_BIOME_TREE_IDS[b] || [];
+            }
             
             const entries: LoadedCatalogEntry[] = [];
             for (const mId of userModelIds) {
                 const entry = this.catalogModelMap.get(mId);
                 if (entry) entries.push(entry);
-            }
-            // Fallback if none found
-            if (entries.length === 0) {
-                for (const fallbackId of DEFAULT_BIOME_TREE_IDS[b]) {
-                    const fallbackEntry = this.catalogModelMap.get(fallbackId);
-                    if (fallbackEntry) entries.push(fallbackEntry);
-                }
             }
             biomeActiveModels[b] = entries;
         }
@@ -741,8 +808,7 @@ export class TreeSystem {
                 this.dummy.scale.set(scaleX, scaleY, scaleZ);
                 this.dummy.updateMatrix();
 
-                selectedModel.trunkInst.setMatrixAt(currentCount, this.dummy.matrix);
-                selectedModel.canopyInst.setMatrixAt(currentCount, this.dummy.matrix);
+                selectedModel.treeInst.setMatrixAt(currentCount, this.dummy.matrix);
 
                 // Canopy Color selection with per-tree instance variation
                 const canopyPalette = veg.canopyColors.length > 0 ? veg.canopyColors : ['#ff1493', '#00d2ff', '#00ff88'];
@@ -752,13 +818,16 @@ export class TreeSystem {
                 this.tempHSL.l = THREE.MathUtils.clamp(this.tempHSL.l + (rng() - 0.5) * 0.08, 0.1, 0.9);
                 this.tempHSL.s = THREE.MathUtils.clamp(this.tempHSL.s + (rng() - 0.5) * 0.06, 0.2, 1.0);
                 this.tempColor.setHSL(this.tempHSL.h, this.tempHSL.s, this.tempHSL.l);
-                selectedModel.canopyInst.setColorAt(currentCount, this.tempColor);
+                selectedModel.treeInst.setColorAt(currentCount, this.tempColor);
 
                 // Trunk Color selection with per-tree instance variation
                 const trunkPalette = veg.trunkColors.length > 0 ? veg.trunkColors : ['#ffffff', '#fff3e0'];
                 const trunkHex = trunkPalette[Math.floor(rng() * trunkPalette.length)];
                 this.tempColor.set(trunkHex);
-                selectedModel.trunkInst.setColorAt(currentCount, this.tempColor);
+                const trunkAttr = selectedModel.treeInst.geometry.getAttribute('aTrunkColor') as THREE.InstancedBufferAttribute;
+                if (trunkAttr) {
+                    trunkAttr.setXYZ(currentCount, this.tempColor.r, this.tempColor.g, this.tempColor.b);
+                }
 
                 modelCounts.set(modelKey, currentCount + 1);
             }
@@ -767,12 +836,15 @@ export class TreeSystem {
         // Commit tree counts and update buffers across all catalog models
         for (const [key, entry] of this.catalogModelMap.entries()) {
             const count = modelCounts.get(key) || 0;
-            entry.trunkInst.count = count;
-            entry.canopyInst.count = count;
-            if (entry.trunkInst.instanceMatrix) entry.trunkInst.instanceMatrix.needsUpdate = true;
-            if (entry.trunkInst.instanceColor) entry.trunkInst.instanceColor.needsUpdate = true;
-            if (entry.canopyInst.instanceMatrix) entry.canopyInst.instanceMatrix.needsUpdate = true;
-            if (entry.canopyInst.instanceColor) entry.canopyInst.instanceColor.needsUpdate = true;
+            entry.treeInst.count = count;
+            const isVisible = count > 0;
+            entry.treeInst.visible = isVisible;
+            if (isVisible) {
+                if (entry.treeInst.instanceMatrix) entry.treeInst.instanceMatrix.needsUpdate = true;
+                if (entry.treeInst.instanceColor) entry.treeInst.instanceColor.needsUpdate = true;
+                const trunkAttr = entry.treeInst.geometry.getAttribute('aTrunkColor');
+                if (trunkAttr) trunkAttr.needsUpdate = true;
+            }
         }
 
         // ── 2. Rebuild Bushes ──────────────────────────────────────────────────
@@ -826,13 +898,19 @@ export class TreeSystem {
 
         if (this.bushInsts[0]) {
             this.bushInsts[0].count = bushCount0;
-            if (this.bushInsts[0].instanceMatrix) this.bushInsts[0].instanceMatrix.needsUpdate = true;
-            if (this.bushInsts[0].instanceColor) this.bushInsts[0].instanceColor.needsUpdate = true;
+            this.bushInsts[0].visible = bushCount0 > 0;
+            if (bushCount0 > 0) {
+                if (this.bushInsts[0].instanceMatrix) this.bushInsts[0].instanceMatrix.needsUpdate = true;
+                if (this.bushInsts[0].instanceColor) this.bushInsts[0].instanceColor.needsUpdate = true;
+            }
         }
         if (this.bushInsts[1]) {
             this.bushInsts[1].count = bushCount1;
-            if (this.bushInsts[1].instanceMatrix) this.bushInsts[1].instanceMatrix.needsUpdate = true;
-            if (this.bushInsts[1].instanceColor) this.bushInsts[1].instanceColor.needsUpdate = true;
+            this.bushInsts[1].visible = bushCount1 > 0;
+            if (bushCount1 > 0) {
+                if (this.bushInsts[1].instanceMatrix) this.bushInsts[1].instanceMatrix.needsUpdate = true;
+                if (this.bushInsts[1].instanceColor) this.bushInsts[1].instanceColor.needsUpdate = true;
+            }
         }
     }
 

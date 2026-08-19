@@ -1,15 +1,17 @@
 import * as THREE from 'three';
-import { terrainHeightJS, smoothstep, getPathStrength, getBiomeWeights, BiomeId } from './noise';
+import { terrainHeightJS, smoothstep, getPathStrength, getBiomeWeights, snoise, BiomeId } from './noise';
 import { TerrainColorsSettings, globalConfigManager } from '../core/config';
 
 const gradientColors = new Uint8Array([
-    160, 160, 160, 255, // Shadows
-    255, 255, 255, 255  // Light
+    130, 130, 130, 255, // Deep shadow
+    185, 185, 185, 255, // Midtone
+    230, 230, 230, 255, // Soft highlight
+    255, 255, 255, 255  // Full light
 ]);
-export const gradientMap = new THREE.DataTexture(gradientColors, 2, 1, THREE.RGBAFormat);
+export const gradientMap = new THREE.DataTexture(gradientColors, 4, 1, THREE.RGBAFormat);
 gradientMap.needsUpdate = true;
-gradientMap.minFilter = THREE.NearestFilter;
-gradientMap.magFilter = THREE.NearestFilter;
+gradientMap.minFilter = THREE.LinearFilter;
+gradientMap.magFilter = THREE.LinearFilter;
 gradientMap.generateMipmaps = false;
 
 export const TERRAIN_PALETTES: Record<string, TerrainColorsSettings> = {
@@ -65,14 +67,17 @@ interface BiomeColorSet {
 
 export class TerrainSystem {
     public mesh: THREE.Mesh;
-    public terrainMat: THREE.MeshToonMaterial;
+    public terrainMat: THREE.Material;
+    public toonMat: THREE.MeshToonMaterial;
+    public standardMat: THREE.MeshStandardMaterial;
+    public isToonMode: boolean = true;
     private geometry: THREE.PlaneGeometry;
     private lastGridX: number = -99999;
     private lastGridZ: number = -99999;
     public lastPlayerX: number = 0;
     public lastPlayerZ: number = 0;
-    public gridStride: number = 6.25;
-    public currentRes: number = 256;
+    public gridStride: number = 12.5;
+    public currentRes: number = 128;
 
     private biomeColors: Record<BiomeId, BiomeColorSet> = {
         meadow: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
@@ -89,12 +94,12 @@ export class TerrainSystem {
     private vSand = new THREE.Color();
     private tempColor = new THREE.Color();
 
-    private shoreBloomUniform = { value: 0.75 };
+    private shoreBloomUniform = { value: 0.0 };
     private shoreColorUniform = { value: new THREE.Color(0xffffff) };
     private shoreWaterYUniform = { value: 2.5 };
     private shoreWidthUniform = { value: 0.8 };
 
-    constructor(scene: THREE.Scene, initialRes: number = 256, initialStride?: number) {
+    constructor(scene: THREE.Scene, initialRes: number = 128, initialStride?: number) {
         this.currentRes = initialRes;
         this.gridStride = initialStride ?? (1600 / initialRes);
 
@@ -105,51 +110,66 @@ export class TerrainSystem {
         this.shoreColorUniform.value.set(activeBiome.bloom.shoreColor);
         this.shoreWidthUniform.value = activeBiome.bloom.shoreWidth;
 
-        this.terrainMat = new THREE.MeshToonMaterial({
+        const attachShoreShader = (mat: THREE.Material) => {
+            mat.onBeforeCompile = (shader) => {
+                shader.uniforms.uShoreBloom = this.shoreBloomUniform;
+                shader.uniforms.uShoreColor = this.shoreColorUniform;
+                shader.uniforms.uShoreWaterY = this.shoreWaterYUniform;
+                shader.uniforms.uShoreWidth = this.shoreWidthUniform;
+
+                shader.vertexShader = `
+                    varying float vCustomWorldY;
+                ` + shader.vertexShader;
+                shader.vertexShader = shader.vertexShader.replace(
+                    '#include <worldpos_vertex>',
+                    `
+                    #include <worldpos_vertex>
+                    vCustomWorldY = (modelMatrix * vec4(transformed, 1.0)).y;
+                    `
+                );
+
+                shader.fragmentShader = `
+                    uniform float uShoreBloom;
+                    uniform vec3 uShoreColor;
+                    uniform float uShoreWaterY;
+                    uniform float uShoreWidth;
+                    varying float vCustomWorldY;
+                ` + shader.fragmentShader;
+                shader.fragmentShader = shader.fragmentShader.replace(
+                    '#include <emissivemap_fragment>',
+                    `
+                    #include <emissivemap_fragment>
+                    if (uShoreBloom > 0.001) {
+                        float diff = abs(vCustomWorldY - uShoreWaterY);
+                        if (diff < uShoreWidth) {
+                            float shoreFactor = smoothstep(uShoreWidth, 0.0, diff);
+                            totalEmissiveRadiance += uShoreColor * (uShoreBloom * shoreFactor * 2.0);
+                        }
+                    }
+                    `
+                );
+            };
+        };
+
+        this.toonMat = new THREE.MeshToonMaterial({
             color: 0xffffff,
             vertexColors: true,
             gradientMap,
             dithering: true
         });
+        attachShoreShader(this.toonMat);
 
-        this.terrainMat.onBeforeCompile = (shader) => {
-            shader.uniforms.uShoreBloom = this.shoreBloomUniform;
-            shader.uniforms.uShoreColor = this.shoreColorUniform;
-            shader.uniforms.uShoreWaterY = this.shoreWaterYUniform;
-            shader.uniforms.uShoreWidth = this.shoreWidthUniform;
+        this.standardMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            vertexColors: true,
+            roughness: 0.85,
+            metalness: 0.0,
+            dithering: true
+        });
+        attachShoreShader(this.standardMat);
 
-            shader.vertexShader = `
-                varying float vCustomWorldY;
-            ` + shader.vertexShader;
-            shader.vertexShader = shader.vertexShader.replace(
-                '#include <worldpos_vertex>',
-                `
-                #include <worldpos_vertex>
-                vCustomWorldY = (modelMatrix * vec4(transformed, 1.0)).y;
-                `
-            );
-
-            shader.fragmentShader = `
-                uniform float uShoreBloom;
-                uniform vec3 uShoreColor;
-                uniform float uShoreWaterY;
-                uniform float uShoreWidth;
-                varying float vCustomWorldY;
-            ` + shader.fragmentShader;
-            shader.fragmentShader = shader.fragmentShader.replace(
-                '#include <emissivemap_fragment>',
-                `
-                #include <emissivemap_fragment>
-                if (uShoreBloom > 0.001) {
-                    float diff = abs(vCustomWorldY - uShoreWaterY);
-                    if (diff < uShoreWidth) {
-                        float shoreFactor = smoothstep(uShoreWidth, 0.0, diff);
-                        totalEmissiveRadiance += uShoreColor * (uShoreBloom * shoreFactor * 2.0);
-                    }
-                }
-                `
-            );
-        };
+        this.isToonMode = activeBiome.terrain.isToonMode ?? true;
+        this.terrainMat = this.isToonMode ? this.toonMat : this.standardMat;
 
         this.geometry = new THREE.PlaneGeometry(1600, 1600, initialRes, initialRes);
         this.geometry.rotateX(-Math.PI / 2);
@@ -171,8 +191,27 @@ export class TerrainSystem {
             set.path.set(cfg.colorPath);
             set.sand.set(cfg.colorSand);
         }
+        const activeCfg = globalConfigManager.getActiveBiomeConfig().terrain;
+        if (activeCfg.isToonMode !== undefined) {
+            this.isToonMode = activeCfg.isToonMode;
+            this.terrainMat = this.isToonMode ? this.toonMat : this.standardMat;
+            if (this.mesh) this.mesh.material = this.terrainMat;
+        }
         if (redraw && this.mesh) {
             this.invalidateAndRedraw();
+        }
+    }
+
+    public setToonMode(isToon: boolean, biomeId?: BiomeId): void {
+        this.isToonMode = isToon;
+        const bId = biomeId || globalConfigManager.config.activeBiomeId;
+        const bCfg = globalConfigManager.getBiomeConfig(bId);
+        if (bCfg) {
+            bCfg.terrain.isToonMode = isToon;
+        }
+        this.terrainMat = this.isToonMode ? this.toonMat : this.standardMat;
+        if (this.mesh) {
+            this.mesh.material = this.terrainMat;
         }
     }
 
@@ -200,6 +239,14 @@ export class TerrainSystem {
         }
         if (colors.presetName) {
             cfg.presetName = colors.presetName;
+        }
+        if (colors.isToonMode !== undefined) {
+            cfg.isToonMode = colors.isToonMode;
+            if (biomeId === globalConfigManager.config.activeBiomeId) {
+                this.isToonMode = colors.isToonMode;
+                this.terrainMat = this.isToonMode ? this.toonMat : this.standardMat;
+                if (this.mesh) this.mesh.material = this.terrainMat;
+            }
         }
 
         const px = playerX !== undefined ? playerX : this.lastPlayerX;
@@ -280,8 +327,10 @@ export class TerrainSystem {
             this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(pos.count * 3), 3));
         }
         const colors = this.geometry.attributes.color as THREE.BufferAttribute;
+        const normals = this.geometry.attributes.normal as THREE.BufferAttribute;
 
         const biomes: BiomeId[] = ['meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
+        const delta = 2.0;
 
         for (let i = 0; i < pos.count; i++) {
             const worldX = pos.getX(i) + gridX;
@@ -289,48 +338,80 @@ export class TerrainSystem {
             const h = terrainHeightJS(worldX, worldZ);
             pos.setY(i, h);
 
+            // Analytical normal via central difference (smooth, continuous curvature without low-poly faceting)
+            const hL = terrainHeightJS(worldX - delta, worldZ);
+            const hR = terrainHeightJS(worldX + delta, worldZ);
+            const hD = terrainHeightJS(worldX, worldZ - delta);
+            const hU = terrainHeightJS(worldX, worldZ + delta);
+
+            const nx = (hL - hR) / (2.0 * delta);
+            const nz = (hD - hU) / (2.0 * delta);
+            const ny = 1.0;
+            const invLen = 1.0 / Math.sqrt(nx * nx + ny * ny + nz * nz);
+
+            normals.setXYZ(i, nx * invLen, ny * invLen, nz * invLen);
+
             const w = getBiomeWeights(worldX, worldZ);
 
-            this.vLow.setRGB(0, 0, 0);
-            this.vHigh.setRGB(0, 0, 0);
-            this.vDirt.setRGB(0, 0, 0);
-            this.vPath.setRGB(0, 0, 0);
-            this.vSand.setRGB(0, 0, 0);
+            let lowR = 0, lowG = 0, lowB = 0;
+            let highR = 0, highG = 0, highB = 0;
+            let dirtR = 0, dirtG = 0, dirtB = 0;
+            let pathR = 0, pathG = 0, pathB = 0;
+            let sandR = 0, sandG = 0, sandB = 0;
 
             for (const b of biomes) {
                 const weight = w[b];
                 if (weight <= 0.0001) continue;
                 const bc = this.biomeColors[b];
-                this.vLow.r += bc.low.r * weight; this.vLow.g += bc.low.g * weight; this.vLow.b += bc.low.b * weight;
-                this.vHigh.r += bc.high.r * weight; this.vHigh.g += bc.high.g * weight; this.vHigh.b += bc.high.b * weight;
-                this.vDirt.r += bc.dirt.r * weight; this.vDirt.g += bc.dirt.g * weight; this.vDirt.b += bc.dirt.b * weight;
-                this.vPath.r += bc.path.r * weight; this.vPath.g += bc.path.g * weight; this.vPath.b += bc.path.b * weight;
-                this.vSand.r += bc.sand.r * weight; this.vSand.g += bc.sand.g * weight; this.vSand.b += bc.sand.b * weight;
+                lowR += bc.low.r * weight; lowG += bc.low.g * weight; lowB += bc.low.b * weight;
+                highR += bc.high.r * weight; highG += bc.high.g * weight; highB += bc.high.b * weight;
+                dirtR += bc.dirt.r * weight; dirtG += bc.dirt.g * weight; dirtB += bc.dirt.b * weight;
+                pathR += bc.path.r * weight; pathG += bc.path.g * weight; pathB += bc.path.b * weight;
+                sandR += bc.sand.r * weight; sandG += bc.sand.g * weight; sandB += bc.sand.b * weight;
             }
 
-            let blend = Math.min(Math.max(h / 38.0, 0), 1);
-            const patchNoise = (Math.sin(worldX * 0.08) + Math.cos(worldZ * 0.08)) * 0.15;
-            blend = Math.min(Math.max(blend + patchNoise, 0), 1);
+            // Smooth macro-variation (low frequency to prevent aliasing across grid cells)
+            const macroNoise = snoise(worldX * 0.008, worldZ * 0.008) * 3.5;
 
-            if (h > 42) {
-                this.tempColor.lerpColors(this.vHigh, this.vDirt, smoothstep(42, 62, h));
-            } else if (h < 2.8) {
-                this.tempColor.copy(this.vSand);
-            } else if (h < 4.2) {
-                this.tempColor.lerpColors(this.vSand, this.vLow, smoothstep(2.8, 4.2, h));
-            } else {
-                this.tempColor.lerpColors(this.vLow, this.vHigh, smoothstep(0, 1, blend));
-                const pStrength = getPathStrength(worldX, worldZ);
-                const pathMask = smoothstep(4.5, 7.0, h);
-                if (pStrength > 0 && pathMask > 0) {
-                    this.tempColor.lerp(this.vPath, pStrength * pathMask);
+            // 1. Smooth Lowland to Highland grass gradient (0m to 44m)
+            const grassWeight = smoothstep(2.0, 44.0, h + macroNoise);
+            let r = lowR * (1.0 - grassWeight) + highR * grassWeight;
+            let g = lowG * (1.0 - grassWeight) + highG * grassWeight;
+            let b = lowB * (1.0 - grassWeight) + highB * grassWeight;
+
+            // 2. Continuous mountain dirt/rock transition (smoothly blends from 36m up to 74m)
+            const dirtWeight = smoothstep(36.0, 74.0, h + macroNoise * 0.5);
+            if (dirtWeight > 0.0) {
+                r = r * (1.0 - dirtWeight) + dirtR * dirtWeight;
+                g = g * (1.0 - dirtWeight) + dirtG * dirtWeight;
+                b = b * (1.0 - dirtWeight) + dirtB * dirtWeight;
+            }
+
+            // 3. Smooth shoreline sand blend below 5.2m
+            const sandWeight = smoothstep(5.2, 1.8, h);
+            if (sandWeight > 0.0) {
+                r = r * (1.0 - sandWeight) + sandR * sandWeight;
+                g = g * (1.0 - sandWeight) + sandG * sandWeight;
+                b = b * (1.0 - sandWeight) + sandB * sandWeight;
+            }
+
+            // 4. Village and exploration pathways
+            const pStrength = getPathStrength(worldX, worldZ);
+            if (pStrength > 0.0) {
+                const pathMask = smoothstep(3.0, 7.0, h);
+                const pathWeight = pStrength * pathMask * (1.0 - dirtWeight) * (1.0 - sandWeight);
+                if (pathWeight > 0.001) {
+                    r = r * (1.0 - pathWeight) + pathR * pathWeight;
+                    g = g * (1.0 - pathWeight) + pathG * pathWeight;
+                    b = b * (1.0 - pathWeight) + pathB * pathWeight;
                 }
             }
-            colors.setXYZ(i, this.tempColor.r, this.tempColor.g, this.tempColor.b);
+
+            colors.setXYZ(i, r, g, b);
         }
 
-        this.geometry.computeVertexNormals();
         pos.needsUpdate = true;
+        normals.needsUpdate = true;
         colors.needsUpdate = true;
 
         this.lastGridX = gridX;

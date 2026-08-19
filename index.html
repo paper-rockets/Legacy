@@ -653,25 +653,25 @@
       background: rgba(255, 255, 255, 0.2);
     }
 
-    /* ── Comprehensive Developer Editor Panel ── */
+    /* ── Minimal 1-Page Biome Studio Developer Editor ── */
     #dev-editor-panel {
       position: fixed;
       right: max(14px, env(safe-area-inset-right));
       top: max(14px, env(safe-area-inset-top));
       bottom: max(14px, env(safe-area-inset-bottom));
-      width: min(440px, calc(100vw - 28px));
+      width: min(460px, calc(100vw - 28px));
       max-height: calc(100vh - 28px);
-      background: rgba(14, 17, 24, 0.95);
+      background: rgba(11, 15, 22, 0.96);
       backdrop-filter: blur(28px);
       -webkit-backdrop-filter: blur(28px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
       z-index: 120;
       display: none;
       flex-direction: column;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
       overflow: hidden;
-      color: #ffffff;
+      color: #f8fafc;
       pointer-events: auto;
     }
 
@@ -679,151 +679,112 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.04);
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.025);
       flex-shrink: 0;
     }
 
+    .dev-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .dev-header-title {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
-      letter-spacing: 0.08em;
-      color: #ffffff;
+      letter-spacing: 0.09em;
+      color: #94a3b8;
       text-transform: uppercase;
+    }
+
+    .dev-header-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      padding: 2px 7px;
+      border-radius: 5px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .dev-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dev-header-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .dev-header-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .dev-header-btn.primary {
+      border-color: rgba(56, 189, 248, 0.5);
+      background: rgba(56, 189, 248, 0.18);
+      color: #38bdf8;
+    }
+
+    .dev-header-btn.primary:hover {
+      background: rgba(56, 189, 248, 0.35);
+      color: #ffffff;
     }
 
     /* Biome Select Bar */
     .dev-biome-nav {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 5px;
-      padding: 8px 10px;
-      background: rgba(0, 0, 0, 0.35);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 4px;
+      padding: 6px 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       flex-shrink: 0;
     }
 
     .dev-biome-btn {
-      padding: 7px 3px;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(255, 255, 255, 0.06);
-      color: rgba(255, 255, 255, 0.75);
+      padding: 6px 2px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.04);
+      color: #94a3b8;
       font-family: inherit;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       text-align: center;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+      transition: all 0.12s ease;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .dev-biome-btn:hover {
-      background: rgba(255, 255, 255, 0.16);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.28);
-    }
-
-    .dev-biome-btn:active {
-      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+      border-color: rgba(255, 255, 255, 0.2);
     }
 
     .dev-biome-btn.active {
-      background: rgba(77, 169, 232, 0.4);
-      border-color: rgba(77, 169, 232, 0.9);
-      color: #ffffff;
+      background: rgba(56, 189, 248, 0.22);
+      border-color: rgba(56, 189, 248, 0.8);
+      color: #38bdf8;
       font-weight: 700;
-      box-shadow: 0 0 10px rgba(77, 169, 232, 0.3);
-    }
-
-    .dev-biome-subbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      flex-shrink: 0;
-    }
-
-    .dev-biome-name {
-      font-size: 12px;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: 0.02em;
-    }
-
-    .dev-tp-action-btn {
-      padding: 5px 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(77, 169, 232, 0.6);
-      background: rgba(77, 169, 232, 0.25);
-      color: #ffffff;
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s ease, transform 0.1s ease;
-    }
-
-    .dev-tp-action-btn:hover {
-      background: rgba(77, 169, 232, 0.45);
-    }
-
-    .dev-tp-action-btn:active {
-      transform: scale(0.95);
-    }
-
-    .dev-tab-nav {
-      display: flex;
-      overflow-x: auto;
-      padding: 6px 10px;
-      gap: 4px;
-      background: rgba(0, 0, 0, 0.22);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      flex-shrink: 0;
-    }
-
-    .dev-tab-nav::-webkit-scrollbar {
-      height: 3px;
-    }
-    .dev-tab-nav::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.25);
-      border-radius: 2px;
-    }
-
-    .dev-tab-btn {
-      background: transparent;
-      border: none;
-      outline: none;
-      color: rgba(255, 255, 255, 0.65);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 7px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
-    }
-
-    .dev-tab-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-    }
-
-    .dev-tab-btn:active {
-      transform: scale(0.96);
-    }
-
-    .dev-tab-btn.active {
-      background: rgba(77, 169, 232, 0.35);
-      border: 1px solid rgba(77, 169, 232, 0.7);
-      color: #ffffff;
-      font-weight: 700;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
     }
 
     .dev-scroll-body {
@@ -832,18 +793,21 @@
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
-    .dev-tab-page {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    .dev-scroll-body::-webkit-scrollbar {
+      width: 5px;
+    }
+    .dev-scroll-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 3px;
     }
 
-    .dev-group {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.09);
+    /* Minimal Section Card */
+    .dev-section {
+      background: rgba(255, 255, 255, 0.028);
+      border: 1px solid rgba(255, 255, 255, 0.07);
       border-radius: 10px;
       padding: 10px 12px;
       display: flex;
@@ -851,85 +815,271 @@
       gap: 9px;
     }
 
-    .dev-group-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      color: rgba(255, 255, 255, 0.85);
-      text-transform: uppercase;
+    .dev-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       margin-bottom: 2px;
     }
 
+    .dev-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #cbd5e1;
+      text-transform: uppercase;
+    }
+
+    .dev-section-tag {
+      font-size: 10px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    /* Tree Loader & Action Bar */
+    .dev-tree-action-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .dev-tree-upload-btn {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px dashed rgba(56, 189, 248, 0.5);
+      background: rgba(56, 189, 248, 0.08);
+      color: #38bdf8;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .dev-tree-upload-btn:hover {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.8);
+      color: #ffffff;
+    }
+
+    .dev-tree-cat-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-bottom: 4px;
+    }
+
+    .dev-tree-cat-btn {
+      padding: 3px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: #94a3b8;
+      font-family: inherit;
+      font-size: 9.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .dev-tree-cat-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f1f5f9;
+    }
+
+    .dev-tree-cat-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: rgba(56, 189, 248, 0.7);
+      color: #38bdf8;
+      font-weight: 700;
+    }
+
+    .dev-tree-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      max-height: 250px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .dev-tree-grid::-webkit-scrollbar {
+      width: 4px;
+    }
+    .dev-tree-grid::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+    }
+
+    .dev-tree-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 4px 5px 4px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: #94a3b8;
+      cursor: pointer;
+      text-align: center;
+      font-family: inherit;
+      transition: all 0.12s ease;
+      user-select: none;
+      position: relative;
+    }
+
+    .dev-tree-card:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #f1f5f9;
+      transform: translateY(-1px);
+    }
+
+    .dev-tree-card.active {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.85);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+
+    .dev-tree-thumb-box {
+      width: 100%;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 5px;
+      padding: 2px;
+    }
+
+    .dev-tree-thumb-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      pointer-events: none;
+    }
+
+    .dev-tree-card-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #f1f5f9;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+      margin-bottom: 2px;
+    }
+
+    .dev-tree-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 0 2px;
+    }
+
+    .dev-tree-card-tag {
+      font-size: 8.5px;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: 0.02em;
+    }
+
+    .dev-tree-card.active .dev-tree-card-tag {
+      color: #7dd3fc;
+    }
+
+    .dev-tree-card-status {
+      font-size: 8.5px;
+      font-weight: 800;
+      color: #475569;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .dev-tree-card.active .dev-tree-card-status {
+      color: #38bdf8;
+    }
+
+    /* Sliders and Numerical Displays */
     .dev-row {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
 
     .dev-row-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.88);
+      color: #cbd5e1;
     }
 
     .dev-row-val {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      color: #4da9e8;
-      background: rgba(77, 169, 232, 0.15);
-      padding: 1px 6px;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      padding: 1px 5px;
       border-radius: 4px;
     }
 
     .dev-slider {
       width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: rgba(255, 255, 255, 0.16);
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.12);
       outline: none;
-      accent-color: #4da9e8;
+      accent-color: #38bdf8;
       cursor: pointer;
     }
 
+    /* Color Swatches and Pickers */
     .dev-color-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.88);
+      color: #cbd5e1;
     }
 
     .dev-color-picker-wrap {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .dev-color-hex-label {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.65);
+      font-size: 9.5px;
+      color: #64748b;
     }
 
     .dev-color-input {
       -webkit-appearance: none;
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      border-radius: 6px;
-      width: 38px;
-      height: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 5px;
+      width: 32px;
+      height: 20px;
       padding: 0;
       background: transparent;
       cursor: pointer;
-      transition: transform 0.1s ease, border-color 0.15s ease;
+      transition: border-color 0.12s ease, transform 0.1s ease;
     }
 
     .dev-color-input:hover {
-      border-color: #ffffff;
+      border-color: #38bdf8;
       transform: scale(1.05);
     }
 
@@ -939,35 +1089,31 @@
 
     .dev-color-input::-webkit-color-swatch {
       border: none;
-      border-radius: 5px;
+      border-radius: 4px;
     }
 
     .dev-chip-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 4px;
+      gap: 5px;
+      margin-top: 2px;
     }
 
     .dev-color-chip {
       position: relative;
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
       overflow: hidden;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      transition: transform 0.12s ease, border-color 0.12s ease;
     }
 
     .dev-color-chip:hover {
-      transform: scale(1.12);
+      transform: scale(1.15);
       border-color: #ffffff;
-    }
-
-    .dev-color-chip:active {
-      transform: scale(0.95);
     }
 
     .dev-chip-picker {
@@ -979,146 +1125,65 @@
       cursor: pointer;
     }
 
-    /* Tree Model Selector Grid */
-    .dev-tree-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
-      max-height: 240px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .dev-tree-grid::-webkit-scrollbar {
-      width: 4px;
-    }
-    .dev-tree-grid::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.25);
-      border-radius: 2px;
-    }
-
-    .dev-tree-card {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(255, 255, 255, 0.05);
-      color: rgba(255, 255, 255, 0.85);
-      cursor: pointer;
-      text-align: left;
-      font-family: inherit;
-      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
-      user-select: none;
-    }
-
-    .dev-tree-card:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .dev-tree-card:active {
-      transform: scale(0.97);
-    }
-
-    .dev-tree-card.active {
-      background: rgba(77, 169, 232, 0.35);
-      border-color: rgba(77, 169, 232, 0.9);
-      color: #ffffff;
-      box-shadow: 0 0 12px rgba(77, 169, 232, 0.25);
-    }
-
-    .dev-tree-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .dev-tree-card-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .dev-tree-card-tag {
-      font-size: 9px;
-      font-weight: 600;
-      color: #4da9e8;
-      background: rgba(77, 169, 232, 0.18);
-      padding: 1px 5px;
-      border-radius: 4px;
-      letter-spacing: 0.02em;
-    }
-
-    .dev-tree-card-desc {
-      font-size: 9.5px;
-      color: rgba(255, 255, 255, 0.55);
-      line-height: 1.25;
-    }
-
+    /* Grids & Buttons */
     .dev-btn-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
+      gap: 4px;
     }
 
     .dev-btn-grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 4px;
     }
 
     .dev-btn {
-      padding: 7px 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      background: rgba(255, 255, 255, 0.08);
-      color: rgba(255, 255, 255, 0.9);
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
       font-family: inherit;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 600;
       cursor: pointer;
       text-align: center;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+      transition: all 0.12s ease;
       white-space: nowrap;
     }
 
     .dev-btn:hover {
-      background: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
-    }
-
-    .dev-btn:active {
-      transform: scale(0.96);
     }
 
     .dev-btn.active {
-      background: rgba(77, 169, 232, 0.4);
-      border-color: rgba(77, 169, 232, 0.85);
-      color: #ffffff;
+      background: rgba(56, 189, 248, 0.25);
+      border-color: rgba(56, 189, 248, 0.8);
+      color: #38bdf8;
       font-weight: 700;
     }
 
     .dev-save-btn {
       width: 100%;
-      padding: 9px 12px;
-      border-radius: 8px;
-      border: 1px solid rgba(77, 169, 232, 0.7);
-      background: rgba(77, 169, 232, 0.35);
-      color: #ffffff;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.6);
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
       font-family: inherit;
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.02em;
       cursor: pointer;
       text-align: center;
       transition: background 0.15s ease, transform 0.1s ease;
-      margin-top: 4px;
     }
 
     .dev-save-btn:hover {
-      background: rgba(77, 169, 232, 0.55);
+      background: rgba(56, 189, 248, 0.35);
+      color: #ffffff;
     }
 
     .dev-save-btn:active {
@@ -1127,22 +1192,23 @@
 
     .dev-reset-btn {
       width: 100%;
-      padding: 9px 12px;
-      border-radius: 8px;
-      border: 1px solid rgba(239, 68, 68, 0.6);
-      background: rgba(239, 68, 68, 0.25);
-      color: #ffffff;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
       font-family: inherit;
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.02em;
       cursor: pointer;
       text-align: center;
       transition: background 0.15s ease, transform 0.1s ease;
     }
 
     .dev-reset-btn:hover {
-      background: rgba(239, 68, 68, 0.45);
+      background: rgba(239, 68, 68, 0.3);
+      color: #ffffff;
     }
 
     .dev-reset-btn:active {
@@ -1151,25 +1217,25 @@
 
     #dev-status-msg {
       display: none;
-      padding: 8px 12px;
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 10.5px;
       font-weight: 600;
       text-align: center;
     }
 
     .dev-textarea {
       width: 100%;
-      height: 110px;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 8px;
-      color: #e2e8f0;
+      height: 90px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #cbd5e1;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 10px;
-      padding: 8px;
+      font-size: 9.5px;
+      padding: 6px 8px;
       resize: vertical;
       outline: none;
     }
@@ -1299,6 +1365,9 @@
         <button id="debug-toggle" class="menu-item-btn">Debug: OFF</button>
         <button id="photo-toggle" class="menu-item-btn">Photo Mode</button>
         <hr class="menu-divider" />
+        <div class="menu-section-title">Terrain Shading Style</div>
+        <button id="terrain-shading-toggle" class="menu-item-btn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); text-align: center; font-weight: 700; color: #38bdf8;">Style: Painterly Ghibli</button>
+        <hr class="menu-divider" />
         <div class="menu-section-title">Color Palette</div>
         <div class="menu-presets-grid">
           <button id="preset-candy" class="menu-preset-btn active" data-preset="candy">Candy Mix</button>
@@ -1366,14 +1435,21 @@
     </div>
   </div>
 
-  <!-- Developer Editor Full Panel -->
+  <!-- Minimal 1-Page Biome Studio Developer Editor -->
   <div id="dev-editor-panel">
+    <!-- Header Bar -->
     <div class="dev-header-bar">
-      <div class="dev-header-title">Developer Editor</div>
-      <button id="dev-editor-close" class="debug-close-btn" aria-label="Close Developer Editor">Close</button>
+      <div class="dev-header-left">
+        <span class="dev-header-title">Biome Studio</span>
+        <span id="dev-active-biome-title" class="dev-header-badge">Lush Meadow</span>
+      </div>
+      <div class="dev-header-actions">
+        <button id="dev-biome-tp-btn" class="dev-header-btn primary" title="Teleport to this biome center">Teleport</button>
+        <button id="dev-editor-close" class="dev-header-btn" aria-label="Close Developer Editor">Close</button>
+      </div>
     </div>
 
-    <!-- Biome Selector Navigation Bar -->
+    <!-- Biome Selector Strip -->
     <div class="dev-biome-nav">
       <button class="dev-biome-btn active" data-biome="meadow" title="Lush Meadow">Meadow</button>
       <button class="dev-biome-btn" data-biome="archipelago" title="Floating Archipelago">Archipelago</button>
@@ -1382,461 +1458,460 @@
       <button class="dev-biome-btn" data-biome="redwood" title="Colossal Redwood">Redwood</button>
     </div>
 
-    <!-- Active Biome Subbar -->
-    <div class="dev-biome-subbar">
-      <div id="dev-active-biome-title" class="dev-biome-name">Lush Meadow</div>
-      <button id="dev-biome-tp-btn" class="dev-tp-action-btn" title="Teleport to this biome center">Teleport Here</button>
-    </div>
-
-    <!-- Sub-Tabs within selected Biome -->
-    <div class="dev-tab-nav">
-      <button class="dev-tab-btn active" data-tab="env">Environment</button>
-      <button class="dev-tab-btn" data-tab="bloom">Bloom & Glow</button>
-      <button class="dev-tab-btn" data-tab="trees">Trees & Foliage</button>
-      <button class="dev-tab-btn" data-tab="terrain">Terrain & Water</button>
-      <button class="dev-tab-btn" data-tab="save">Save & Profiles</button>
-    </div>
-
-    <!-- Scrollable Tab Content -->
+    <!-- Continuous 1-Page Scroll Body -->
     <div class="dev-scroll-body">
       <div id="dev-status-msg"></div>
 
-      <!-- Tab 1: Environment (Day / Dusk / Twilight) for this Biome -->
-      <div id="dev-page-env" class="dev-tab-page">
-        <div class="dev-group">
-          <div class="dev-group-title">Time Phase</div>
-          <div class="dev-btn-grid-3">
-            <button class="dev-btn dev-phase-btn active" data-phase="0">Day</button>
-            <button class="dev-btn dev-phase-btn" data-phase="1">Dusk</button>
-            <button class="dev-btn dev-phase-btn" data-phase="2">Twilight</button>
-          </div>
+      <!-- Section 1: 3D Tree Loader & Foliage -->
+      <div class="dev-section">
+        <div class="dev-section-header">
+          <span class="dev-section-title">1. 3D Tree Picker & Foliage</span>
+          <span id="dev-tree-active-count" class="dev-section-tag">0 Models Active</span>
         </div>
 
-        <div class="dev-group">
-          <div class="dev-group-title">Atmosphere & Fog</div>
-          <div class="dev-color-row">
-            <span>Sky Background</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-env-bg-hex" class="dev-color-hex-label">#93d4ff</span>
-              <input type="color" id="dev-env-bg" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-color-row">
-            <span>Fog Color</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-env-fog-hex" class="dev-color-hex-label">#cce9ff</span>
-              <input type="color" id="dev-env-fog" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Fog Near Distance</span>
-              <span id="dev-env-fognear-val" class="dev-row-val">200</span>
-            </div>
-            <input type="range" id="dev-env-fognear" class="dev-slider" min="10" max="600" step="5" value="200" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Fog Far Distance</span>
-              <span id="dev-env-fogfar-val" class="dev-row-val">720</span>
-            </div>
-            <input type="range" id="dev-env-fogfar" class="dev-slider" min="100" max="1500" step="10" value="720" />
-          </div>
+        <!-- Tree Loader Action Bar -->
+        <div class="dev-tree-action-bar">
+          <input type="file" id="dev-tree-file-input" accept=".glb" style="display: none;" />
+          <button id="dev-upload-tree-btn" class="dev-tree-upload-btn" title="Load custom .glb tree model directly into this biome">Upload Custom .GLB</button>
+          <button id="dev-select-all-trees-btn" class="dev-btn" style="padding: 6px 8px;" title="Select all catalog trees for this biome">All</button>
+          <button id="dev-clear-trees-btn" class="dev-btn" style="padding: 6px 8px;" title="Clear selected trees (no trees in world)">Clear</button>
         </div>
 
-        <div class="dev-group">
-          <div class="dev-group-title">Illumination</div>
-          <div class="dev-color-row">
-            <span>Ambient Light</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-env-amb-color-hex" class="dev-color-hex-label">#ffffff</span>
-              <input type="color" id="dev-env-amb-color" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Ambient Intensity</span>
-              <span id="dev-env-amb-intensity-val" class="dev-row-val">0.75</span>
-            </div>
-            <input type="range" id="dev-env-amb-intensity" class="dev-slider" min="0" max="2.5" step="0.05" value="0.75" />
-          </div>
-          <div class="dev-color-row">
-            <span>Directional Light</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-env-dir-color-hex" class="dev-color-hex-label">#fff8e7</span>
-              <input type="color" id="dev-env-dir-color" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Directional Intensity</span>
-              <span id="dev-env-dir-intensity-val" class="dev-row-val">1.40</span>
-            </div>
-            <input type="range" id="dev-env-dir-intensity" class="dev-slider" min="0" max="3.0" step="0.05" value="1.4" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Hemisphere Intensity</span>
-              <span id="dev-env-hemi-intensity-val" class="dev-row-val">0.60</span>
-            </div>
-            <input type="range" id="dev-env-hemi-intensity" class="dev-slider" min="0" max="2.0" step="0.05" value="0.6" />
-          </div>
+        <!-- Tree Category Filter Pills -->
+        <div class="dev-tree-cat-bar">
+          <button class="dev-tree-cat-btn active" data-cat="all">All (24)</button>
+          <button class="dev-tree-cat-btn" data-cat="Cartoon">Cartoon (16)</button>
+          <button class="dev-tree-cat-btn" data-cat="Bushy">Bushy (8)</button>
         </div>
 
-        <div class="dev-group">
-          <div class="dev-group-title">Sun & Celestial Stars</div>
-          <div class="dev-color-row">
-            <span>Sun Color</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-env-sun-color-hex" class="dev-color-hex-label">#fffbe8</span>
-              <input type="color" id="dev-env-sun-color" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Sun Intensity</span>
-              <span id="dev-env-sun-intensity-val" class="dev-row-val">1.80</span>
-            </div>
-            <input type="range" id="dev-env-sun-intensity" class="dev-slider" min="0" max="4.0" step="0.1" value="1.8" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Sun Scale</span>
-              <span id="dev-env-sun-scale-val" class="dev-row-val">1.30x</span>
-            </div>
-            <input type="range" id="dev-env-sun-scale" class="dev-slider" min="0.1" max="4.0" step="0.1" value="1.3" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Starfield Opacity</span>
-              <span id="dev-env-star-opacity-val" class="dev-row-val">0.00</span>
-            </div>
-            <input type="range" id="dev-env-star-opacity" class="dev-slider" min="0" max="1.0" step="0.05" value="0.0" />
-          </div>
-        </div>
-      </div>
+        <!-- Visual 3D Tree Model Grid with Previews -->
+        <div id="dev-tree-models-grid" class="dev-tree-grid"></div>
 
-      <!-- Tab 2: Bloom & Glow (Biome Locked) -->
-      <div id="dev-page-bloom" class="dev-tab-page" style="display: none;">
-        <div class="dev-group">
-          <div class="dev-group-title">Post-Processing Bloom (Biome Locked)</div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Bloom Strength</span>
-              <span id="dev-bloom-strength-val" class="dev-row-val">0.42</span>
-            </div>
-            <input type="range" id="dev-bloom-strength" class="dev-slider" min="0" max="2.5" step="0.02" value="0.42" />
+        <!-- Scale & Density -->
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Tree Scale</span>
+            <span id="dev-veg-tree-scale-val" class="dev-row-val">6.00x</span>
           </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Bloom Radius</span>
-              <span id="dev-bloom-radius-val" class="dev-row-val">0.50</span>
-            </div>
-            <input type="range" id="dev-bloom-radius" class="dev-slider" min="0" max="1.5" step="0.02" value="0.50" />
+          <input type="range" id="dev-veg-tree-scale" class="dev-slider" min="0.5" max="50.0" step="0.1" value="6.0" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Tree Density</span>
+            <span id="dev-veg-tree-density-val" class="dev-row-val">800</span>
           </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Bloom Threshold</span>
-              <span id="dev-bloom-threshold-val" class="dev-row-val">0.55</span>
-            </div>
-            <input type="range" id="dev-bloom-threshold" class="dev-slider" min="0" max="1.0" step="0.02" value="0.55" />
+          <input type="range" id="dev-veg-tree-density" class="dev-slider" min="0" max="800" step="10" value="800" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Bush Scale</span>
+            <span id="dev-veg-bush-scale-val" class="dev-row-val">1.00x</span>
           </div>
+          <input type="range" id="dev-veg-bush-scale" class="dev-slider" min="0.2" max="5.0" step="0.05" value="1.0" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Bush Density</span>
+            <span id="dev-veg-bush-density-val" class="dev-row-val">250</span>
+          </div>
+          <input type="range" id="dev-veg-bush-density" class="dev-slider" min="0" max="800" step="10" value="250" />
         </div>
 
-        <div class="dev-group">
-          <div class="dev-group-title">Vegetation Bloom & Emissive Glow</div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Tree Bloom Multiplier</span>
-              <span id="dev-tree-bloom-val" class="dev-row-val">1.00</span>
-            </div>
-            <input type="range" id="dev-tree-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="1.0" />
+        <!-- Color Swatches & Presets -->
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Canopy Colors (Click swatch to edit)</span>
           </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Canopy Glow (Night/Dusk)</span>
-              <span id="dev-tree-canopy-glow-val" class="dev-row-val">1.00</span>
-            </div>
-            <input type="range" id="dev-tree-canopy-glow" class="dev-slider" min="0" max="2.5" step="0.05" value="1.0" />
+          <div id="dev-canopy-swatches" class="dev-chip-grid"></div>
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Trunk Colors (Click swatch to edit)</span>
           </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Trunk Base Glow</span>
-              <span id="dev-tree-trunk-glow-val" class="dev-row-val">1.00</span>
-            </div>
-            <input type="range" id="dev-tree-trunk-glow" class="dev-slider" min="0" max="2.5" step="0.05" value="1.0" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Bush Bloom Multiplier</span>
-              <span id="dev-bush-bloom-val" class="dev-row-val">1.00</span>
-            </div>
-            <input type="range" id="dev-bush-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="1.0" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Bush Glow Multiplier</span>
-              <span id="dev-bush-glow-val" class="dev-row-val">1.00</span>
-            </div>
-            <input type="range" id="dev-bush-glow" class="dev-slider" min="0" max="2.5" step="0.05" value="1.0" />
-          </div>
+          <div id="dev-trunk-swatches" class="dev-chip-grid"></div>
         </div>
 
-        <div class="dev-group">
-          <div class="dev-group-title">Water Shoreline Foam Bloom</div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Shore Bloom Intensity</span>
-              <span id="dev-shore-bloom-val" class="dev-row-val">0.75</span>
-            </div>
-            <input type="range" id="dev-shore-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.75" />
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Color Presets</span>
           </div>
-          <div class="dev-color-row">
-            <span>Shore Foam Color</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-shore-color-hex" class="dev-color-hex-label">#ffffff</span>
-              <input type="color" id="dev-shore-color" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Shore Band Width</span>
-              <span id="dev-shore-width-val" class="dev-row-val">0.80</span>
-            </div>
-            <input type="range" id="dev-shore-width" class="dev-slider" min="0.1" max="3.0" step="0.05" value="0.8" />
-          </div>
-        </div>
-
-        <div class="dev-group">
-          <div class="dev-group-title">Cloud Bloom & Emissive Glow</div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Cloud Bloom Intensity</span>
-              <span id="dev-cloud-bloom-val" class="dev-row-val">0.45</span>
-            </div>
-            <input type="range" id="dev-cloud-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.45" />
-          </div>
-          <div class="dev-color-row">
-            <span>Cloud Base Color</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-cloud-color-hex" class="dev-color-hex-label">#ffffff</span>
-              <input type="color" id="dev-cloud-color" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-color-row">
-            <span>Cloud Emissive Color</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-cloud-emissive-hex" class="dev-color-hex-label">#ffffff</span>
-              <input type="color" id="dev-cloud-emissive" class="dev-color-input" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab 3: Trees & Foliage (Manual 3D Tree Selector, Colors, Scaling) -->
-      <div id="dev-page-trees" class="dev-tab-page" style="display: none;">
-        <div class="dev-group">
-          <div class="dev-group-title">Manual 3D Tree Models (Click to toggle/select)</div>
-          <div id="dev-tree-models-grid" class="dev-tree-grid"></div>
-        </div>
-
-        <div class="dev-group">
-          <div class="dev-group-title">Vegetation Color Presets</div>
           <div class="dev-btn-grid">
             <button class="dev-btn dev-veg-preset-btn active" data-preset="candy">Candy Mix</button>
             <button class="dev-btn dev-veg-preset-btn" data-preset="cotton">Cotton Candy</button>
             <button class="dev-btn dev-veg-preset-btn" data-preset="lollipop">Lollipop</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="mints">Spearmint & Ice</button>
+            <button class="dev-btn dev-veg-preset-btn" data-preset="mints">Spearmint</button>
             <button class="dev-btn dev-veg-preset-btn" data-preset="berry">Wild Berry</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="archipelago">Sakura Blossom</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="archipelago_crystal">Cyan Crystal</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="archipelago_lavender">Lavender Mist</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="geothermal">Ash & Lava Ember</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="geothermal_magma">Molten Magma</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="geothermal_sulfur">Sulfur Gold</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="estuary">Bioluminescent Coral</button>
+            <button class="dev-btn dev-veg-preset-btn" data-preset="archipelago">Sakura</button>
+            <button class="dev-btn dev-veg-preset-btn" data-preset="archipelago_crystal">Crystal Cyan</button>
+            <button class="dev-btn dev-veg-preset-btn" data-preset="archipelago_lavender">Lavender</button>
+            <button class="dev-btn dev-veg-preset-btn" data-preset="geothermal">Ash & Lava</button>
+            <button class="dev-btn dev-veg-preset-btn" data-preset="geothermal_magma">Molten</button>
+            <button class="dev-btn dev-veg-preset-btn" data-preset="estuary">Biolum Coral</button>
             <button class="dev-btn dev-veg-preset-btn" data-preset="estuary_neon">Neon Lagoon</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="estuary_spirit">Spirit Blossom</button>
             <button class="dev-btn dev-veg-preset-btn" data-preset="redwood">Giant Redwood</button>
             <button class="dev-btn dev-veg-preset-btn" data-preset="redwood_golden">Golden Forest</button>
-            <button class="dev-btn dev-veg-preset-btn" data-preset="redwood_conifer" style="grid-column: span 2;">Deep Conifer</button>
-          </div>
-        </div>
-
-        <div class="dev-group">
-          <div class="dev-group-title">Canopy Custom Colors (Click swatch to edit)</div>
-          <div id="dev-canopy-swatches" class="dev-chip-grid"></div>
-        </div>
-
-        <div class="dev-group">
-          <div class="dev-group-title">Trunk Custom Colors (Click swatch to edit)</div>
-          <div id="dev-trunk-swatches" class="dev-chip-grid"></div>
-        </div>
-
-        <div class="dev-group">
-          <div class="dev-group-title">Tree Scale & Density</div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Tree Scale</span>
-              <span id="dev-veg-tree-scale-val" class="dev-row-val">6.00x</span>
-            </div>
-            <input type="range" id="dev-veg-tree-scale" class="dev-slider" min="0.5" max="50.0" step="0.1" value="6.0" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Tree Density</span>
-              <span id="dev-veg-tree-density-val" class="dev-row-val">800</span>
-            </div>
-            <input type="range" id="dev-veg-tree-density" class="dev-slider" min="0" max="800" step="10" value="800" />
-          </div>
-        </div>
-
-        <div class="dev-group">
-          <div class="dev-group-title">Bush Scale & Density</div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Bush Scale</span>
-              <span id="dev-veg-bush-scale-val" class="dev-row-val">1.00x</span>
-            </div>
-            <input type="range" id="dev-veg-bush-scale" class="dev-slider" min="0.2" max="5.0" step="0.05" value="1.0" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Bush Density</span>
-              <span id="dev-veg-bush-density-val" class="dev-row-val">250</span>
-            </div>
-            <input type="range" id="dev-veg-bush-density" class="dev-slider" min="0" max="800" step="10" value="250" />
           </div>
         </div>
       </div>
 
-      <!-- Tab 4: Terrain & Water -->
-      <div id="dev-page-terrain" class="dev-tab-page" style="display: none;">
-        <div class="dev-group">
-          <div class="dev-group-title">Terrain Palette Presets</div>
+      <!-- Section 2: Atmosphere, Sky & Illumination -->
+      <div class="dev-section">
+        <div class="dev-section-header">
+          <span class="dev-section-title">2. Atmosphere & Sky</span>
+          <span class="dev-section-tag">Lighting & Fog</span>
+        </div>
+
+        <!-- Phase Switcher -->
+        <div class="dev-btn-grid-3">
+          <button class="dev-btn dev-phase-btn active" data-phase="0">Day</button>
+          <button class="dev-btn dev-phase-btn" data-phase="1">Dusk</button>
+          <button class="dev-btn dev-phase-btn" data-phase="2">Twilight</button>
+        </div>
+
+        <!-- Sky & Fog -->
+        <div class="dev-color-row">
+          <span>Sky Background</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-env-bg-hex" class="dev-color-hex-label">#93d4ff</span>
+            <input type="color" id="dev-env-bg" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-color-row">
+          <span>Fog Color</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-env-fog-hex" class="dev-color-hex-label">#cce9ff</span>
+            <input type="color" id="dev-env-fog" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Fog Near</span>
+            <span id="dev-env-fognear-val" class="dev-row-val">200</span>
+          </div>
+          <input type="range" id="dev-env-fognear" class="dev-slider" min="10" max="600" step="5" value="200" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Fog Far</span>
+            <span id="dev-env-fogfar-val" class="dev-row-val">720</span>
+          </div>
+          <input type="range" id="dev-env-fogfar" class="dev-slider" min="100" max="1500" step="10" value="720" />
+        </div>
+
+        <!-- Illumination -->
+        <div class="dev-color-row">
+          <span>Ambient Light</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-env-amb-color-hex" class="dev-color-hex-label">#ffffff</span>
+            <input type="color" id="dev-env-amb-color" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Ambient Intensity</span>
+            <span id="dev-env-amb-intensity-val" class="dev-row-val">0.75</span>
+          </div>
+          <input type="range" id="dev-env-amb-intensity" class="dev-slider" min="0" max="2.5" step="0.05" value="0.75" />
+        </div>
+        <div class="dev-color-row">
+          <span>Directional Light</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-env-dir-color-hex" class="dev-color-hex-label">#fff8e7</span>
+            <input type="color" id="dev-env-dir-color" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Directional Intensity</span>
+            <span id="dev-env-dir-intensity-val" class="dev-row-val">1.40</span>
+          </div>
+          <input type="range" id="dev-env-dir-intensity" class="dev-slider" min="0" max="3.0" step="0.05" value="1.4" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Hemisphere Intensity</span>
+            <span id="dev-env-hemi-intensity-val" class="dev-row-val">0.60</span>
+          </div>
+          <input type="range" id="dev-env-hemi-intensity" class="dev-slider" min="0" max="2.0" step="0.05" value="0.6" />
+        </div>
+
+        <!-- Sun & Stars -->
+        <div class="dev-color-row">
+          <span>Sun Color</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-env-sun-color-hex" class="dev-color-hex-label">#fffbe8</span>
+            <input type="color" id="dev-env-sun-color" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Sun Intensity</span>
+            <span id="dev-env-sun-intensity-val" class="dev-row-val">1.80</span>
+          </div>
+          <input type="range" id="dev-env-sun-intensity" class="dev-slider" min="0" max="4.0" step="0.1" value="1.8" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Sun Scale</span>
+            <span id="dev-env-sun-scale-val" class="dev-row-val">1.30x</span>
+          </div>
+          <input type="range" id="dev-env-sun-scale" class="dev-slider" min="0.1" max="4.0" step="0.1" value="1.3" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Starfield Opacity</span>
+            <span id="dev-env-star-opacity-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-env-star-opacity" class="dev-slider" min="0" max="1.0" step="0.05" value="0.0" />
+        </div>
+      </div>
+
+      <!-- Section 3: Bloom & Emissive Glow (Biome Locked) -->
+      <div class="dev-section">
+        <div class="dev-section-header">
+          <span class="dev-section-title">3. Bloom & Emissive Glow</span>
+          <span class="dev-section-tag">Locked to Biome</span>
+        </div>
+
+        <!-- UnrealBloom Post Pass -->
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Post Bloom Strength</span>
+            <span id="dev-bloom-strength-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-bloom-strength" class="dev-slider" min="0" max="2.5" step="0.02" value="0.0" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Post Bloom Radius</span>
+            <span id="dev-bloom-radius-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-bloom-radius" class="dev-slider" min="0" max="1.5" step="0.02" value="0.0" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Post Bloom Threshold</span>
+            <span id="dev-bloom-threshold-val" class="dev-row-val">0.70</span>
+          </div>
+          <input type="range" id="dev-bloom-threshold" class="dev-slider" min="0" max="1.0" step="0.02" value="0.70" />
+        </div>
+
+        <!-- Vegetation Glow -->
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Tree Bloom Multiplier</span>
+            <span id="dev-tree-bloom-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-tree-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.0" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Canopy Night Glow</span>
+            <span id="dev-tree-canopy-glow-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-tree-canopy-glow" class="dev-slider" min="0" max="2.5" step="0.05" value="0.0" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Trunk Base Glow</span>
+            <span id="dev-tree-trunk-glow-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-tree-trunk-glow" class="dev-slider" min="0" max="2.5" step="0.05" value="0.0" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Bush Bloom Multiplier</span>
+            <span id="dev-bush-bloom-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-bush-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.0" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Bush Glow Multiplier</span>
+            <span id="dev-bush-glow-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-bush-glow" class="dev-slider" min="0" max="2.5" step="0.05" value="0.0" />
+        </div>
+
+        <!-- Shoreline Foam -->
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Shore Foam Bloom</span>
+            <span id="dev-shore-bloom-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-shore-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.0" />
+        </div>
+        <div class="dev-color-row">
+          <span>Shore Foam Color</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-shore-color-hex" class="dev-color-hex-label">#ffffff</span>
+            <input type="color" id="dev-shore-color" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Shore Band Width</span>
+            <span id="dev-shore-width-val" class="dev-row-val">0.80</span>
+          </div>
+          <input type="range" id="dev-shore-width" class="dev-slider" min="0.1" max="3.0" step="0.05" value="0.8" />
+        </div>
+
+        <!-- Cloud Atmosphere -->
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Cloud Bloom</span>
+            <span id="dev-cloud-bloom-val" class="dev-row-val">0.00</span>
+          </div>
+          <input type="range" id="dev-cloud-bloom" class="dev-slider" min="0" max="3.0" step="0.05" value="0.0" />
+        </div>
+        <div class="dev-color-row">
+          <span>Cloud Base Color</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-cloud-color-hex" class="dev-color-hex-label">#ffffff</span>
+            <input type="color" id="dev-cloud-color" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-color-row">
+          <span>Cloud Emissive Color</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-cloud-emissive-hex" class="dev-color-hex-label">#ffffff</span>
+            <input type="color" id="dev-cloud-emissive" class="dev-color-input" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Terrain & Water -->
+      <div class="dev-section">
+        <div class="dev-section-header">
+          <span class="dev-section-title">4. Terrain & Water</span>
+          <span class="dev-section-tag">Surface Shading</span>
+        </div>
+
+        <!-- Terrain Presets -->
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Terrain Palettes</span>
+          </div>
           <div class="dev-btn-grid">
             <button class="dev-btn dev-palette-btn active" data-palette="Lush Green">Lush Green</button>
             <button class="dev-btn dev-palette-btn" data-palette="Autumn Warmth">Autumn Warmth</button>
             <button class="dev-btn dev-palette-btn" data-palette="Ghibli Pastel">Ghibli Pastel</button>
-            <button class="dev-btn dev-palette-btn" data-palette="Alpine Highlands">Alpine Highlands</button>
+            <button class="dev-btn dev-palette-btn" data-palette="Alpine Highlands">Alpine</button>
             <button class="dev-btn dev-palette-btn" data-palette="Candy Meadow" style="grid-column: span 2;">Candy Meadow</button>
           </div>
         </div>
 
-        <div class="dev-group">
-          <div class="dev-group-title">Terrain Biome Vertex Colors</div>
-          <div class="dev-color-row">
-            <span>Lowland Valley Grass</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-terrain-low-hex" class="dev-color-hex-label">#38b000</span>
-              <input type="color" id="dev-terrain-low" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-color-row">
-            <span>Highland Hill Grass</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-terrain-high-hex" class="dev-color-hex-label">#70e000</span>
-              <input type="color" id="dev-terrain-high" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-color-row">
-            <span>Mountain Peak Dirt / Rock</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-terrain-dirt-hex" class="dev-color-hex-label">#936639</span>
-              <input type="color" id="dev-terrain-dirt" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-color-row">
-            <span>Dirt Trail Path</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-terrain-path-hex" class="dev-color-hex-label">#b08968</span>
-              <input type="color" id="dev-terrain-path" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-color-row">
-            <span>Beach Coast Sand</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-terrain-sand-hex" class="dev-color-hex-label">#ede0d4</span>
-              <input type="color" id="dev-terrain-sand" class="dev-color-input" />
-            </div>
+        <!-- Vertex Colors -->
+        <div class="dev-color-row">
+          <span>Lowland Grass</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-terrain-low-hex" class="dev-color-hex-label">#38b000</span>
+            <input type="color" id="dev-terrain-low" class="dev-color-input" />
           </div>
         </div>
+        <div class="dev-color-row">
+          <span>Highland Grass</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-terrain-high-hex" class="dev-color-hex-label">#70e000</span>
+            <input type="color" id="dev-terrain-high" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-color-row">
+          <span>Mountain Dirt / Rock</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-terrain-dirt-hex" class="dev-color-hex-label">#936639</span>
+            <input type="color" id="dev-terrain-dirt" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-color-row">
+          <span>Trail Dirt Path</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-terrain-path-hex" class="dev-color-hex-label">#b08968</span>
+            <input type="color" id="dev-terrain-path" class="dev-color-input" />
+          </div>
+        </div>
+        <div class="dev-color-row">
+          <span>Coast Sand</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-terrain-sand-hex" class="dev-color-hex-label">#ede0d4</span>
+            <input type="color" id="dev-terrain-sand" class="dev-color-input" />
+          </div>
+        </div>
+        <button id="dev-terrain-toon-toggle" class="dev-btn" style="margin-top: 4px;">Terrain Style: Painterly Ghibli</button>
 
-        <div class="dev-group">
-          <div class="dev-group-title">Water Surface Properties</div>
-          <div class="dev-color-row">
-            <span>Water Color</span>
-            <div class="dev-color-picker-wrap">
-              <span id="dev-water-color-hex" class="dev-color-hex-label">#0099ff</span>
-              <input type="color" id="dev-water-color" class="dev-color-input" />
-            </div>
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Opacity (1 - Transparency)</span>
-              <span id="dev-water-opacity-val" class="dev-row-val">0.82</span>
-            </div>
-            <input type="range" id="dev-water-opacity" class="dev-slider" min="0" max="1.0" step="0.02" value="0.82" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Reflectivity</span>
-              <span id="dev-water-reflectivity-val" class="dev-row-val">0.65</span>
-            </div>
-            <input type="range" id="dev-water-reflectivity" class="dev-slider" min="0" max="1.0" step="0.02" value="0.65" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Roughness</span>
-              <span id="dev-water-roughness-val" class="dev-row-val">0.18</span>
-            </div>
-            <input type="range" id="dev-water-roughness" class="dev-slider" min="0" max="1.0" step="0.02" value="0.18" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Metalness</span>
-              <span id="dev-water-metalness-val" class="dev-row-val">0.05</span>
-            </div>
-            <input type="range" id="dev-water-metalness" class="dev-slider" min="0" max="1.0" step="0.02" value="0.05" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Clearcoat</span>
-              <span id="dev-water-clearcoat-val" class="dev-row-val">0.80</span>
-            </div>
-            <input type="range" id="dev-water-clearcoat" class="dev-slider" min="0" max="1.0" step="0.02" value="0.80" />
-          </div>
-          <div class="dev-row">
-            <div class="dev-row-header">
-              <span>Clearcoat Roughness</span>
-              <span id="dev-water-clearcoat-roughness-val" class="dev-row-val">0.15</span>
-            </div>
-            <input type="range" id="dev-water-clearcoat-roughness" class="dev-slider" min="0" max="1.0" step="0.02" value="0.15" />
+        <!-- Water -->
+        <div class="dev-color-row">
+          <span>Water Color</span>
+          <div class="dev-color-picker-wrap">
+            <span id="dev-water-color-hex" class="dev-color-hex-label">#0099ff</span>
+            <input type="color" id="dev-water-color" class="dev-color-input" />
           </div>
         </div>
-
-        <div class="dev-group">
-          <div class="dev-group-title">Shader Mode</div>
-          <button id="dev-water-toon-toggle" class="dev-btn">Shader Mode: MeshPhysical (Realistic)</button>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Water Opacity</span>
+            <span id="dev-water-opacity-val" class="dev-row-val">0.82</span>
+          </div>
+          <input type="range" id="dev-water-opacity" class="dev-slider" min="0" max="1.0" step="0.02" value="0.82" />
         </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Reflectivity</span>
+            <span id="dev-water-reflectivity-val" class="dev-row-val">0.65</span>
+          </div>
+          <input type="range" id="dev-water-reflectivity" class="dev-slider" min="0" max="1.0" step="0.02" value="0.65" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Roughness</span>
+            <span id="dev-water-roughness-val" class="dev-row-val">0.18</span>
+          </div>
+          <input type="range" id="dev-water-roughness" class="dev-slider" min="0" max="1.0" step="0.02" value="0.18" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Metalness</span>
+            <span id="dev-water-metalness-val" class="dev-row-val">0.05</span>
+          </div>
+          <input type="range" id="dev-water-metalness" class="dev-slider" min="0" max="1.0" step="0.02" value="0.05" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Clearcoat</span>
+            <span id="dev-water-clearcoat-val" class="dev-row-val">0.80</span>
+          </div>
+          <input type="range" id="dev-water-clearcoat" class="dev-slider" min="0" max="1.0" step="0.02" value="0.80" />
+        </div>
+        <div class="dev-row">
+          <div class="dev-row-header">
+            <span>Clearcoat Roughness</span>
+            <span id="dev-water-clearcoat-roughness-val" class="dev-row-val">0.15</span>
+          </div>
+          <input type="range" id="dev-water-clearcoat-roughness" class="dev-slider" min="0" max="1.0" step="0.02" value="0.15" />
+        </div>
+        <button id="dev-water-toon-toggle" class="dev-btn" style="margin-top: 2px;">Shader Mode: MeshPhysical (Realistic)</button>
       </div>
 
-      <!-- Tab 5: Save & Profiles -->
-      <div id="dev-page-save" class="dev-tab-page" style="display: none;">
-        <div class="dev-group">
-          <div class="dev-group-title">Biome Default Persistence</div>
-          <button id="dev-save-biome-btn" class="dev-save-btn">Set As Default for Lush Meadow</button>
-          <button id="dev-save-all-btn" class="dev-save-btn" style="margin-top: 6px; background: rgba(34, 197, 94, 0.35); border-color: rgba(34, 197, 94, 0.7);">Set All Biomes As Default</button>
-          <button id="dev-reset-biome-btn" class="dev-reset-btn" style="margin-top: 6px;">Reset Lush Meadow to Factory</button>
-          <button id="dev-reset-all-btn" class="dev-reset-btn" style="margin-top: 6px;">Reset All Biomes to Factory</button>
+      <!-- Section 5: Biome Profiles & Actions -->
+      <div class="dev-section">
+        <div class="dev-section-header">
+          <span class="dev-section-title">5. Profile & Presets</span>
+          <span class="dev-section-tag">Persistence</span>
         </div>
 
-        <div class="dev-group">
-          <div class="dev-group-title">Export / Import JSON Profile</div>
+        <button id="dev-save-biome-btn" class="dev-save-btn">Set As Default for Active Biome</button>
+        <button id="dev-save-all-btn" class="dev-save-btn" style="background: rgba(34, 197, 94, 0.25); border-color: rgba(34, 197, 94, 0.6); color: #4ade80;">Set All Biomes As Default</button>
+        <button id="dev-reset-biome-btn" class="dev-reset-btn">Reset Active Biome to Factory</button>
+        <button id="dev-reset-all-btn" class="dev-reset-btn">Reset All Biomes to Factory</button>
+
+        <div class="dev-row" style="margin-top: 4px;">
+          <div class="dev-row-header">
+            <span>JSON Configuration</span>
+          </div>
           <textarea id="dev-json-export" class="dev-textarea" spellcheck="false"></textarea>
-          <div class="dev-btn-grid" style="margin-top: 6px;">
-            <button id="dev-copy-json-btn" class="dev-btn">Copy JSON Config</button>
-            <button id="dev-apply-json-btn" class="dev-btn">Apply JSON Config</button>
+          <div class="dev-btn-grid" style="margin-top: 4px;">
+            <button id="dev-copy-json-btn" class="dev-btn">Copy JSON</button>
+            <button id="dev-apply-json-btn" class="dev-btn">Apply JSON</button>
           </div>
         </div>
       </div>
