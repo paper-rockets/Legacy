@@ -668,6 +668,17 @@ export class UIManager {
         if (this.trees) this.trees.update(pos.x, pos.z);
         this.props.update(pos.x, pos.z, 0.016);
         this.water.update(pos.x, pos.z, 0.016);
+
+        const biomeId = this.player.currentBiome;
+        globalConfigManager.config.activeBiomeId = biomeId;
+        const bCfg = globalConfigManager.getBiomeConfig(biomeId);
+        if (bCfg) {
+            this.pipeline.applyBiomeBloom(bCfg.bloom);
+            this.props.applyBiomeCloud(bCfg.bloom);
+        }
+        if (this.devEditor && this.devEditor.isOpen) {
+            this.devEditor.selectBiome(biomeId);
+        }
     }
 
     public updateFPS() {

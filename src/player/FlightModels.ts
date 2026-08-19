@@ -60,7 +60,8 @@ export const FLIGHT_MODELS: FlightModelDef[] = [
         name: 'Mitsubishi B2M2',
         file: 'Assets/Flight/mitsubishi_b2m2_-_game_art_1_stylized_plane.glb',
         preferredAnim: 'Flying',
-        scale: 0.28,
+        scale: 0.22,
+        rotY: Math.PI,
         offsetY: -0.15
     }
 ];

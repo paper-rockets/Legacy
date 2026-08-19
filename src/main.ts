@@ -10,6 +10,7 @@ import { ControlsManager } from './player/controls';
 import { AmbientAudioEngine } from './audio/audio';
 import { UIManager } from './ui/ui';
 import { terrainHeightJS } from './world/noise';
+import { globalConfigManager } from './core/config';
 
 async function bootstrap() {
     const container = document.getElementById('app');
@@ -25,6 +26,11 @@ async function bootstrap() {
     const trees = new TreeSystem(pipeline.scene);
     trees.init().catch(console.error);
 
+    // Initial Biome Bloom and Cloud configuration
+    const initialBiome = globalConfigManager.getActiveBiomeConfig();
+    pipeline.applyBiomeBloom(initialBiome.bloom);
+    props.applyBiomeCloud(initialBiome.bloom);
+
     const player = new PlayerSystem(pipeline.scene, pipeline.camera);
     const controls = new ControlsManager();
     const audio = new AmbientAudioEngine();
@@ -32,6 +38,7 @@ async function bootstrap() {
     (window as any).__game = { pipeline, player, terrain, lighting, water, props, trees, ui };
 
     const clock = new THREE.Clock();
+    let lastBiomeId = player.currentBiome;
 
     // Interaction triggers for audio unlocking
     const unlockAudio = () => audio.initAudio();
@@ -48,8 +55,18 @@ async function bootstrap() {
         const playerPos = player.playerGrp.position;
         const groundY = terrainHeightJS(playerPos.x, playerPos.z);
 
+        // Biome flight traversal detection & bloom interpolation
+        if (player.currentBiome !== lastBiomeId) {
+            lastBiomeId = player.currentBiome;
+            const bCfg = globalConfigManager.getBiomeConfig(player.currentBiome);
+            if (bCfg) {
+                pipeline.applyBiomeBloom(bCfg.bloom, 0.12);
+                props.applyBiomeCloud(bCfg.bloom);
+            }
+        }
+
         lighting.update(realDt, pipeline.scene, playerPos, groundY);
-        trees.updateGlow(realDt, lighting.timePhase);
+        trees.updateGlow(realDt, lighting.timePhase, player.currentBiome);
 
         if (!ui.isPhotoMode) {
             const inputState = controls.getInputState();

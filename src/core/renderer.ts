@@ -55,18 +55,49 @@ export class RenderPipeline {
         // Synchronous & ready immediately
     }
 
-    public setBloomStrength(val: number) {
+    public applyBiomeBloom(bloom: { globalStrength?: number; globalRadius?: number; globalThreshold?: number }, lerpFactor?: number) {
+        const targetStrength = bloom.globalStrength !== undefined ? Math.max(0, Math.min(3.0, bloom.globalStrength)) : this.bloomPass.strength;
+        const targetRadius = bloom.globalRadius !== undefined ? Math.max(0, Math.min(2.0, bloom.globalRadius)) : this.bloomPass.radius;
+        const targetThreshold = bloom.globalThreshold !== undefined ? Math.max(0, Math.min(1.0, bloom.globalThreshold)) : this.bloomPass.threshold;
+
+        if (lerpFactor !== undefined && lerpFactor < 1.0) {
+            this.bloomPass.strength = THREE.MathUtils.lerp(this.bloomPass.strength, targetStrength, lerpFactor);
+            this.bloomPass.radius = THREE.MathUtils.lerp(this.bloomPass.radius, targetRadius, lerpFactor);
+            this.bloomPass.threshold = THREE.MathUtils.lerp(this.bloomPass.threshold, targetThreshold, lerpFactor);
+        } else {
+            this.bloomPass.strength = targetStrength;
+            this.bloomPass.radius = targetRadius;
+            this.bloomPass.threshold = targetThreshold;
+        }
+    }
+
+    public setBloomStrength(val: number, biomeId?: string) {
         this.bloomPass.strength = Math.max(0, Math.min(3.0, val));
+        const activeB = biomeId || globalConfigManager.config.activeBiomeId;
+        const bCfg = globalConfigManager.getBiomeConfig(activeB as any);
+        if (bCfg) {
+            bCfg.bloom.globalStrength = this.bloomPass.strength;
+        }
         globalConfigManager.config.globalBloom.strength = this.bloomPass.strength;
     }
 
-    public setBloomRadius(val: number) {
+    public setBloomRadius(val: number, biomeId?: string) {
         this.bloomPass.radius = Math.max(0, Math.min(2.0, val));
+        const activeB = biomeId || globalConfigManager.config.activeBiomeId;
+        const bCfg = globalConfigManager.getBiomeConfig(activeB as any);
+        if (bCfg) {
+            bCfg.bloom.globalRadius = this.bloomPass.radius;
+        }
         globalConfigManager.config.globalBloom.radius = this.bloomPass.radius;
     }
 
-    public setBloomThreshold(val: number) {
+    public setBloomThreshold(val: number, biomeId?: string) {
         this.bloomPass.threshold = Math.max(0, Math.min(1.0, val));
+        const activeB = biomeId || globalConfigManager.config.activeBiomeId;
+        const bCfg = globalConfigManager.getBiomeConfig(activeB as any);
+        if (bCfg) {
+            bCfg.bloom.globalThreshold = this.bloomPass.threshold;
+        }
         globalConfigManager.config.globalBloom.threshold = this.bloomPass.threshold;
     }
 

@@ -144,9 +144,15 @@ async function loadTreeGeometries(
     let modelMinY = Infinity;
     let modelMaxY = -Infinity;
 
+    const hasNamedRoots = gltf.scene.children.some(c => c.name && c.name.trim().length > 0);
+
     gltf.scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
+            // Ignore unnamed orphan root meshes when named tree nodes exist
+            if (hasNamedRoots && child.parent === gltf.scene && (!child.name || child.name.trim() === '')) {
+                return;
+            }
             mesh.geometry.computeBoundingBox();
             const bb = mesh.geometry.boundingBox;
             if (bb) {
@@ -161,88 +167,151 @@ async function loadTreeGeometries(
 
     const modelHeight = Math.max(0.001, modelMaxY - modelMinY);
 
+    interface SubPart {
+        geo: THREE.BufferGeometry;
+        mesh: THREE.Mesh;
+        mat?: THREE.Material;
+    }
+
+    const subParts: SubPart[] = [];
+
     for (const mesh of allMeshes) {
-        const geo = mesh.geometry.clone();
-        geo.applyMatrix4(mesh.matrixWorld);
-        if (!geo.getAttribute('normal')) geo.computeVertexNormals();
+        const worldGeo = mesh.geometry.clone();
+        worldGeo.applyMatrix4(mesh.matrixWorld);
+        if (!worldGeo.getAttribute('normal')) worldGeo.computeVertexNormals();
 
-        const clean = new THREE.BufferGeometry();
-        clean.setAttribute('position', geo.getAttribute('position'));
-        clean.setAttribute('normal', geo.getAttribute('normal'));
-        if (geo.index) clean.setIndex(geo.index);
+        if (worldGeo.groups && worldGeo.groups.length > 1) {
+            for (const g of worldGeo.groups) {
+                const subGeo = new THREE.BufferGeometry();
+                subGeo.setAttribute('position', worldGeo.getAttribute('position'));
+                subGeo.setAttribute('normal', worldGeo.getAttribute('normal'));
+                if (worldGeo.getAttribute('uv')) subGeo.setAttribute('uv', worldGeo.getAttribute('uv'));
 
-        const mat = mesh.material as THREE.Material | THREE.Material[] | undefined;
-        const matName = mat ? (Array.isArray(mat) ? mat.map(m => m.name).join(' ') : mat.name) : '';
-        const name = (mesh.name + ' ' + (mesh.parent ? mesh.parent.name : '') + ' ' + matName).toLowerCase();
-
-        // 1. Explicit keyword check
-        const isTrunkName = name.includes('wood') || name.includes('stick') || name.includes('trunk') || 
-                            name.includes('branch') || name.includes('bark') || name.includes('stem') || 
-                            name.includes('brown');
-        const isCanopyName = name.includes('leaf') || name.includes('leaves') || name.includes('canopy') || 
-                             name.includes('bubble') || name.includes('crown') || name.includes('foliage') || 
-                             name.includes('yellow') || name.includes('green') || name.includes('sphere') ||
-                             name.includes('crone');
-
-        if (isTrunkName && !isCanopyName) {
-            trunkGeos.push(clean);
-            continue;
+                if (worldGeo.index) {
+                    const indices = worldGeo.index.array.slice(g.start, g.start + g.count);
+                    subGeo.setIndex(new THREE.BufferAttribute(indices, 1));
+                } else {
+                    const pos = worldGeo.getAttribute('position') as THREE.BufferAttribute;
+                    const norm = worldGeo.getAttribute('normal') as THREE.BufferAttribute;
+                    const pArr = pos.array.slice(g.start * 3, (g.start + g.count) * 3);
+                    subGeo.setAttribute('position', new THREE.BufferAttribute(pArr, 3));
+                    if (norm) {
+                        const nArr = norm.array.slice(g.start * 3, (g.start + g.count) * 3);
+                        subGeo.setAttribute('normal', new THREE.BufferAttribute(nArr, 3));
+                    }
+                }
+                const nonIndexed = subGeo.toNonIndexed ? subGeo.toNonIndexed() : subGeo;
+                const gMat = Array.isArray(mesh.material) ? mesh.material[g.materialIndex] : mesh.material;
+                subParts.push({ geo: nonIndexed, mesh, mat: gMat });
+            }
+        } else {
+            const clean = new THREE.BufferGeometry();
+            clean.setAttribute('position', worldGeo.getAttribute('position'));
+            clean.setAttribute('normal', worldGeo.getAttribute('normal'));
+            if (worldGeo.getAttribute('uv')) clean.setAttribute('uv', worldGeo.getAttribute('uv'));
+            if (worldGeo.index) clean.setIndex(worldGeo.index);
+            const nonIndexed = clean.toNonIndexed ? clean.toNonIndexed() : clean;
+            const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+            subParts.push({ geo: nonIndexed, mesh, mat });
         }
-        if (isCanopyName && !isTrunkName) {
-            canopyGeos.push(clean);
-            continue;
-        }
+    }
 
-        // 2. Position-based check for multi-mesh models without explicit keywords (e.g. Archipelago TreeAsset_4/5/6)
-        if (allMeshes.length > 1) {
-            geo.computeBoundingBox();
-            const bb = geo.boundingBox!;
+    if (subParts.length > 1) {
+        for (const sp of subParts) {
+            const mat = sp.mat;
+            const matName = mat ? mat.name : '';
+            const name = (sp.mesh.name + ' ' + (sp.mesh.parent ? sp.mesh.parent.name : '') + ' ' + matName).toLowerCase();
+
+            // 1. Explicit keyword check
+            const isTrunkName = name.includes('wood') || name.includes('stick') || name.includes('trunk') || 
+                                name.includes('branch') || name.includes('bark') || name.includes('stem') || 
+                                name.includes('brown') || name.includes('holz') || name.includes('stamm');
+            const isCanopyName = name.includes('leaf') || name.includes('leaves') || name.includes('canopy') || 
+                                 name.includes('bubble') || name.includes('crown') || name.includes('foliage') || 
+                                 name.includes('yellow') || name.includes('green') || name.includes('sphere') || 
+                                 name.includes('crone') || name.includes('krone') || name.includes('laub');
+
+            if (isTrunkName && !isCanopyName) {
+                trunkGeos.push(sp.geo);
+                continue;
+            }
+            if (isCanopyName && !isTrunkName) {
+                canopyGeos.push(sp.geo);
+                continue;
+            }
+
+            // 2. Material color check
+            const col = (mat as THREE.MeshStandardMaterial)?.color;
+            if (col) {
+                if (col.r > col.g * 1.18 && col.b < col.r * 0.85) {
+                    trunkGeos.push(sp.geo);
+                    continue;
+                } else if (col.g > col.r * 1.05 || (col.g > 0.35 && col.b > col.r)) {
+                    canopyGeos.push(sp.geo);
+                    continue;
+                }
+            }
+
+            // 3. Position-based check
+            sp.geo.computeBoundingBox();
+            const bb = sp.geo.boundingBox!;
             const meshCenterY = (bb.min.y + bb.max.y) / 2;
             const relY = (meshCenterY - modelMinY) / modelHeight;
-            // Lower 42% of tree height is trunk, upper part is canopy
             if (relY < 0.42 || (bb.min.y <= modelMinY + 0.05 * modelHeight && bb.max.y < modelMinY + 0.65 * modelHeight)) {
-                trunkGeos.push(clean);
+                trunkGeos.push(sp.geo);
             } else {
-                canopyGeos.push(clean);
+                canopyGeos.push(sp.geo);
             }
-            continue;
         }
+    }
 
-        // 3. Single-mesh model (e.g. tree_Tree_9.glb) - Split triangles by vertex height
-        const pos = clean.attributes.position as THREE.BufferAttribute;
-        const index = clean.index;
-        const splitY = modelMinY + modelHeight * 0.32;
+    // Fallback or single-mesh model: if either trunkGeos or canopyGeos is empty, split triangles by height
+    if (trunkGeos.length === 0 || canopyGeos.length === 0) {
+        trunkGeos.length = 0;
+        canopyGeos.length = 0;
 
-        const trunkIndices: number[] = [];
-        const canopyIndices: number[] = [];
-        const triCount = index ? index.count / 3 : pos.count / 3;
+        const allGeos = subParts.map(sp => sp.geo);
+        const mergedAll = allGeos.length === 1 ? allGeos[0] : (mergeGeometries(allGeos, false) || allGeos[0]);
+        const nonIndexed = mergedAll.toNonIndexed ? mergedAll.toNonIndexed() : mergedAll;
+        const pos = nonIndexed.attributes.position as THREE.BufferAttribute;
+        const norm = nonIndexed.attributes.normal as THREE.BufferAttribute | undefined;
+        const splitY = modelMinY + modelHeight * 0.38;
 
+        const trunkPositions: number[] = [];
+        const canopyPositions: number[] = [];
+        const trunkNormals: number[] = [];
+        const canopyNormals: number[] = [];
+
+        const triCount = pos.count / 3;
         for (let i = 0; i < triCount; i++) {
-            const i0 = index ? index.getX(i * 3) : i * 3;
-            const i1 = index ? index.getX(i * 3 + 1) : i * 3 + 1;
-            const i2 = index ? index.getX(i * 3 + 2) : i * 3 + 2;
-
-            const y0 = pos.getY(i0);
-            const y1 = pos.getY(i1);
-            const y2 = pos.getY(i2);
+            const i0 = i * 3, i1 = i * 3 + 1, i2 = i * 3 + 2;
+            const y0 = pos.getY(i0), y1 = pos.getY(i1), y2 = pos.getY(i2);
             const avgY = (y0 + y1 + y2) / 3;
 
-            if (avgY < splitY) {
-                trunkIndices.push(i0, i1, i2);
-            } else {
-                canopyIndices.push(i0, i1, i2);
+            const targetPos = avgY < splitY ? trunkPositions : canopyPositions;
+            const targetNorm = avgY < splitY ? trunkNormals : canopyNormals;
+
+            for (const idx of [i0, i1, i2]) {
+                targetPos.push(pos.getX(idx), pos.getY(idx), pos.getZ(idx));
+                if (norm) {
+                    targetNorm.push(norm.getX(idx), norm.getY(idx), norm.getZ(idx));
+                } else {
+                    targetNorm.push(0, 1, 0);
+                }
             }
         }
 
-        if (trunkIndices.length > 0) {
-            const tGeo = clean.clone();
-            tGeo.setIndex(trunkIndices);
-            trunkGeos.push(tGeo.toNonIndexed ? tGeo.toNonIndexed() : tGeo);
+        if (trunkPositions.length > 0) {
+            const tGeo = new THREE.BufferGeometry();
+            tGeo.setAttribute('position', new THREE.Float32BufferAttribute(trunkPositions, 3));
+            tGeo.setAttribute('normal', new THREE.Float32BufferAttribute(trunkNormals, 3));
+            trunkGeos.push(tGeo);
         }
-        if (canopyIndices.length > 0) {
-            const cGeo = clean.clone();
-            cGeo.setIndex(canopyIndices);
-            canopyGeos.push(cGeo.toNonIndexed ? cGeo.toNonIndexed() : cGeo);
+        if (canopyPositions.length > 0) {
+            const cGeo = new THREE.BufferGeometry();
+            cGeo.setAttribute('position', new THREE.Float32BufferAttribute(canopyPositions, 3));
+            cGeo.setAttribute('normal', new THREE.Float32BufferAttribute(canopyNormals, 3));
+            canopyGeos.push(cGeo);
         }
     }
 
@@ -290,37 +359,45 @@ async function loadTreeGeometries(
     return { trunkGeo: mergedTrunk, canopyGeo: mergedCanopy };
 }
 
-interface TreeModelConfig {
+export interface TreeCatalogItem {
+    id: string;
+    name: string;
+    category: string;
     path: string;
     scaleMultiplier?: number;
+    description: string;
 }
 
-const BIOME_TREE_CONFIGS: Record<BiomeId, TreeModelConfig[]> = {
-    meadow: [
-        { path: '/Assets/Cartoon/Cartoon_Trees_Tree_1.glb' },
-        { path: '/Assets/Cartoon/Cartoon_Trees_Tree_2.glb' },
-        { path: '/Assets/Cartoon/Cartoon_Trees_Tree_3.glb' },
-    ],
-    redwood: [
-        { path: '/Assets/Cartoon 4/LPTree_Tree_Type0_04_Model_balanced_instanced_l1_superhigh.glb', scaleMultiplier: 1.2 },
-        { path: '/Assets/Cartoon 4/LPTree_Tree_Type3_03_Model_instanced_l2_superhigh.glb' },
-        { path: '/Assets/Cartoon 4/LPTree_Tree_Type3_05_Model_balanced_instanced_l1_superhigh.glb' },
-        { path: '/Assets/Cartoon 4/Lowpolytree_6_yellow_superhigh.glb' },
-    ],
-    archipelago: [
-        { path: '/Assets/Bubble/TreeAsset_4_instanced_l2_superhigh.glb' },
-        { path: '/Assets/Bubble/TreeAsset_5_instanced_l2_superhigh.glb' },
-        { path: '/Assets/Bubble/TreeAsset_6_instanced_l2_superhigh.glb' },
-    ],
-    estuary: [
-        { path: '/Assets/Cartoon 2/Cartoon_Trees_Tree_1.glb' },
-        { path: '/Assets/Cartoon 2/Cartoon_Trees_Tree_2.glb' },
-        { path: '/Assets/Cartoon 2/Cartoon_Trees_Tree_3.glb' },
-    ],
-    geothermal: [
-        { path: '/Assets/Cartoon 3/low_poly_tree_1_Tree_1.glb' },
-        { path: '/Assets/Cartoon 3/tree_Tree_9.glb' },
-    ],
+export const TREE_CATALOG: TreeCatalogItem[] = [
+    { id: 'cartoon_1', name: 'Cartoon Oak 1', category: 'Stylized', path: '/Assets/Cartoon/Cartoon_Trees_Tree_1.glb', scaleMultiplier: 1.0, description: 'Lush round canopy oak' },
+    { id: 'cartoon_2', name: 'Cartoon Oak 2', category: 'Stylized', path: '/Assets/Cartoon/Cartoon_Trees_Tree_2.glb', scaleMultiplier: 1.0, description: 'Branching stylized tree' },
+    { id: 'cartoon_3', name: 'Cartoon Oak 3', category: 'Stylized', path: '/Assets/Cartoon/Cartoon_Trees_Tree_3.glb', scaleMultiplier: 1.0, description: 'Compact flowering tree' },
+    { id: 'bubble_4', name: 'Bubble Blossom A', category: 'Bubble', path: '/Assets/Bubble/TreeAsset_4_instanced_l2_superhigh.glb', scaleMultiplier: 1.0, description: 'Spherical cloud blossom tree' },
+    { id: 'bubble_5', name: 'Bubble Blossom B', category: 'Bubble', path: '/Assets/Bubble/TreeAsset_5_instanced_l2_superhigh.glb', scaleMultiplier: 1.0, description: 'Triple bubble canopy tree' },
+    { id: 'bubble_6', name: 'Bubble Blossom C', category: 'Bubble', path: '/Assets/Bubble/TreeAsset_6_instanced_l2_superhigh.glb', scaleMultiplier: 1.0, description: 'Clustered bubble canopy' },
+    { id: 'redwood_04', name: 'Giant Redwood Spire', category: 'Conifer', path: '/Assets/Cartoon 4/LPTree_Tree_Type0_04_Model_balanced_instanced_l1_superhigh.glb', scaleMultiplier: 1.25, description: 'Colossal ancient sequoia' },
+    { id: 'redwood_03', name: 'Towering Pine', category: 'Conifer', path: '/Assets/Cartoon 4/LPTree_Tree_Type3_03_Model_instanced_l2_superhigh.glb', scaleMultiplier: 1.0, description: 'Alpine high-altitude pine' },
+    { id: 'redwood_05', name: 'Ancient Sequoia', category: 'Conifer', path: '/Assets/Cartoon 4/LPTree_Tree_Type3_05_Model_balanced_instanced_l1_superhigh.glb', scaleMultiplier: 1.0, description: 'Dense tiered pine' },
+    { id: 'yellow_poly', name: 'Golden Conifer', category: 'Conifer', path: '/Assets/Cartoon 4/Lowpolytree_6_yellow_superhigh.glb', scaleMultiplier: 1.0, description: 'Golden tapered pine' },
+    { id: 'estuary_1', name: 'Coral Palm 1', category: 'Tropical', path: '/Assets/Cartoon 5/LowPoly-Tree-02_Tree_1_instanced.glb', scaleMultiplier: 1.0, description: 'Flared coral mangrove palm' },
+    { id: 'estuary_4', name: 'Coral Palm 2', category: 'Tropical', path: '/Assets/Cartoon 5/LowPoly-Tree-02_Tree_4_instanced.glb', scaleMultiplier: 1.0, description: 'Twin branching lagoon palm' },
+    { id: 'estuary_7', name: 'Coral Shrub', category: 'Tropical', path: '/Assets/Cartoon 5/LowPoly-Tree-02_Tree_7_instanced.glb', scaleMultiplier: 1.0, description: 'Low coastal coral shrub' },
+    { id: 'geo_1', name: 'Ash Pine', category: 'Volcanic', path: '/Assets/Cartoon 3/low_poly_tree_1_Tree_1.glb', scaleMultiplier: 1.0, description: 'Charred ridge pine' },
+    { id: 'geo_9', name: 'Basalt Spire', category: 'Volcanic', path: '/Assets/Cartoon 3/tree_Tree_9.glb', scaleMultiplier: 1.0, description: 'Hardy geothermal canopy' },
+    { id: 'pack_1', name: 'Low Poly Oak', category: 'Low Poly', path: '/Separated_Trees/Cartoon_Trees_Pack_Tree_1.glb', scaleMultiplier: 1.0, description: 'Minimalist low-poly oak' },
+    { id: 'pack_5', name: 'Low Poly Pine', category: 'Low Poly', path: '/Separated_Trees/Cartoon_Trees_Pack_Tree_5.glb', scaleMultiplier: 1.0, description: 'Layered polygonal pine' },
+    { id: 'pack_8', name: 'Low Poly Bush Tree', category: 'Low Poly', path: '/Separated_Trees/Cartoon_Trees_Pack_Tree_8.glb', scaleMultiplier: 1.0, description: 'Rounded low-poly tree' },
+    { id: 'cherry_1', name: 'Cherry Blossom', category: 'Blossom', path: '/Separated_Trees/Cherry+Blossom-Tree_Pack+JSGraphics_CGTrader_Tree_1.glb', scaleMultiplier: 1.0, description: 'Delicate blossom branch tree' },
+    { id: 'rock_tree_2', name: 'Rock Cedar', category: 'Alpine', path: '/Separated_Trees/tree_X12_+X1_Rock_Pack_Tree_2.glb', scaleMultiplier: 1.0, description: 'Rugged cliffside cedar' },
+    { id: 'rock_tree_6', name: 'Highland Juniper', category: 'Alpine', path: '/Separated_Trees/tree_X12_+X1_Rock_Pack_Tree_6.glb', scaleMultiplier: 1.0, description: 'Twisted highland juniper' },
+];
+
+export const DEFAULT_BIOME_TREE_IDS: Record<BiomeId, string[]> = {
+    meadow: ['cartoon_1', 'cartoon_2', 'cartoon_3'],
+    archipelago: ['bubble_4', 'bubble_5', 'bubble_6'],
+    geothermal: ['geo_1', 'geo_9'],
+    estuary: ['estuary_1', 'estuary_4', 'estuary_7'],
+    redwood: ['redwood_04', 'redwood_03', 'redwood_05', 'yellow_poly']
 };
 
 function isVegetationAllowed(x: number, z: number, y: number, biome: BiomeId): boolean {
@@ -346,24 +423,19 @@ function isVegetationAllowed(x: number, z: number, y: number, biome: BiomeId): b
     }
 }
 
+interface LoadedCatalogEntry {
+    item: TreeCatalogItem;
+    trunkGeo: THREE.BufferGeometry;
+    canopyGeo: THREE.BufferGeometry;
+    trunkInst: THREE.InstancedMesh;
+    canopyInst: THREE.InstancedMesh;
+}
+
 // ── TreeSystem ─────────────────────────────────────────────────────────────────
 
 export class TreeSystem {
-    // Biome-Specific GLB Tree InstancedMeshes (Trunk & Canopy separated)
-    private biomeTreeTrunkInsts: Record<BiomeId, THREE.InstancedMesh[]> = {
-        meadow: [],
-        archipelago: [],
-        geothermal: [],
-        estuary: [],
-        redwood: []
-    };
-    private biomeTreeCanopyInsts: Record<BiomeId, THREE.InstancedMesh[]> = {
-        meadow: [],
-        archipelago: [],
-        geothermal: [],
-        estuary: [],
-        redwood: []
-    };
+    public catalogModelMap: Map<string, LoadedCatalogEntry> = new Map();
+    public catalogKeys: string[] = [];
 
     // Bushes (2 varieties)
     private bushInsts: THREE.InstancedMesh[] = [];
@@ -390,6 +462,7 @@ export class TreeSystem {
     private dirty: boolean = true;
     public lastX: number = -99999;
     public lastZ: number = -99999;
+    private rebuildRafId: number | null = null;
 
     // Temporary Math Objects (Zero Garbage Collection)
     private dummy = new THREE.Object3D();
@@ -492,26 +565,27 @@ export class TreeSystem {
             return inst;
         };
 
-        // ── 2. Load Biome Tree Models ──────────────────────────────────────────
-        const biomes: BiomeId[] = ['meadow', 'redwood', 'archipelago', 'estuary', 'geothermal'];
-        const loadedBiomes = await Promise.all(
-            biomes.map(async (biomeKey) => {
-                const configs = BIOME_TREE_CONFIGS[biomeKey];
-                const models = await Promise.all(
-                    configs.map(cfg => loadTreeGeometries(cfg.path, loader, cfg.scaleMultiplier ?? 1.0))
-                );
-                return { biomeKey, models };
-            })
-        );
-
-        for (const { biomeKey, models } of loadedBiomes) {
-            for (const { trunkGeo, canopyGeo } of models) {
-                const trunkInst = setupInstMesh(trunkGeo, this.trunkMat, MAX_CAPACITY, true);
-                const canopyInst = setupInstMesh(canopyGeo, this.canopyMat, MAX_CAPACITY, true);
-                this.biomeTreeTrunkInsts[biomeKey].push(trunkInst);
-                this.biomeTreeCanopyInsts[biomeKey].push(canopyInst);
+        // ── 2. Pre-Load Entire Tree Catalog ────────────────────────────────────
+        const loadPromises = TREE_CATALOG.map(async (item) => {
+            try {
+                const geo = await loadTreeGeometries(item.path, loader, item.scaleMultiplier ?? 1.0);
+                const trunkInst = setupInstMesh(geo.trunkGeo, this.trunkMat, MAX_CAPACITY, true);
+                const canopyInst = setupInstMesh(geo.canopyGeo, this.canopyMat, MAX_CAPACITY, true);
+                const entry: LoadedCatalogEntry = {
+                    item,
+                    trunkGeo: geo.trunkGeo,
+                    canopyGeo: geo.canopyGeo,
+                    trunkInst,
+                    canopyInst
+                };
+                this.catalogModelMap.set(item.id, entry);
+                this.catalogKeys.push(item.id);
+            } catch (err) {
+                console.warn(`[TreeSystem] Failed to load catalog item ${item.name} (${item.path}):`, err);
             }
-        }
+        });
+
+        await Promise.all(loadPromises);
 
         // ── 3. Bush Geometries ─────────────────────────────────────────────────
         const bushRoundGeo = new THREE.IcosahedronGeometry(1.4, 2);
@@ -541,10 +615,11 @@ export class TreeSystem {
         this.dirty = false;
     }
 
-    updateGlow(dt: number, timePhase: number): void {
+    updateGlow(dt: number, timePhase: number, activeBiomeId?: BiomeId): void {
         if (!this.ready) return;
 
-        const activeBiome = globalConfigManager.getActiveBiomeConfig();
+        const bId = activeBiomeId || globalConfigManager.config.activeBiomeId;
+        const activeBiome = globalConfigManager.getBiomeConfig(bId);
         const blm = activeBiome.bloom;
 
         this.treeBloomUniform.value = blm.treeBloom;
@@ -573,21 +648,49 @@ export class TreeSystem {
     public rebuild(px: number, pz: number): void {
         if (!this.ready) return;
 
-        const biomeCounts: Record<BiomeId, number[]> = {
-            meadow: new Array(this.biomeTreeTrunkInsts.meadow.length).fill(0),
-            archipelago: new Array(this.biomeTreeTrunkInsts.archipelago.length).fill(0),
-            geothermal: new Array(this.biomeTreeTrunkInsts.geothermal.length).fill(0),
-            estuary: new Array(this.biomeTreeTrunkInsts.estuary.length).fill(0),
-            redwood: new Array(this.biomeTreeTrunkInsts.redwood.length).fill(0),
-        };
+        // Model instance count map
+        const modelCounts: Map<string, number> = new Map();
+        for (const key of this.catalogKeys) {
+            modelCounts.set(key, 0);
+        }
 
-        const area = Math.PI * SPAWN_RADIUS * SPAWN_RADIUS;
         const treeGridSpacing = 16.0;
 
         const minCX = Math.floor((px - SPAWN_RADIUS) / treeGridSpacing);
         const maxCX = Math.ceil((px + SPAWN_RADIUS) / treeGridSpacing);
         const minCZ = Math.floor((pz - SPAWN_RADIUS) / treeGridSpacing);
         const maxCZ = Math.ceil((pz + SPAWN_RADIUS) / treeGridSpacing);
+
+        // Precompute active model entries per biome for ultra-fast loop
+        const allBiomes: BiomeId[] = ['meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
+        const biomeActiveModels: Record<BiomeId, LoadedCatalogEntry[]> = {
+            meadow: [],
+            archipelago: [],
+            geothermal: [],
+            estuary: [],
+            redwood: []
+        };
+
+        for (const b of allBiomes) {
+            const bCfg = globalConfigManager.getBiomeConfig(b);
+            const userModelIds = bCfg.vegetation.selectedTreeModelIds && bCfg.vegetation.selectedTreeModelIds.length > 0 
+                ? bCfg.vegetation.selectedTreeModelIds 
+                : DEFAULT_BIOME_TREE_IDS[b];
+            
+            const entries: LoadedCatalogEntry[] = [];
+            for (const mId of userModelIds) {
+                const entry = this.catalogModelMap.get(mId);
+                if (entry) entries.push(entry);
+            }
+            // Fallback if none found
+            if (entries.length === 0) {
+                for (const fallbackId of DEFAULT_BIOME_TREE_IDS[b]) {
+                    const fallbackEntry = this.catalogModelMap.get(fallbackId);
+                    if (fallbackEntry) entries.push(fallbackEntry);
+                }
+            }
+            biomeActiveModels[b] = entries;
+        }
 
         for (let cx = minCX; cx <= maxCX; cx++) {
             for (let cz = minCZ; cz <= maxCZ; cz++) {
@@ -610,16 +713,14 @@ export class TreeSystem {
                 const densityChance = veg.treeDensity / 800.0;
                 if (rng() > densityChance) continue;
 
-                const trunkList = this.biomeTreeTrunkInsts[biome];
-                const canopyList = this.biomeTreeCanopyInsts[biome];
-                const numVariants = trunkList.length;
-                if (numVariants === 0) continue;
+                const activeModels = biomeActiveModels[biome];
+                if (!activeModels || activeModels.length === 0) continue;
 
-                const variantIndex = Math.floor(rng() * numVariants);
-                const trunkInst = trunkList[variantIndex];
-                const canopyInst = canopyList[variantIndex];
-                const idx = biomeCounts[biome][variantIndex];
-                if (idx >= MAX_CAPACITY) continue;
+                const variantIndex = Math.floor(rng() * activeModels.length);
+                const selectedModel = activeModels[variantIndex];
+                const modelKey = selectedModel.item.id;
+                const currentCount = modelCounts.get(modelKey) || 0;
+                if (currentCount >= MAX_CAPACITY) continue;
 
                 // Scale factor per biome with instance variation
                 let baseScale = veg.treeScale * 0.16;
@@ -640,8 +741,8 @@ export class TreeSystem {
                 this.dummy.scale.set(scaleX, scaleY, scaleZ);
                 this.dummy.updateMatrix();
 
-                trunkInst.setMatrixAt(idx, this.dummy.matrix);
-                canopyInst.setMatrixAt(idx, this.dummy.matrix);
+                selectedModel.trunkInst.setMatrixAt(currentCount, this.dummy.matrix);
+                selectedModel.canopyInst.setMatrixAt(currentCount, this.dummy.matrix);
 
                 // Canopy Color selection with per-tree instance variation
                 const canopyPalette = veg.canopyColors.length > 0 ? veg.canopyColors : ['#ff1493', '#00d2ff', '#00ff88'];
@@ -651,32 +752,27 @@ export class TreeSystem {
                 this.tempHSL.l = THREE.MathUtils.clamp(this.tempHSL.l + (rng() - 0.5) * 0.08, 0.1, 0.9);
                 this.tempHSL.s = THREE.MathUtils.clamp(this.tempHSL.s + (rng() - 0.5) * 0.06, 0.2, 1.0);
                 this.tempColor.setHSL(this.tempHSL.h, this.tempHSL.s, this.tempHSL.l);
-                canopyInst.setColorAt(idx, this.tempColor);
+                selectedModel.canopyInst.setColorAt(currentCount, this.tempColor);
 
                 // Trunk Color selection with per-tree instance variation
                 const trunkPalette = veg.trunkColors.length > 0 ? veg.trunkColors : ['#ffffff', '#fff3e0'];
                 const trunkHex = trunkPalette[Math.floor(rng() * trunkPalette.length)];
                 this.tempColor.set(trunkHex);
-                trunkInst.setColorAt(idx, this.tempColor);
+                selectedModel.trunkInst.setColorAt(currentCount, this.tempColor);
 
-                biomeCounts[biome][variantIndex]++;
+                modelCounts.set(modelKey, currentCount + 1);
             }
         }
 
-        // Commit tree counts and update buffers
-        const allBiomes: BiomeId[] = ['meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
-        for (const b of allBiomes) {
-            for (let v = 0; v < this.biomeTreeTrunkInsts[b].length; v++) {
-                const trunk = this.biomeTreeTrunkInsts[b][v];
-                const canopy = this.biomeTreeCanopyInsts[b][v];
-                const count = biomeCounts[b][v];
-                trunk.count = count;
-                canopy.count = count;
-                if (trunk.instanceMatrix) trunk.instanceMatrix.needsUpdate = true;
-                if (trunk.instanceColor) trunk.instanceColor.needsUpdate = true;
-                if (canopy.instanceMatrix) canopy.instanceMatrix.needsUpdate = true;
-                if (canopy.instanceColor) canopy.instanceColor.needsUpdate = true;
-            }
+        // Commit tree counts and update buffers across all catalog models
+        for (const [key, entry] of this.catalogModelMap.entries()) {
+            const count = modelCounts.get(key) || 0;
+            entry.trunkInst.count = count;
+            entry.canopyInst.count = count;
+            if (entry.trunkInst.instanceMatrix) entry.trunkInst.instanceMatrix.needsUpdate = true;
+            if (entry.trunkInst.instanceColor) entry.trunkInst.instanceColor.needsUpdate = true;
+            if (entry.canopyInst.instanceMatrix) entry.canopyInst.instanceMatrix.needsUpdate = true;
+            if (entry.canopyInst.instanceColor) entry.canopyInst.instanceColor.needsUpdate = true;
         }
 
         // ── 2. Rebuild Bushes ──────────────────────────────────────────────────
@@ -744,7 +840,7 @@ export class TreeSystem {
 
     public setBiomeTreeScale(biomeId: BiomeId, scale: number): void {
         const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
-        veg.treeScale = Math.max(0.5, Math.min(15.0, scale));
+        veg.treeScale = Math.max(0.5, Math.min(50.0, scale));
         this.forceRebuild();
     }
 
@@ -775,6 +871,31 @@ export class TreeSystem {
     public setBiomeTrunkColors(biomeId: BiomeId, colors: string[]): void {
         const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
         veg.trunkColors = colors;
+        this.forceRebuild();
+    }
+
+    public setBiomeTreeModels(biomeId: BiomeId, modelIds: string[]): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        veg.selectedTreeModelIds = [...modelIds];
+        this.forceRebuild();
+    }
+
+    public selectSingleBiomeTreeModel(biomeId: BiomeId, modelId: string): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        veg.selectedTreeModelIds = [modelId];
+        this.forceRebuild();
+    }
+
+    public toggleBiomeTreeModel(biomeId: BiomeId, modelId: string): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        const current = veg.selectedTreeModelIds || [];
+        if (current.includes(modelId)) {
+            if (current.length > 1) {
+                veg.selectedTreeModelIds = current.filter(id => id !== modelId);
+            }
+        } else {
+            veg.selectedTreeModelIds = [...current, modelId];
+        }
         this.forceRebuild();
     }
 
@@ -843,9 +964,15 @@ export class TreeSystem {
 
     public forceRebuild(): void {
         this.dirty = true;
-        if (this.lastX !== -99999) {
-            this.rebuild(this.lastX, this.lastZ);
-            this.dirty = false;
+        if (this.rebuildRafId === null) {
+            this.rebuildRafId = requestAnimationFrame(() => {
+                this.rebuildRafId = null;
+                if (this.lastX !== -99999) {
+                    this.rebuild(this.lastX, this.lastZ);
+                    this.dirty = false;
+                }
+            });
         }
     }
 }
+

@@ -1,7 +1,7 @@
 import { RenderPipeline } from '../core/renderer';
 import { LightingSystem } from '../world/lighting';
 import { PropsSystem } from '../world/props';
-import { TreeSystem, BIOME_VEG_PRESETS } from '../world/trees';
+import { TreeSystem, BIOME_VEG_PRESETS, TREE_CATALOG } from '../world/trees';
 import { WaterSystem } from '../world/water';
 import { TerrainSystem, TERRAIN_PALETTES } from '../world/terrain';
 import { PlayerSystem } from '../player/player';
@@ -11,7 +11,7 @@ import { BiomeId, BIOME_LOCATIONS } from '../world/noise';
 export class DevEditor {
     public isOpen = false;
     public activeBiomeId: BiomeId = 'meadow';
-    private activeTab: 'env' | 'trees' | 'terrain' | 'water' | 'global' | 'save' = 'env';
+    private activeTab: 'env' | 'bloom' | 'trees' | 'terrain' | 'save' = 'env';
     public activeEnvPhase: number = 0;
 
     private panel: HTMLElement | null = null;
@@ -31,6 +31,7 @@ export class DevEditor {
         this.initDOM();
         this.bindEvents();
         this.bindKeyboardShortcut();
+        this.syncBiomeUI();
         this.refreshUI();
     }
 
@@ -96,8 +97,16 @@ export class DevEditor {
     public selectBiome(biomeId: BiomeId) {
         this.activeBiomeId = biomeId;
         globalConfigManager.config.activeBiomeId = biomeId;
+        
+        const biomeCfg = globalConfigManager.getBiomeConfig(biomeId);
+        if (biomeCfg) {
+            this.pipeline.applyBiomeBloom(biomeCfg.bloom);
+            this.props.applyBiomeCloud(biomeCfg.bloom);
+        }
+        
         this.lighting.switchBiome(biomeId, this.pipeline.scene);
         this.water.switchBiome(biomeId);
+
         if (this.player) {
             const loc = BIOME_LOCATIONS.find(b => b.id === biomeId);
             if (loc) {
@@ -151,7 +160,6 @@ export class DevEditor {
     }
 
     public refreshUI() {
-        const cfg = globalConfigManager.config;
         const biomeCfg = globalConfigManager.getBiomeConfig(this.activeBiomeId);
         const phaseCfg = biomeCfg.phases[this.activeEnvPhase];
 
@@ -162,34 +170,51 @@ export class DevEditor {
             btn.classList.toggle('active', phase === this.activeEnvPhase);
         });
 
-        this.setInputValue('dev-env-bg', phaseCfg.bg);
-        this.setInputValue('dev-env-fog', phaseCfg.fog);
+        this.setInputValueAndHex('dev-env-bg', 'dev-env-bg-hex', phaseCfg.bg);
+        this.setInputValueAndHex('dev-env-fog', 'dev-env-fog-hex', phaseCfg.fog);
         this.setSliderAndLabel('dev-env-fognear', 'dev-env-fognear-val', phaseCfg.fogNear, '');
         this.setSliderAndLabel('dev-env-fogfar', 'dev-env-fogfar-val', phaseCfg.fogFar, '');
-        this.setInputValue('dev-env-amb-color', phaseCfg.amb);
+        this.setInputValueAndHex('dev-env-amb-color', 'dev-env-amb-color-hex', phaseCfg.amb);
         this.setSliderAndLabel('dev-env-amb-intensity', 'dev-env-amb-intensity-val', phaseCfg.ambI, '');
-        this.setInputValue('dev-env-dir-color', phaseCfg.dir);
+        this.setInputValueAndHex('dev-env-dir-color', 'dev-env-dir-color-hex', phaseCfg.dir);
         this.setSliderAndLabel('dev-env-dir-intensity', 'dev-env-dir-intensity-val', phaseCfg.dirI, '');
         this.setSliderAndLabel('dev-env-hemi-intensity', 'dev-env-hemi-intensity-val', phaseCfg.hemi, '');
-        this.setInputValue('dev-env-sun-color', phaseCfg.sunC);
+        this.setInputValueAndHex('dev-env-sun-color', 'dev-env-sun-color-hex', phaseCfg.sunC);
         this.setSliderAndLabel('dev-env-sun-intensity', 'dev-env-sun-intensity-val', phaseCfg.sunI, '');
         this.setSliderAndLabel('dev-env-sun-scale', 'dev-env-sun-scale-val', phaseCfg.sunScale, 'x');
         this.setSliderAndLabel('dev-env-star-opacity', 'dev-env-star-opacity-val', phaseCfg.starOp, '');
 
-        // ── Tab 2: Trees & Foliage ─────────────────────────────────────────────
-        const veg = biomeCfg.vegetation;
+        // ── Tab 2: Bloom & Glow (Per-Biome Locked) ──────────────────────────────
         const blm = biomeCfg.bloom;
-
-        this.setSliderAndLabel('dev-veg-tree-scale', 'dev-veg-tree-scale-val', veg.treeScale, 'x');
-        this.setSliderAndLabel('dev-veg-tree-density', 'dev-veg-tree-density-val', veg.treeDensity, '');
-        this.setSliderAndLabel('dev-veg-bush-scale', 'dev-veg-bush-scale-val', veg.bushScale, 'x');
-        this.setSliderAndLabel('dev-veg-bush-density', 'dev-veg-bush-density-val', veg.bushDensity, '');
+        this.setSliderAndLabel('dev-bloom-strength', 'dev-bloom-strength-val', blm.globalStrength, '');
+        this.setSliderAndLabel('dev-bloom-radius', 'dev-bloom-radius-val', blm.globalRadius, '');
+        this.setSliderAndLabel('dev-bloom-threshold', 'dev-bloom-threshold-val', blm.globalThreshold, '');
 
         this.setSliderAndLabel('dev-tree-bloom', 'dev-tree-bloom-val', blm.treeBloom, '');
         this.setSliderAndLabel('dev-tree-canopy-glow', 'dev-tree-canopy-glow-val', blm.treeCanopyGlow, '');
         this.setSliderAndLabel('dev-tree-trunk-glow', 'dev-tree-trunk-glow-val', blm.treeTrunkGlow, '');
         this.setSliderAndLabel('dev-bush-bloom', 'dev-bush-bloom-val', blm.bushBloom, '');
         this.setSliderAndLabel('dev-bush-glow', 'dev-bush-glow-val', blm.bushGlow, '');
+
+        this.setSliderAndLabel('dev-shore-bloom', 'dev-shore-bloom-val', blm.shoreBloom, '');
+        this.setInputValueAndHex('dev-shore-color', 'dev-shore-color-hex', blm.shoreColor);
+        this.setSliderAndLabel('dev-shore-width', 'dev-shore-width-val', blm.shoreWidth, '');
+
+        this.setSliderAndLabel('dev-cloud-bloom', 'dev-cloud-bloom-val', blm.cloudBloom, '');
+        this.setInputValueAndHex('dev-cloud-color', 'dev-cloud-color-hex', blm.cloudColor);
+        this.setInputValueAndHex('dev-cloud-emissive', 'dev-cloud-emissive-hex', blm.cloudEmissive);
+
+        // ── Tab 3: Trees & Foliage ─────────────────────────────────────────────
+        const veg = biomeCfg.vegetation;
+        const activeTreeIds = veg.selectedTreeModelIds && veg.selectedTreeModelIds.length > 0 
+            ? veg.selectedTreeModelIds 
+            : (['cartoon_1', 'cartoon_2', 'cartoon_3']);
+        this.renderTreeModelSelector(activeTreeIds);
+
+        this.setSliderAndLabel('dev-veg-tree-scale', 'dev-veg-tree-scale-val', veg.treeScale, 'x');
+        this.setSliderAndLabel('dev-veg-tree-density', 'dev-veg-tree-density-val', veg.treeDensity, '');
+        this.setSliderAndLabel('dev-veg-bush-scale', 'dev-veg-bush-scale-val', veg.bushScale, 'x');
+        this.setSliderAndLabel('dev-veg-bush-density', 'dev-veg-bush-density-val', veg.bushDensity, '');
 
         this.renderCanopyColorSwatches(veg.canopyColors);
         this.renderTrunkColorSwatches(veg.trunkColors);
@@ -200,13 +225,13 @@ export class DevEditor {
             btn.classList.toggle('active', pKey === veg.activePreset);
         });
 
-        // ── Tab 3: Terrain Colors ──────────────────────────────────────────────
+        // ── Tab 4: Terrain & Water ─────────────────────────────────────────────
         const ter = biomeCfg.terrain;
-        this.setInputValue('dev-terrain-low', ter.colorLow);
-        this.setInputValue('dev-terrain-high', ter.colorHigh);
-        this.setInputValue('dev-terrain-dirt', ter.colorDirt);
-        this.setInputValue('dev-terrain-path', ter.colorPath);
-        this.setInputValue('dev-terrain-sand', ter.colorSand);
+        this.setInputValueAndHex('dev-terrain-low', 'dev-terrain-low-hex', ter.colorLow);
+        this.setInputValueAndHex('dev-terrain-high', 'dev-terrain-high-hex', ter.colorHigh);
+        this.setInputValueAndHex('dev-terrain-dirt', 'dev-terrain-dirt-hex', ter.colorDirt);
+        this.setInputValueAndHex('dev-terrain-path', 'dev-terrain-path-hex', ter.colorPath);
+        this.setInputValueAndHex('dev-terrain-sand', 'dev-terrain-sand-hex', ter.colorSand);
 
         const paletteBtns = document.querySelectorAll('.dev-palette-btn');
         paletteBtns.forEach((btn) => {
@@ -214,9 +239,8 @@ export class DevEditor {
             btn.classList.toggle('active', palName === ter.presetName);
         });
 
-        // ── Tab 4: Water & Shores ──────────────────────────────────────────────
         const wat = biomeCfg.water;
-        this.setInputValue('dev-water-color', wat.color);
+        this.setInputValueAndHex('dev-water-color', 'dev-water-color-hex', wat.color);
         this.setSliderAndLabel('dev-water-opacity', 'dev-water-opacity-val', wat.opacity, '');
         this.setSliderAndLabel('dev-water-reflectivity', 'dev-water-reflectivity-val', wat.reflectivity, '');
         this.setSliderAndLabel('dev-water-roughness', 'dev-water-roughness-val', wat.roughness, '');
@@ -230,26 +254,36 @@ export class DevEditor {
             toonBtn.classList.toggle('active', wat.isToonMode);
         }
 
-        this.setSliderAndLabel('dev-shore-bloom', 'dev-shore-bloom-val', blm.shoreBloom, '');
-        this.setInputValue('dev-shore-color', blm.shoreColor);
-        this.setSliderAndLabel('dev-shore-width', 'dev-shore-width-val', blm.shoreWidth, '');
-
-        // ── Tab 5: Global Post & Cloud ─────────────────────────────────────────
-        const gblm = cfg.globalBloom;
-        const cld = cfg.cloud;
-        this.setSliderAndLabel('dev-bloom-strength', 'dev-bloom-strength-val', gblm.strength, '');
-        this.setSliderAndLabel('dev-bloom-radius', 'dev-bloom-radius-val', gblm.radius, '');
-        this.setSliderAndLabel('dev-bloom-threshold', 'dev-bloom-threshold-val', gblm.threshold, '');
-
-        this.setSliderAndLabel('dev-cloud-bloom', 'dev-cloud-bloom-val', cld.bloom, '');
-        this.setInputValue('dev-cloud-color', cld.color);
-        this.setInputValue('dev-cloud-emissive', cld.emissive);
-
-        // ── Tab 6: Defaults JSON ───────────────────────────────────────────────
+        // ── Tab 5: Save & Profile JSON ─────────────────────────────────────────
         const jsonArea = document.getElementById('dev-json-export') as HTMLTextAreaElement | null;
         if (jsonArea) {
             jsonArea.value = globalConfigManager.exportJSON();
         }
+    }
+
+    private renderTreeModelSelector(selectedModelIds: string[]) {
+        const container = document.getElementById('dev-tree-models-grid');
+        if (!container) return;
+        container.innerHTML = '';
+
+        TREE_CATALOG.forEach((item) => {
+            const isSelected = selectedModelIds.includes(item.id);
+            const card = document.createElement('div');
+            card.className = `dev-tree-card ${isSelected ? 'active' : ''}`;
+            card.innerHTML = `
+                <div class="dev-tree-card-header">
+                    <span class="dev-tree-card-title">${item.name}</span>
+                    <span class="dev-tree-card-tag">${item.category}</span>
+                </div>
+                <div class="dev-tree-card-desc">${item.description}</div>
+            `;
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.trees.toggleBiomeTreeModel(this.activeBiomeId, item.id);
+                this.refreshUI();
+            });
+            container.appendChild(card);
+        });
     }
 
     private renderCanopyColorSwatches(colors: string[]) {
@@ -308,9 +342,13 @@ export class DevEditor {
         });
     }
 
-    private setInputValue(id: string, val: string) {
-        const el = document.getElementById(id) as HTMLInputElement | null;
+    private setInputValueAndHex(inputId: string, hexLabelId: string | undefined, val: string) {
+        const el = document.getElementById(inputId) as HTMLInputElement | null;
         if (el) el.value = val;
+        if (hexLabelId) {
+            const hexEl = document.getElementById(hexLabelId);
+            if (hexEl) hexEl.textContent = val;
+        }
     }
 
     private setSliderAndLabel(sliderId: string, labelId: string, val: number, unit: string = '') {
@@ -392,10 +430,14 @@ export class DevEditor {
             this.lighting.updateBiomePhaseConfig(this.activeBiomeId, this.activeEnvPhase, partial, this.pipeline.scene);
         };
 
-        const bindEnvColor = (id: string, key: keyof EnvPhaseConfig) => {
+        const bindEnvColor = (id: string, hexLabelId: string, key: keyof EnvPhaseConfig) => {
             const el = document.getElementById(id) as HTMLInputElement | null;
+            const hexEl = document.getElementById(hexLabelId);
             if (el) {
-                el.addEventListener('input', () => updateEnvField({ [key]: el.value }));
+                el.addEventListener('input', () => {
+                    if (hexEl) hexEl.textContent = el.value;
+                    updateEnvField({ [key]: el.value });
+                });
             }
         };
 
@@ -411,21 +453,85 @@ export class DevEditor {
             }
         };
 
-        bindEnvColor('dev-env-bg', 'bg');
-        bindEnvColor('dev-env-fog', 'fog');
+        bindEnvColor('dev-env-bg', 'dev-env-bg-hex', 'bg');
+        bindEnvColor('dev-env-fog', 'dev-env-fog-hex', 'fog');
         bindEnvSlider('dev-env-fognear', 'dev-env-fognear-val', 'fogNear');
         bindEnvSlider('dev-env-fogfar', 'dev-env-fogfar-val', 'fogFar');
-        bindEnvColor('dev-env-amb-color', 'amb');
+        bindEnvColor('dev-env-amb-color', 'dev-env-amb-color-hex', 'amb');
         bindEnvSlider('dev-env-amb-intensity', 'dev-env-amb-intensity-val', 'ambI');
-        bindEnvColor('dev-env-dir-color', 'dir');
+        bindEnvColor('dev-env-dir-color', 'dev-env-dir-color-hex', 'dir');
         bindEnvSlider('dev-env-dir-intensity', 'dev-env-dir-intensity-val', 'dirI');
         bindEnvSlider('dev-env-hemi-intensity', 'dev-env-hemi-intensity-val', 'hemi');
-        bindEnvColor('dev-env-sun-color', 'sunC');
+        bindEnvColor('dev-env-sun-color', 'dev-env-sun-color-hex', 'sunC');
         bindEnvSlider('dev-env-sun-intensity', 'dev-env-sun-intensity-val', 'sunI');
         bindEnvSlider('dev-env-sun-scale', 'dev-env-sun-scale-val', 'sunScale', 'x');
         bindEnvSlider('dev-env-star-opacity', 'dev-env-star-opacity-val', 'starOp');
 
-        // ── Tab 2 Trees & Foliage Inputs ───────────────────────────────────────
+        // ── Tab 2 Bloom & Glow Inputs ──────────────────────────────────────────
+        const bindBloomSlider = (sliderId: string, labelId: string, callback: (val: number) => void) => {
+            const slider = document.getElementById(sliderId) as HTMLInputElement | null;
+            const label = document.getElementById(labelId);
+            if (slider) {
+                slider.addEventListener('input', () => {
+                    const val = parseFloat(slider.value);
+                    if (label) label.textContent = !Number.isInteger(val) ? val.toFixed(2) : val.toString();
+                    callback(val);
+                });
+            }
+        };
+
+        bindBloomSlider('dev-bloom-strength', 'dev-bloom-strength-val', (v) => {
+            this.pipeline.setBloomStrength(v, this.activeBiomeId);
+        });
+        bindBloomSlider('dev-bloom-radius', 'dev-bloom-radius-val', (v) => {
+            this.pipeline.setBloomRadius(v, this.activeBiomeId);
+        });
+        bindBloomSlider('dev-bloom-threshold', 'dev-bloom-threshold-val', (v) => {
+            this.pipeline.setBloomThreshold(v, this.activeBiomeId);
+        });
+
+        bindBloomSlider('dev-tree-bloom', 'dev-tree-bloom-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { treeBloom: v }));
+        bindBloomSlider('dev-tree-canopy-glow', 'dev-tree-canopy-glow-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { treeCanopyGlow: v }));
+        bindBloomSlider('dev-tree-trunk-glow', 'dev-tree-trunk-glow-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { treeTrunkGlow: v }));
+        bindBloomSlider('dev-bush-bloom', 'dev-bush-bloom-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { bushBloom: v }));
+        bindBloomSlider('dev-bush-glow', 'dev-bush-glow-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { bushGlow: v }));
+
+        bindBloomSlider('dev-shore-bloom', 'dev-shore-bloom-val', (v) => this.terrain.setShoreBloom(v, undefined, undefined, this.activeBiomeId));
+        const shoreColorInp = document.getElementById('dev-shore-color') as HTMLInputElement | null;
+        const shoreColorHex = document.getElementById('dev-shore-color-hex');
+        if (shoreColorInp) {
+            shoreColorInp.addEventListener('input', () => {
+                if (shoreColorHex) shoreColorHex.textContent = shoreColorInp.value;
+                const blm = globalConfigManager.getBiomeConfig(this.activeBiomeId).bloom;
+                this.terrain.setShoreBloom(blm.shoreBloom, shoreColorInp.value, undefined, this.activeBiomeId);
+            });
+        }
+        bindBloomSlider('dev-shore-width', 'dev-shore-width-val', (v) => {
+            const blm = globalConfigManager.getBiomeConfig(this.activeBiomeId).bloom;
+            this.terrain.setShoreBloom(blm.shoreBloom, undefined, v, this.activeBiomeId);
+        });
+
+        bindBloomSlider('dev-cloud-bloom', 'dev-cloud-bloom-val', (v) => {
+            this.props.setCloudBloom(v, this.activeBiomeId);
+        });
+        const cloudColorInp = document.getElementById('dev-cloud-color') as HTMLInputElement | null;
+        const cloudColorHex = document.getElementById('dev-cloud-color-hex');
+        if (cloudColorInp) {
+            cloudColorInp.addEventListener('input', () => {
+                if (cloudColorHex) cloudColorHex.textContent = cloudColorInp.value;
+                this.props.setCloudColor(cloudColorInp.value, this.activeBiomeId);
+            });
+        }
+        const cloudEmissiveInp = document.getElementById('dev-cloud-emissive') as HTMLInputElement | null;
+        const cloudEmissiveHex = document.getElementById('dev-cloud-emissive-hex');
+        if (cloudEmissiveInp) {
+            cloudEmissiveInp.addEventListener('input', () => {
+                if (cloudEmissiveHex) cloudEmissiveHex.textContent = cloudEmissiveInp.value;
+                this.props.setCloudEmissive(cloudEmissiveInp.value, this.activeBiomeId);
+            });
+        }
+
+        // ── Tab 3 Trees & Foliage Inputs ───────────────────────────────────────
         const bindSlider = (sliderId: string, labelId: string, callback: (val: number) => void) => {
             const slider = document.getElementById(sliderId) as HTMLInputElement | null;
             const label = document.getElementById(labelId);
@@ -443,12 +549,6 @@ export class DevEditor {
         bindSlider('dev-veg-bush-scale', 'dev-veg-bush-scale-val', (v) => this.trees.setBiomeBushScale(this.activeBiomeId, v));
         bindSlider('dev-veg-bush-density', 'dev-veg-bush-density-val', (v) => this.trees.setBiomeBushDensity(this.activeBiomeId, v));
 
-        bindSlider('dev-tree-bloom', 'dev-tree-bloom-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { treeBloom: v }));
-        bindSlider('dev-tree-canopy-glow', 'dev-tree-canopy-glow-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { treeCanopyGlow: v }));
-        bindSlider('dev-tree-trunk-glow', 'dev-tree-trunk-glow-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { treeTrunkGlow: v }));
-        bindSlider('dev-bush-bloom', 'dev-bush-bloom-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { bushBloom: v }));
-        bindSlider('dev-bush-glow', 'dev-bush-glow-val', (v) => this.trees.setBiomeBloomAndGlow(this.activeBiomeId, { bushGlow: v }));
-
         const vegPresetBtns = document.querySelectorAll('.dev-veg-preset-btn');
         vegPresetBtns.forEach((btn) => {
             btn.addEventListener('click', (e) => {
@@ -462,27 +562,29 @@ export class DevEditor {
             });
         });
 
-        // ── Tab 3 Terrain Colors ───────────────────────────────────────────────
+        // ── Tab 4 Terrain & Water Inputs ───────────────────────────────────────
         const getPlayerCoords = () => {
             if (this.player) return { x: this.player.playerGrp.position.x, z: this.player.playerGrp.position.z };
             return { x: this.terrain.lastPlayerX, z: this.terrain.lastPlayerZ };
         };
 
-        const bindTerrainColor = (id: string, key: string) => {
+        const bindTerrainColor = (id: string, hexLabelId: string, key: string) => {
             const el = document.getElementById(id) as HTMLInputElement | null;
+            const hexEl = document.getElementById(hexLabelId);
             if (el) {
                 el.addEventListener('input', () => {
+                    if (hexEl) hexEl.textContent = el.value;
                     const coords = getPlayerCoords();
                     this.terrain.setBiomeTerrainColors(this.activeBiomeId, { [key]: el.value }, coords.x, coords.z);
                 });
             }
         };
 
-        bindTerrainColor('dev-terrain-low', 'colorLow');
-        bindTerrainColor('dev-terrain-high', 'colorHigh');
-        bindTerrainColor('dev-terrain-dirt', 'colorDirt');
-        bindTerrainColor('dev-terrain-path', 'colorPath');
-        bindTerrainColor('dev-terrain-sand', 'colorSand');
+        bindTerrainColor('dev-terrain-low', 'dev-terrain-low-hex', 'colorLow');
+        bindTerrainColor('dev-terrain-high', 'dev-terrain-high-hex', 'colorHigh');
+        bindTerrainColor('dev-terrain-dirt', 'dev-terrain-dirt-hex', 'colorDirt');
+        bindTerrainColor('dev-terrain-path', 'dev-terrain-path-hex', 'colorPath');
+        bindTerrainColor('dev-terrain-sand', 'dev-terrain-sand-hex', 'colorSand');
 
         const paletteBtns = document.querySelectorAll('.dev-palette-btn');
         paletteBtns.forEach((btn) => {
@@ -498,10 +600,13 @@ export class DevEditor {
             });
         });
 
-        // ── Tab 4 Water & Shoreline Bloom ──────────────────────────────────────
         const waterColorInp = document.getElementById('dev-water-color') as HTMLInputElement | null;
+        const waterColorHex = document.getElementById('dev-water-color-hex');
         if (waterColorInp) {
-            waterColorInp.addEventListener('input', () => this.water.setColor(waterColorInp.value, this.activeBiomeId));
+            waterColorInp.addEventListener('input', () => {
+                if (waterColorHex) waterColorHex.textContent = waterColorInp.value;
+                this.water.setColor(waterColorInp.value, this.activeBiomeId);
+            });
         }
         bindSlider('dev-water-opacity', 'dev-water-opacity-val', (v) => this.water.setOpacity(v, this.activeBiomeId));
         bindSlider('dev-water-reflectivity', 'dev-water-reflectivity-val', (v) => this.water.setReflectivity(v, this.activeBiomeId));
@@ -521,53 +626,7 @@ export class DevEditor {
             });
         }
 
-        bindSlider('dev-shore-bloom', 'dev-shore-bloom-val', (v) => this.terrain.setShoreBloom(v, undefined, undefined, this.activeBiomeId));
-        const shoreColorInp = document.getElementById('dev-shore-color') as HTMLInputElement | null;
-        if (shoreColorInp) {
-            shoreColorInp.addEventListener('input', () => {
-                const blm = globalConfigManager.getBiomeConfig(this.activeBiomeId).bloom;
-                this.terrain.setShoreBloom(blm.shoreBloom, shoreColorInp.value, undefined, this.activeBiomeId);
-            });
-        }
-        bindSlider('dev-shore-width', 'dev-shore-width-val', (v) => {
-            const blm = globalConfigManager.getBiomeConfig(this.activeBiomeId).bloom;
-            this.terrain.setShoreBloom(blm.shoreBloom, undefined, v, this.activeBiomeId);
-        });
-
-        // ── Tab 5 Global Post & Clouds ─────────────────────────────────────────
-        bindSlider('dev-bloom-strength', 'dev-bloom-strength-val', (v) => {
-            globalConfigManager.config.globalBloom.strength = v;
-            this.pipeline.setBloomStrength(v);
-        });
-        bindSlider('dev-bloom-radius', 'dev-bloom-radius-val', (v) => {
-            globalConfigManager.config.globalBloom.radius = v;
-            this.pipeline.setBloomRadius(v);
-        });
-        bindSlider('dev-bloom-threshold', 'dev-bloom-threshold-val', (v) => {
-            globalConfigManager.config.globalBloom.threshold = v;
-            this.pipeline.setBloomThreshold(v);
-        });
-
-        bindSlider('dev-cloud-bloom', 'dev-cloud-bloom-val', (v) => {
-            globalConfigManager.config.cloud.bloom = v;
-            this.props.setCloudBloom(v);
-        });
-        const cloudColorInp = document.getElementById('dev-cloud-color') as HTMLInputElement | null;
-        if (cloudColorInp) {
-            cloudColorInp.addEventListener('input', () => {
-                globalConfigManager.config.cloud.color = cloudColorInp.value;
-                this.props.setCloudColor(cloudColorInp.value);
-            });
-        }
-        const cloudEmissiveInp = document.getElementById('dev-cloud-emissive') as HTMLInputElement | null;
-        if (cloudEmissiveInp) {
-            cloudEmissiveInp.addEventListener('input', () => {
-                globalConfigManager.config.cloud.emissive = cloudEmissiveInp.value;
-                this.props.setCloudEmissive(cloudEmissiveInp.value);
-            });
-        }
-
-        // ── Tab 6 Defaults & Profiles ──────────────────────────────────────────
+        // ── Tab 5 Defaults & Profiles ──────────────────────────────────────────
         const saveBiomeBtn = document.getElementById('dev-save-biome-btn');
         if (saveBiomeBtn) {
             saveBiomeBtn.addEventListener('click', () => {
@@ -591,6 +650,11 @@ export class DevEditor {
                 const bName = globalConfigManager.getBiomeConfig(this.activeBiomeId).name;
                 if (confirm(`Reset ${bName} to factory defaults?`)) {
                     globalConfigManager.resetBiomeDefaults(this.activeBiomeId);
+                    const bCfg = globalConfigManager.getBiomeConfig(this.activeBiomeId);
+                    if (bCfg) {
+                        this.pipeline.applyBiomeBloom(bCfg.bloom);
+                        this.props.applyBiomeCloud(bCfg.bloom);
+                    }
                     this.lighting.switchBiome(this.activeBiomeId, this.pipeline.scene);
                     this.water.switchBiome(this.activeBiomeId);
                     this.terrain.reloadColorsFromConfig();
@@ -606,6 +670,11 @@ export class DevEditor {
             resetAllBtn.addEventListener('click', () => {
                 if (confirm('Reset all biomes and global settings to original factory defaults?')) {
                     globalConfigManager.resetFactoryDefaults();
+                    const bCfg = globalConfigManager.getBiomeConfig(this.activeBiomeId);
+                    if (bCfg) {
+                        this.pipeline.applyBiomeBloom(bCfg.bloom);
+                        this.props.applyBiomeCloud(bCfg.bloom);
+                    }
                     this.lighting.switchBiome(this.activeBiomeId, this.pipeline.scene);
                     this.water.switchBiome(this.activeBiomeId);
                     this.terrain.reloadColorsFromConfig();
@@ -635,6 +704,11 @@ export class DevEditor {
                 if (jsonArea && jsonArea.value.trim()) {
                     const success = globalConfigManager.importJSON(jsonArea.value.trim());
                     if (success) {
+                        const bCfg = globalConfigManager.getBiomeConfig(this.activeBiomeId);
+                        if (bCfg) {
+                            this.pipeline.applyBiomeBloom(bCfg.bloom);
+                            this.props.applyBiomeCloud(bCfg.bloom);
+                        }
                         this.lighting.switchBiome(this.activeBiomeId, this.pipeline.scene);
                         this.water.switchBiome(this.activeBiomeId);
                         this.terrain.reloadColorsFromConfig();
@@ -649,3 +723,4 @@ export class DevEditor {
         }
     }
 }
+

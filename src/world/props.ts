@@ -75,19 +75,54 @@ export class PropsSystem {
         this.instClouds.instanceMatrix.needsUpdate = true;
     }
 
-    public setCloudBloom(intensity: number) {
-        this.cloudBloomUniform.value = Math.max(0, Math.min(3.0, intensity));
+    public applyBiomeCloud(cloudProps: { bloom?: number; color?: string; emissive?: string; cloudBloom?: number; cloudColor?: string; cloudEmissive?: string }) {
+        const blm = cloudProps.cloudBloom !== undefined ? cloudProps.cloudBloom : cloudProps.bloom;
+        const col = cloudProps.cloudColor !== undefined ? cloudProps.cloudColor : cloudProps.color;
+        const emi = cloudProps.cloudEmissive !== undefined ? cloudProps.cloudEmissive : cloudProps.emissive;
+
+        if (blm !== undefined) {
+            this.cloudBloomUniform.value = Math.max(0, Math.min(3.0, blm));
+        }
+        if (col !== undefined) {
+            this.matCloud.color.set(col);
+        }
+        if (emi !== undefined) {
+            this.cloudEmissiveUniform.value.set(emi);
+            this.matCloud.emissive.set(emi);
+        }
+    }
+
+    public setBiomeCloud(biomeId: string, cloudProps: Partial<{ bloom: number; color: string; emissive: string; cloudBloom: number; cloudColor: string; cloudEmissive: string }>) {
+        const bCfg = globalConfigManager.getBiomeConfig(biomeId as any);
+        const blm = cloudProps.cloudBloom !== undefined ? cloudProps.cloudBloom : cloudProps.bloom;
+        const col = cloudProps.cloudColor !== undefined ? cloudProps.cloudColor : cloudProps.color;
+        const emi = cloudProps.cloudEmissive !== undefined ? cloudProps.cloudEmissive : cloudProps.emissive;
+
+        if (bCfg) {
+            if (blm !== undefined) bCfg.bloom.cloudBloom = blm;
+            if (col !== undefined) bCfg.bloom.cloudColor = col;
+            if (emi !== undefined) bCfg.bloom.cloudEmissive = emi;
+        }
+        if (biomeId === globalConfigManager.config.activeBiomeId) {
+            this.applyBiomeCloud({ cloudBloom: blm, cloudColor: col, cloudEmissive: emi });
+        }
+    }
+
+    public setCloudBloom(intensity: number, biomeId?: string) {
+        const activeB = biomeId || globalConfigManager.config.activeBiomeId;
+        this.setBiomeCloud(activeB, { bloom: intensity });
         globalConfigManager.config.cloud.bloom = this.cloudBloomUniform.value;
     }
 
-    public setCloudColor(hex: string) {
-        this.matCloud.color.set(hex);
+    public setCloudColor(hex: string, biomeId?: string) {
+        const activeB = biomeId || globalConfigManager.config.activeBiomeId;
+        this.setBiomeCloud(activeB, { color: hex });
         globalConfigManager.config.cloud.color = hex;
     }
 
-    public setCloudEmissive(hex: string) {
-        this.cloudEmissiveUniform.value.set(hex);
-        this.matCloud.emissive.set(hex);
+    public setCloudEmissive(hex: string, biomeId?: string) {
+        const activeB = biomeId || globalConfigManager.config.activeBiomeId;
+        this.setBiomeCloud(activeB, { emissive: hex });
         globalConfigManager.config.cloud.emissive = hex;
     }
 
