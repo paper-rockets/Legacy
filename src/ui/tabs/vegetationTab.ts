@@ -280,9 +280,9 @@ export function buildVegetationTab(ctx: VegetationTabContext): ControlDef[] {
                 },
                 {
                     kind: 'segmented',
-                    label: 'Color Mode',
+                    label: 'Texture / Color Mode',
                     options: [
-                        { value: 'original', text: 'Original Colors' },
+                        { value: 'original', text: 'Original Textures' },
                         { value: 'custom', text: 'Custom Colors' }
                     ],
                     get: () => (model().useOriginalColors ? 'original' : 'custom'),
@@ -504,8 +504,23 @@ export function buildVegetationTab(ctx: VegetationTabContext): ControlDef[] {
         // ── 5. CANDY & SHADER MATERIAL QUALITIES ────────────────────────────────
         {
             kind: 'section',
-            title: 'CANDY & SHADER MATERIAL QUALITIES',
+            title: 'CANOPY TEXTURES & SHADER QUALITIES',
             children: [
+                {
+                    kind: 'segmented',
+                    label: 'Texture Style',
+                    hint: 'Choose between authentic original GLTF textures, glossy candy glaze, soft cotton candy puffs, or fluttering leafy foliage.',
+                    options: [
+                        { value: 'original', text: 'Original Textures' },
+                        { value: 'candy', text: 'Candy Gloss' },
+                        { value: 'cotton_candy', text: 'Cotton Candy' },
+                        { value: 'flutter', text: 'Foliage Flutter' }
+                    ],
+                    get: () => veg().textureStyle || 'candy',
+                    set: (val: string) => {
+                        ctx.trees.setBiomeTextureStyle(ctx.biomeId(), val as any);
+                    }
+                },
                 {
                     kind: 'slider',
                     label: 'Candy Gloss & Reflectivity',

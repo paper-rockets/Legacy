@@ -973,25 +973,31 @@ export class TreeSystem {
                 // Diverse Procedural Canopy Textures: Cotton Candy Puff, Flutter Foliage, and Glossy Crystal
                 float styleRng = fract(sin(dot(floor(vTreeWorldPos.xz / 16.0), vec2(27.643, 89.412))) * 43758.5453);
 
-                if (vPartType > 1.5) {
-                    if (styleRng < 0.35) {
-                        // 1. Cotton Candy: Soft pillowy volumetric billows with subsurface transmission
-                        float puff = sin(vTreeWorldPos.x * 3.2) * cos(vTreeWorldPos.y * 3.2) * sin(vTreeWorldPos.z * 3.2);
-                        vec3 cottonMod = vec3(0.94 + puff * 0.12);
-                        vec3 softSheen = candyGlossSheen * 0.35;
-                        diffuseColor.rgb = finalTreeColor * cottonMod + softSheen + finalTreeColor * (uCandyTranslucency * 0.65 * (1.0 - NdotV));
-                    } else if (styleRng < 0.70) {
-                        // 2. Flutter / Leafy: Organic cellular dappled foliage pattern
-                        float flutter = sin(vTreeWorldPos.x * 12.0) * cos(vTreeWorldPos.z * 12.0);
-                        float leafDapple = (smoothstep(-0.4, 0.4, flutter) - 0.5) * 0.22;
-                        vec3 leafMod = vec3(1.0 + leafDapple, 1.0 + leafDapple * 1.15, 1.0 + leafDapple * 0.85);
-                        diffuseColor.rgb = finalTreeColor * leafMod + candyGlossSheen * 0.55;
-                    } else {
-                        // 3. Hard Candy Crystal: High gloss clearcoat with sharp specular glint
-                        diffuseColor.rgb = finalTreeColor + candyGlossSheen * 1.25 + finalTreeColor * (uCandyTranslucency * 0.25 * (1.0 - NdotV));
-                    }
+                if (vColorMode > 0.5) {
+                    // Original GLTF texture mode: Preserve classic original textured maps with natural matte shading
+                    diffuseColor.rgb = finalTreeColor;
                 } else {
-                    diffuseColor.rgb = finalTreeColor + candyGlossSheen * 0.45;
+                    // Custom Candy / Stylized Shaders
+                    if (vPartType > 1.5) {
+                        if (styleRng < 0.35) {
+                            // 1. Cotton Candy: Soft pillowy volumetric billows with subsurface transmission
+                            float puff = sin(vTreeWorldPos.x * 3.2) * cos(vTreeWorldPos.y * 3.2) * sin(vTreeWorldPos.z * 3.2);
+                            vec3 cottonMod = vec3(0.94 + puff * 0.12);
+                            vec3 softSheen = candyGlossSheen * 0.35;
+                            diffuseColor.rgb = finalTreeColor * cottonMod + softSheen + finalTreeColor * (uCandyTranslucency * 0.65 * (1.0 - NdotV));
+                        } else if (styleRng < 0.70) {
+                            // 2. Flutter / Leafy: Organic cellular dappled foliage pattern
+                            float flutter = sin(vTreeWorldPos.x * 12.0) * cos(vTreeWorldPos.z * 12.0);
+                            float leafDapple = (smoothstep(-0.4, 0.4, flutter) - 0.5) * 0.22;
+                            vec3 leafMod = vec3(1.0 + leafDapple, 1.0 + leafDapple * 1.15, 1.0 + leafDapple * 0.85);
+                            diffuseColor.rgb = finalTreeColor * leafMod + candyGlossSheen * 0.55;
+                        } else {
+                            // 3. Hard Candy Crystal: High gloss clearcoat with sharp specular glint
+                            diffuseColor.rgb = finalTreeColor + candyGlossSheen * 1.25 + finalTreeColor * (uCandyTranslucency * 0.25 * (1.0 - NdotV));
+                        }
+                    } else {
+                        diffuseColor.rgb = finalTreeColor + candyGlossSheen * 0.45;
+                    }
                 }
                 `
             );
@@ -1465,9 +1471,11 @@ export class TreeSystem {
 
                 inst.setMatrixAt(idx, this.dummy.matrix);
 
-                const cPalette = veg.canopyColors.length > 0 ? veg.canopyColors : ['#ff69b4', '#00ff88'];
-                const bHex = cPalette[Math.floor(rng() * cPalette.length)];
-                this.tempColor.set(bHex);
+                // Flowering bush colors: Keep natural green foliage and royal purple blossoms as originally designed
+                const bushHex = variant === 0 
+                    ? (rng() > 0.3 ? '#3f8a27' : '#2e7d32') // Lush green foliage
+                    : (rng() > 0.4 ? '#9333ea' : '#a855f7'); // Vibrant purple blossoms
+                this.tempColor.set(bushHex);
                 inst.setColorAt(idx, this.tempColor);
 
                 if (variant === 0) bushCount0++;
@@ -1721,6 +1729,18 @@ export class TreeSystem {
         const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
         veg.candyTranslucency = Math.max(0.0, Math.min(2.0, val));
         this.candyTranslucencyUniform.value = veg.candyTranslucency;
+    }
+
+    public setBiomeTextureStyle(biomeId: BiomeId, style: 'original' | 'candy' | 'cotton_candy' | 'flutter'): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        veg.textureStyle = style;
+        if (style === 'original') {
+            veg.candyGloss = 0.0;
+            veg.sugarSparkle = 0.0;
+            this.candyGlossUniform.value = 0.0;
+            this.sugarSparkleUniform.value = 0.0;
+        }
+        this.forceRebuild();
     }
 
     public forceRebuild(): void {

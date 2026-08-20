@@ -215,6 +215,7 @@ export class LightingSystem {
 
     public setTimePhase(phase: number, scene?: THREE.Scene): number {
         this.timePhase = Math.max(0, Math.min(2, Math.floor(phase)));
+        this.reloadConfigFromManager();
         if (scene && this.envConfigs[this.timePhase]) {
             const target = this.envConfigs[this.timePhase];
             if (scene.background instanceof THREE.Color) scene.background.set(target.bg);

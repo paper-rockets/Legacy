@@ -1,6 +1,6 @@
 {
   "version": 18,
-  "activeBiomeId": "geothermal",
+  "activeBiomeId": "candyland",
   "placedProps": [
     {
       "id": "candyland_heart_center",
@@ -80,7 +80,7 @@
     }
   ],
   "globalBloom": {
-    "strength": 0.2,
+    "strength": 0.15,
     "radius": 0,
     "threshold": 0.7
   },
@@ -113,7 +113,7 @@
         "isToonMode": false
       },
       "bloom": {
-        "globalStrength": 0,
+        "globalStrength": 0.15,
         "globalRadius": 0,
         "globalThreshold": 0.7,
         "cloudBloom": 0,
@@ -167,7 +167,7 @@
           "candy_lollipop_spiral": {
             "modelId": "candy_lollipop_spiral",
             "enabled": true,
-            "scale": 11.6,
+            "scale": 21.6,
             "density": 195,
             "useOriginalColors": false,
             "canopyColors": [
@@ -293,8 +293,8 @@
         {
           "bg": "#c7d2fe",
           "fog": "#fbcfe8",
-          "fogNear": 60,
-          "fogFar": 420,
+          "fogNear": 20,
+          "fogFar": 300,
           "amb": "#fdf4ff",
           "ambI": 0.6,
           "dir": "#fffbeb",
@@ -344,7 +344,7 @@
           "bg": "#312e81",
           "fog": "#4338ca",
           "fogNear": 40,
-          "fogFar": 360,
+          "fogFar": 250,
           "amb": "#6366f1",
           "ambI": 0.7,
           "dir": "#818cf8",
@@ -431,8 +431,8 @@
         "activePreset": "candy",
         "selectedTreeModelIds": [
           "veg_cartoon_1",
-          "veg_cartoon_2",
-          "veg_tree_broadleaf_1"
+          "veg_tree_broadleaf_1",
+          "veg_cartoon_2"
         ],
         "models": {
           "candy_lollipop_spiral": {
@@ -467,9 +467,9 @@
           },
           "veg_cartoon_1": {
             "modelId": "veg_cartoon_1",
-            "enabled": false,
-            "scale": 6,
-            "density": 250,
+            "enabled": true,
+            "scale": 23.6,
+            "density": 215,
             "bioluminescence": 0.8,
             "useOriginalColors": false,
             "canopyColors": [
@@ -495,17 +495,82 @@
               "#3f3f46"
             ],
             "activePreset": "custom"
+          },
+          "veg_tree_broadleaf_1": {
+            "modelId": "veg_tree_broadleaf_1",
+            "enabled": true,
+            "scale": 25.8,
+            "density": 265,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_cartoon_2": {
+            "modelId": "veg_cartoon_2",
+            "enabled": true,
+            "scale": 21.9,
+            "density": 85,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
           }
         },
         "glowStickIntensity": 4,
-        "glowStickRatio": 0.35
+        "glowStickRatio": 0.35,
+        "candyGloss": 0,
+        "sugarSparkle": 0,
+        "candyTranslucency": 0
       },
       "phases": [
         {
           "bg": "#8cbce6",
           "fog": "#8cbce6",
           "fogNear": 60,
-          "fogFar": 420,
+          "fogFar": 150,
           "amb": "#dcf2ff",
           "ambI": 0.6,
           "dir": "#fffaeb",
@@ -554,10 +619,10 @@
         {
           "bg": "#18182c",
           "fog": "#18182c",
-          "fogNear": 40,
-          "fogFar": 360,
+          "fogNear": 10,
+          "fogFar": 250,
           "amb": "#444470",
-          "ambI": 0.7,
+          "ambI": 0.65,
           "dir": "#6677aa",
           "dirI": 0.6,
           "dirPos": {
@@ -588,7 +653,17 @@
         "colorPath": "#c4b5fd",
         "colorSand": "#fef08a",
         "presetName": "Ghibli Pastel",
-        "isToonMode": true
+        "isToonMode": false,
+        "terrainStyle": "standard",
+        "isCrystalMode": false,
+        "glassTransmission": 0,
+        "iridescence": 0,
+        "specularGlint": 0.1,
+        "bevelGleam": 0,
+        "veinGlow": 0.2,
+        "glassRefraction": 1,
+        "glassTint": 0,
+        "veinScale": 0.1
       },
       "water": {
         "color": "#38bdf8",
@@ -601,7 +676,7 @@
         "isToonMode": false
       },
       "bloom": {
-        "globalStrength": 0,
+        "globalStrength": 0.3,
         "globalRadius": 0,
         "globalThreshold": 0.7,
         "cloudBloom": 0,
@@ -621,7 +696,7 @@
         "treeDensity": 200,
         "bushScale": 1.1,
         "bushDensity": 0,
-        "bioluminescence": 0.35,
+        "bioluminescence": 0.65,
         "canopyColors": [
           "#00bfff",
           "#60a5fa",
@@ -638,10 +713,8 @@
         ],
         "activePreset": "cotton",
         "selectedTreeModelIds": [
-          "veg_cherry_blossom",
-          "veg_palm_a",
-          "veg_cartoon_7",
-          "veg_clover_2"
+          "veg_tree_broadleaf_3",
+          "veg_tree_broadleaf_1"
         ],
         "models": {
           "candy_lollipop_spiral": {
@@ -704,15 +777,174 @@
               "#3f3f46"
             ],
             "activePreset": "candy"
+          },
+          "veg_cartoon_7": {
+            "modelId": "veg_cartoon_7",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_clover_2": {
+            "modelId": "veg_clover_2",
+            "enabled": false,
+            "scale": 3.5,
+            "density": 350,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "candy_cotton_cloud": {
+            "modelId": "candy_cotton_cloud",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_tree_broadleaf_3": {
+            "modelId": "veg_tree_broadleaf_3",
+            "enabled": true,
+            "scale": 25.8,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_tree_broadleaf_1": {
+            "modelId": "veg_tree_broadleaf_1",
+            "enabled": true,
+            "scale": 30,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
           }
-        }
+        },
+        "glowStickRatio": 0.35,
+        "sugarSparkle": 3,
+        "candyGloss": 3,
+        "candyTranslucency": 2
       },
       "phases": [
         {
           "bg": "#7dd3fc",
           "fog": "#7dd3fc",
           "fogNear": 60,
-          "fogFar": 420,
+          "fogFar": 200,
           "amb": "#e0f2fe",
           "ambI": 0.6,
           "dir": "#fffbeb",
@@ -762,7 +994,7 @@
           "bg": "#0f172a",
           "fog": "#0f172a",
           "fogNear": 40,
-          "fogFar": 360,
+          "fogFar": 200,
           "amb": "#38bdf8",
           "ambI": 0.7,
           "dir": "#818cf8",
@@ -808,8 +1040,8 @@
         "isToonMode": false
       },
       "bloom": {
-        "globalStrength": 0,
-        "globalRadius": 0,
+        "globalStrength": 0.8,
+        "globalRadius": 0.05,
         "globalThreshold": 0.7,
         "cloudBloom": 0,
         "cloudColor": "#fed7aa",
@@ -825,9 +1057,9 @@
       },
       "vegetation": {
         "treeScale": 22.5,
-        "treeDensity": 200,
-        "bushScale": 0.95,
-        "bushDensity": 0,
+        "treeDensity": 130,
+        "bushScale": 3.5,
+        "bushDensity": 510,
         "bioluminescence": 0.35,
         "canopyColors": [
           "#ff3300",
@@ -843,9 +1075,7 @@
         ],
         "activePreset": "geothermal",
         "selectedTreeModelIds": [
-          "veg_cartoon_8",
-          "veg_cartoon_10",
-          "veg_tree_var4"
+          "veg_palm_a"
         ],
         "models": {
           "candy_lollipop_spiral": {
@@ -908,8 +1138,197 @@
               "#3f3f46"
             ],
             "activePreset": "candy"
+          },
+          "veg_cartoon_10": {
+            "modelId": "veg_cartoon_10",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_tree_var4": {
+            "modelId": "veg_tree_var4",
+            "enabled": true,
+            "scale": 13,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_flower_var4": {
+            "modelId": "veg_flower_var4",
+            "enabled": true,
+            "scale": 8,
+            "density": 350,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_flower3_single": {
+            "modelId": "veg_flower3_single",
+            "enabled": true,
+            "scale": 21.8,
+            "density": 350,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_flower4_single": {
+            "modelId": "veg_flower4_single",
+            "enabled": true,
+            "scale": 30,
+            "density": 350,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_palm_a": {
+            "modelId": "veg_palm_a",
+            "enabled": true,
+            "scale": 18,
+            "density": 415,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#9232ec",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "custom"
           }
-        }
+        },
+        "candyGloss": 0,
+        "sugarSparkle": 0,
+        "candyTranslucency": 1.95
       },
       "phases": [
         {
@@ -1012,7 +1431,7 @@
         "isToonMode": false
       },
       "bloom": {
-        "globalStrength": 0,
+        "globalStrength": 0.6,
         "globalRadius": 0,
         "globalThreshold": 0.7,
         "cloudBloom": 0,
@@ -1048,10 +1467,8 @@
         ],
         "activePreset": "estuary",
         "selectedTreeModelIds": [
-          "veg_palm_a",
-          "veg_palm_c",
-          "veg_fantasy_jungle",
-          "veg_clover_2"
+          "veg_cherry_blossom",
+          "veg_tree_broadleaf_3"
         ],
         "models": {
           "candy_lollipop_spiral": {
@@ -1083,8 +1500,165 @@
               "#3f3f46"
             ],
             "activePreset": "candy"
+          },
+          "veg_palm_a": {
+            "modelId": "veg_palm_a",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_palm_c": {
+            "modelId": "veg_palm_c",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "candy_cotton_cloud": {
+            "modelId": "candy_cotton_cloud",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_cherry_blossom": {
+            "modelId": "veg_cherry_blossom",
+            "enabled": true,
+            "scale": 26.5,
+            "density": 265,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_tree_broadleaf_3": {
+            "modelId": "veg_tree_broadleaf_3",
+            "enabled": true,
+            "scale": 30,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
           }
-        }
+        },
+        "sugarSparkle": 0.15,
+        "candyGloss": 0
       },
       "phases": [
         {
@@ -1205,8 +1779,8 @@
       "vegetation": {
         "treeScale": 22.5,
         "treeDensity": 200,
-        "bushScale": 1.15,
-        "bushDensity": 0,
+        "bushScale": 3.7,
+        "bushDensity": 360,
         "bioluminescence": 0.35,
         "canopyColors": [
           "#15803d",
@@ -1222,9 +1796,6 @@
         ],
         "activePreset": "redwood",
         "selectedTreeModelIds": [
-          "veg_cartoon_11",
-          "veg_cartoon_12",
-          "veg_bigtree_1",
           "veg_tree_var4"
         ],
         "models": {
@@ -1257,6 +1828,130 @@
               "#3f3f46"
             ],
             "activePreset": "candy"
+          },
+          "veg_cartoon_11": {
+            "modelId": "veg_cartoon_11",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_cartoon_12": {
+            "modelId": "veg_cartoon_12",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_tree_var4": {
+            "modelId": "veg_tree_var4",
+            "enabled": true,
+            "scale": 25.2,
+            "density": 345,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "veg_bigtree_1": {
+            "modelId": "veg_bigtree_1",
+            "enabled": true,
+            "scale": 15.4,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#710fcc",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#4bddac"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "custom"
           }
         }
       },
@@ -1348,17 +2043,20 @@
         "colorPath": "#c084fc",
         "colorSand": "#fae8ff",
         "presetName": "Celestial Haven",
-        "isToonMode": true
+        "isToonMode": true,
+        "glassTransmission": 0,
+        "specularGlint": 0,
+        "veinGlow": 0
       },
       "water": {
         "color": "#67e8f9",
-        "opacity": 0.88,
+        "opacity": 1,
         "reflectivity": 0.85,
         "roughness": 0.1,
         "metalness": 0.05,
         "clearcoat": 0.9,
         "clearcoatRoughness": 0.1,
-        "isToonMode": false
+        "isToonMode": true
       },
       "bloom": {
         "globalStrength": 0,
@@ -1402,6 +2100,37 @@
             "enabled": false,
             "scale": 6,
             "density": 250,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "candy_cotton_cloud": {
+            "modelId": "candy_cotton_cloud",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
             "useOriginalColors": false,
             "canopyColors": [
               "#ff1493",
@@ -1484,7 +2213,7 @@
           "bg": "#1e1b4b",
           "fog": "#312e81",
           "fogNear": 40,
-          "fogFar": 360,
+          "fogFar": 750,
           "amb": "#4338ca",
           "ambI": 0.7,
           "dir": "#818cf8",

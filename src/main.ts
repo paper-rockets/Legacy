@@ -314,7 +314,7 @@ async function bootstrap() {
             terrain.update(focusPos.x, focusPos.z);
             water.update(focusPos.x, focusPos.z, realDt);
             props.update(focusPos.x, focusPos.z, realDt);
-            skyCastles.update(focusPos, realDt);
+            skyCastles.update(focusPos, realDt, lighting.timePhase);
             trees.update(focusPos.x, focusPos.z);
             worldProps.update(realDt);
         }

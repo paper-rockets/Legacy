@@ -117,45 +117,6 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     graphicsRow.appendChild(graphicsGroup);
     rowsWrap.appendChild(graphicsRow);
 
-    // ── 3. Controls Row ──────────────────────────────────────────────────────
-    const controlsRow = document.createElement('div');
-    controlsRow.className = 'settings-row';
-    const controlsLabel = document.createElement('span');
-    controlsLabel.className = 'settings-row-label';
-    controlsLabel.textContent = 'Controls';
-    const controlsVal = document.createElement('span');
-    controlsVal.className = 'settings-row-value';
-    controlsVal.textContent = 'Standard';
-    controlsRow.appendChild(controlsLabel);
-    controlsRow.appendChild(controlsVal);
-    rowsWrap.appendChild(controlsRow);
-
-    // ── 4. Language Row ──────────────────────────────────────────────────────
-    const langRow = document.createElement('div');
-    langRow.className = 'settings-row';
-    const langLabel = document.createElement('span');
-    langLabel.className = 'settings-row-label';
-    langLabel.textContent = 'Language';
-    const langVal = document.createElement('span');
-    langVal.className = 'settings-row-value';
-    langVal.textContent = 'English';
-    langRow.appendChild(langLabel);
-    langRow.appendChild(langVal);
-    rowsWrap.appendChild(langRow);
-
-    // ── 5. Version Row ───────────────────────────────────────────────────────
-    const verRow = document.createElement('div');
-    verRow.className = 'settings-row';
-    const verLabel = document.createElement('span');
-    verLabel.className = 'settings-row-label';
-    verLabel.textContent = 'Version';
-    const verVal = document.createElement('span');
-    verVal.className = 'settings-row-value';
-    verVal.textContent = '1.0';
-    verRow.appendChild(verLabel);
-    verRow.appendChild(verVal);
-    rowsWrap.appendChild(verRow);
-
     win.appendChild(rowsWrap);
 
     // ── Developer Options Button ─────────────────────────────────────────────

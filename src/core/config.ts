@@ -126,6 +126,7 @@ export interface VegetationBiomeSettings {
     candyGloss?: number;
     sugarSparkle?: number;
     candyTranslucency?: number;
+    textureStyle?: 'original' | 'candy' | 'cotton_candy' | 'flutter';
     floatingPlanetsEnabled?: boolean;
     floatingPlanetAltitude?: number;
     floatingPlanetCount?: number;

@@ -289,7 +289,30 @@ export function createHud(deps: HudDeps): Hud {
         closeAllDropdowns();
         deps.onOpenSettings();
     });
-    quickBar.appendChild(settingsBtn);
+    const musicBtn = document.createElement('button');
+    musicBtn.className = 'hud-quick-btn' + (deps.audio.isMusicPlaying ? ' active' : '');
+    musicBtn.title = 'Music: Toggle / Right-click for Next Track';
+    musicBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+
+    function updateMusicUI() {
+        const isPlaying = deps.audio.isMusicPlaying;
+        musicBtn.classList.toggle('active', isPlaying);
+        musicBtn.title = `Music: ${isPlaying ? deps.audio.getCurrentTrackName() : 'Off'} (Left-click: Toggle, Right-click: Next Track)`;
+    }
+
+    musicBtn.addEventListener('click', () => {
+        deps.audio.toggleMusic();
+        updateMusicUI();
+    });
+
+    musicBtn.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        deps.audio.nextTrack();
+        updateMusicUI();
+    });
+
+    quickBar.appendChild(musicBtn);
+    updateMusicUI();
 
     root.appendChild(quickBar);
 

@@ -261,6 +261,7 @@ interface LoadedCastleIsland {
     farSilhouetteProxy: THREE.Group;
     wispPuffs: { mesh: THREE.Mesh; orbitRadius: number; speed: number; angle: number; baseHeight: number }[];
     isLODNear: boolean;
+    groundLight?: THREE.PointLight;
     materialRegistry: {
         mesh: THREE.Mesh;
         mat: THREE.Material;
@@ -281,6 +282,7 @@ export class SkyCastleSystem {
     private matSilhouette: THREE.MeshBasicMaterial;
     private cloudBloomUniform = { value: 0.0 };
     private cloudEmissiveUniform = { value: new THREE.Color(0xfff6ea) };
+    private castleNightGlowUniform = { value: 0.0 };
 
     private islands: LoadedCastleIsland[] = [];
     private sharedCloudGeo: THREE.BufferGeometry;
@@ -335,6 +337,20 @@ export class SkyCastleSystem {
                 `
                 #include <emissivemap_fragment>
                 totalEmissiveRadiance += uCloudEmissive * (uCloudBloom * 2.0);
+                `
+            );
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <fog_fragment>',
+                `
+                #ifdef USE_FOG
+                    #ifdef FOG_EXP2
+                        float fogFactor = 1.0 - exp( - fogDensity * fogDensity * vFogDepth * vFogDepth * 0.25 );
+                    #else
+                        float fogFactor = smoothstep( fogNear, fogFar, vFogDepth );
+                    #endif
+                    fogFactor = clamp(fogFactor * 0.45, 0.0, 1.0);
+                    gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );
+                #endif
                 `
             );
         };
@@ -465,7 +481,7 @@ export class SkyCastleSystem {
         const cloudSkirtGroup = new THREE.Group();
         const wispPuffs: { mesh: THREE.Mesh; orbitRadius: number; speed: number; angle: number; baseHeight: number }[] = [];
 
-        this.buildCloudSkirt(cloudSkirtGroup, wispPuffs, def);
+        const groundLight = this.buildCloudSkirt(cloudSkirtGroup, wispPuffs, def);
         islandGroup.add(cloudSkirtGroup);
 
         // 2. Far Silhouette Proxy
@@ -482,6 +498,7 @@ export class SkyCastleSystem {
             farSilhouetteProxy,
             wispPuffs,
             isLODNear: true,
+            groundLight,
             materialRegistry: []
         };
         this.islands.push(item);
@@ -495,7 +512,7 @@ export class SkyCastleSystem {
         skirtGroup: THREE.Group,
         wispPuffs: { mesh: THREE.Mesh; orbitRadius: number; speed: number; angle: number; baseHeight: number }[],
         def: SkyCastleIslandDef
-    ) {
+    ): THREE.PointLight {
         skirtGroup.clear();
         wispPuffs.length = 0;
 
@@ -531,6 +548,11 @@ export class SkyCastleSystem {
         instancedSkirt.instanceMatrix.needsUpdate = true;
         skirtGroup.add(instancedSkirt);
 
+        // Ground under-island illumination PointLight for night/dusk visibility
+        const groundLight = new THREE.PointLight(0xffdf99, 0, 360, 1.2);
+        groundLight.position.set(0, -14, 0);
+        skirtGroup.add(groundLight);
+
         // Orbiting ambient wisps
         for (let w = 0; w < 3; w++) {
             const wispMesh = new THREE.Mesh(this.sharedCloudGeo, this.matCloud);
@@ -546,6 +568,8 @@ export class SkyCastleSystem {
                 baseHeight: -6 + w * 2.0
             });
         }
+
+        return groundLight;
     }
 
     private buildFarSilhouette(proxyGroup: THREE.Group, def: SkyCastleIslandDef) {
@@ -661,6 +685,45 @@ export class SkyCastleSystem {
                 category = 'wall';
             }
         }
+
+        mat.onBeforeCompile = (shader) => {
+            shader.uniforms.uCastleNightGlow = this.castleNightGlowUniform;
+            shader.fragmentShader = `uniform float uCastleNightGlow;\n` + shader.fragmentShader;
+
+            // Reduce fog factor by 65% so high-altitude castles and spires remain clear and colorful
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <fog_fragment>',
+                `
+                #ifdef USE_FOG
+                    #ifdef FOG_EXP2
+                        float fogFactor = 1.0 - exp( - fogDensity * fogDensity * vFogDepth * vFogDepth * 0.16 );
+                    #else
+                        float fogFactor = smoothstep( fogNear, fogFar, vFogDepth );
+                    #endif
+                    fogFactor = clamp(fogFactor * 0.35, 0.0, 1.0);
+                    gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );
+                #endif
+                `
+            );
+
+            // Inject illuminated glowing warm amber windows and ground facade bounce at dusk/night
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <emissivemap_fragment>',
+                `
+                #include <emissivemap_fragment>
+                if (uCastleNightGlow > 0.001) {
+                    vec3 wp = vWorldPosition;
+                    float winX = fract(wp.x * 0.16 + wp.z * 0.16);
+                    float winY = fract(wp.y * 0.22);
+                    if (winX > 0.42 && winX < 0.82 && winY > 0.42 && winY < 0.82) {
+                        vec3 warmWindowGold = vec3(1.0, 0.84, 0.38) * (uCastleNightGlow * 3.4);
+                        totalEmissiveRadiance += warmWindowGold;
+                    }
+                    totalEmissiveRadiance += vec3(0.16, 0.13, 0.08) * uCastleNightGlow;
+                }
+                `
+            );
+        };
 
         item.materialRegistry.push({
             mesh,
@@ -1114,10 +1177,14 @@ export class SkyCastleSystem {
 
     public isTopViewActive: boolean = false;
 
-    public update(playerPos: THREE.Vector3, dt: number) {
+    public update(playerPos: THREE.Vector3, dt: number, timePhase: number = 0) {
         const px = playerPos.x;
         const py = playerPos.y;
         const pz = playerPos.z;
+
+        // Dynamic night illumination interpolation: Day = 0.0, Dusk = 0.45, Twilight/Night = 1.0
+        const targetGlow = timePhase === 0 ? 0.0 : (timePhase === 1 ? 0.45 : 1.0);
+        this.castleNightGlowUniform.value += (targetGlow - this.castleNightGlowUniform.value) * Math.min(1.0, dt * 4.0);
 
         // Keep layer fog mesh centered under player on XZ
         if (this.layerFogMesh) {
@@ -1127,6 +1194,11 @@ export class SkyCastleSystem {
 
         for (let i = 0; i < this.islands.length; i++) {
             const isl = this.islands[i];
+
+            // Update ground light intensity
+            if (isl.groundLight) {
+                isl.groundLight.intensity = this.castleNightGlowUniform.value * (isl.def.scale * 2.8);
+            }
 
             if (this.isTopViewActive) {
                 isl.group.visible = true;
