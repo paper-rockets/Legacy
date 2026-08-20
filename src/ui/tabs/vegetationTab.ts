@@ -280,6 +280,24 @@ export function buildVegetationTab(ctx: VegetationTabContext): ControlDef[] {
                 },
                 {
                     kind: 'segmented',
+                    label: 'Model Texture Style',
+                    hint: 'Shader texture styling applied to this specific model.',
+                    options: [
+                        { value: 'original', text: 'Original' },
+                        { value: 'candy', text: 'Candy Gloss' },
+                        { value: 'cotton_candy', text: 'Cotton Candy' },
+                        { value: 'flutter', text: 'Flutter' },
+                        { value: 'crystal', text: 'Crystal' },
+                        { value: 'woodland', text: 'Woodland' },
+                        { value: 'velvet', text: 'Velvet' }
+                    ],
+                    get: () => model().textureStyle || (model().useOriginalColors ? 'original' : 'candy'),
+                    set: (val: string) => {
+                        ctx.trees.setModelTextureStyle(ctx.biomeId(), currentInspectedId(), val as any);
+                    }
+                },
+                {
+                    kind: 'segmented',
                     label: 'Texture / Color Mode',
                     options: [
                         { value: 'original', text: 'Original Textures' },
@@ -508,13 +526,16 @@ export function buildVegetationTab(ctx: VegetationTabContext): ControlDef[] {
             children: [
                 {
                     kind: 'segmented',
-                    label: 'Texture Style',
-                    hint: 'Choose between authentic original GLTF textures, glossy candy glaze, soft cotton candy puffs, or fluttering leafy foliage.',
+                    label: 'Biome Texture Style',
+                    hint: 'Master shader texture styling for all trees and vegetation in this biome.',
                     options: [
                         { value: 'original', text: 'Original Textures' },
                         { value: 'candy', text: 'Candy Gloss' },
                         { value: 'cotton_candy', text: 'Cotton Candy' },
-                        { value: 'flutter', text: 'Foliage Flutter' }
+                        { value: 'flutter', text: 'Foliage Flutter' },
+                        { value: 'crystal', text: 'Prismatic Crystal' },
+                        { value: 'woodland', text: 'Woodland Moss' },
+                        { value: 'velvet', text: 'Velvet Bloom' }
                     ],
                     get: () => veg().textureStyle || 'candy',
                     set: (val: string) => {

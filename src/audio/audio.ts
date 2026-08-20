@@ -1038,6 +1038,34 @@ export class AmbientAudioEngine {
         return funTracks[this.currentTrack].name;
     }
 
+    public prevTrack(): string {
+        this.currentTrack = (this.currentTrack - 1 + funTracks.length) % funTracks.length;
+        this.currentBar = 0;
+        this.currentStep = 0;
+        if (this.audioCtx) {
+            this.nextStepTime = this.audioCtx.currentTime + 0.05;
+        }
+        return funTracks[this.currentTrack].name;
+    }
+
+    public selectTrack(index: number): string {
+        this.currentTrack = Math.max(0, Math.min(funTracks.length - 1, index));
+        this.currentBar = 0;
+        this.currentStep = 0;
+        if (this.audioCtx) {
+            this.nextStepTime = this.audioCtx.currentTime + 0.05;
+        }
+        return funTracks[this.currentTrack].name;
+    }
+
+    public getAllTracks(): { name: string; bpm: number }[] {
+        return funTracks.map(t => ({ name: t.name, bpm: t.bpm }));
+    }
+
+    public getCurrentTrackIndex(): number {
+        return this.currentTrack;
+    }
+
     public getCurrentTrackName(): string {
         return funTracks[this.currentTrack]?.name ?? "Track";
     }

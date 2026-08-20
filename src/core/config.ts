@@ -69,6 +69,8 @@ export interface TerrainColorsSettings {
     showGroundCrystals?: boolean;
 }
 
+export type VegetationTextureStyle = 'original' | 'candy' | 'cotton_candy' | 'flutter' | 'crystal' | 'woodland' | 'velvet';
+
 export interface ModelVegetationConfig {
     modelId: string;
     enabled: boolean;
@@ -76,6 +78,7 @@ export interface ModelVegetationConfig {
     density: number;
     bioluminescence?: number;
     useOriginalColors: boolean;
+    textureStyle?: VegetationTextureStyle;
     canopyColors: string[];
     leafColors: string[];
     trunkColors: string[];
@@ -107,6 +110,7 @@ export function getDefaultModelConfig(modelId: string): ModelVegetationConfig {
         density,
         bioluminescence: 0.8,
         useOriginalColors: false,
+        textureStyle: 'candy',
         canopyColors: ['#ff1493', '#ff69b4', '#b026ff', '#8a2be2', '#00d2ff', '#00ff88', '#ffe600'],
         leafColors: ['#22c55e', '#16a34a', '#15803d', '#4ade80', '#10b981'],
         trunkColors: ['#5c3a21', '#451a03', '#78350f', '#3f3f46'],
@@ -126,7 +130,7 @@ export interface VegetationBiomeSettings {
     candyGloss?: number;
     sugarSparkle?: number;
     candyTranslucency?: number;
-    textureStyle?: 'original' | 'candy' | 'cotton_candy' | 'flutter';
+    textureStyle?: VegetationTextureStyle;
     floatingPlanetsEnabled?: boolean;
     floatingPlanetAltitude?: number;
     floatingPlanetCount?: number;

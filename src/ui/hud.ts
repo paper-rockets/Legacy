@@ -223,6 +223,137 @@ export function createHud(deps: HudDeps): Hud {
 
     topBar.appendChild(makeDivider());
 
+    // ------------------------------------------------------------------
+    // Dedicated Music Player Widget in Main Top UI Bar
+    // ------------------------------------------------------------------
+    const musicWrap = document.createElement('div');
+    musicWrap.className = 'hud-dropdown-wrap hud-music-wrap';
+
+    const musicPlayer = document.createElement('div');
+    musicPlayer.className = 'hud-music-player';
+
+    // 1. Previous Track Button
+    const musicPrevBtn = document.createElement('button');
+    musicPrevBtn.className = 'hud-music-ctrl-btn';
+    musicPrevBtn.title = 'Previous Track';
+    musicPrevBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="19,20 9,12 19,4"/><line x1="5" y1="4" x2="5" y2="20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+    musicPrevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deps.audio.prevTrack();
+        if (!deps.audio.isMusicPlaying) deps.audio.toggleMusic();
+        updateMusicPlayerUI();
+    });
+
+    // 2. Play / Pause Toggle Button
+    const musicPlayBtn = document.createElement('button');
+    musicPlayBtn.className = 'hud-music-play-btn';
+    musicPlayBtn.title = 'Play / Pause Music';
+
+    const musicPlaySvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>';
+    const musicPauseSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="4" height="16" rx="1"/><rect x="15" y="4" width="4" height="16" rx="1"/></svg>';
+
+    musicPlayBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deps.audio.toggleMusic();
+        updateMusicPlayerUI();
+    });
+
+    // 3. Next Track Button
+    const musicNextBtn = document.createElement('button');
+    musicNextBtn.className = 'hud-music-ctrl-btn';
+    musicNextBtn.title = 'Next Track';
+    musicNextBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,4 15,12 5,20"/><line x1="19" y1="4" x2="19" y2="20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+    musicNextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deps.audio.nextTrack();
+        if (!deps.audio.isMusicPlaying) deps.audio.toggleMusic();
+        updateMusicPlayerUI();
+    });
+
+    // 4. Track Name / Selector Button
+    const musicTrackBtn = document.createElement('button');
+    musicTrackBtn.className = 'hud-music-track-btn';
+    musicTrackBtn.title = 'Select Track';
+
+    const musicDropdown = document.createElement('div');
+    musicDropdown.className = 'hud-dropdown hud-music-dropdown';
+    musicDropdown.hidden = true;
+
+    musicPlayer.appendChild(musicPrevBtn);
+    musicPlayer.appendChild(musicPlayBtn);
+    musicPlayer.appendChild(musicNextBtn);
+    musicPlayer.appendChild(musicTrackBtn);
+
+    musicWrap.appendChild(musicPlayer);
+    musicWrap.appendChild(musicDropdown);
+    topBar.appendChild(musicWrap);
+
+    // Build Track Selection Dropdown
+    const allTracks = deps.audio.getAllTracks();
+    const trackItemButtons: HTMLButtonElement[] = [];
+
+    allTracks.forEach((t, idx) => {
+        const itemBtn = document.createElement('button');
+        itemBtn.className = 'hud-dropdown-item hud-music-item';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'hud-dropdown-item-title';
+        nameSpan.textContent = t.name;
+
+        const bpmSpan = document.createElement('span');
+        bpmSpan.className = 'hud-music-bpm';
+        bpmSpan.textContent = `${t.bpm} BPM`;
+
+        itemBtn.appendChild(nameSpan);
+        itemBtn.appendChild(bpmSpan);
+
+        itemBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deps.audio.selectTrack(idx);
+            if (!deps.audio.isMusicPlaying) {
+                deps.audio.toggleMusic();
+            }
+            updateMusicPlayerUI();
+            closeAllDropdowns();
+        });
+
+        musicDropdown.appendChild(itemBtn);
+        trackItemButtons.push(itemBtn);
+    });
+
+    musicTrackBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDropdown(musicDropdown);
+    });
+
+    function updateMusicPlayerUI() {
+        const isPlaying = deps.audio.isMusicPlaying;
+        musicPlayBtn.innerHTML = isPlaying ? musicPauseSvg : musicPlaySvg;
+        musicPlayBtn.classList.toggle('playing', isPlaying);
+        musicPlayer.classList.toggle('playing', isPlaying);
+
+        const currentTrackName = deps.audio.getCurrentTrackName();
+        const currentTrackIdx = deps.audio.getCurrentTrackIndex();
+
+        musicTrackBtn.innerHTML = `
+            <span class="hud-music-note-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+            <span class="hud-music-title">${currentTrackName}</span>
+            <span class="hud-music-bars ${isPlaying ? 'playing' : ''}">
+                <span class="hud-bar bar-1"></span>
+                <span class="hud-bar bar-2"></span>
+                <span class="hud-bar bar-3"></span>
+            </span>
+        `;
+
+        trackItemButtons.forEach((btn, idx) => {
+            btn.classList.toggle('active', idx === currentTrackIdx);
+        });
+    }
+
+    updateMusicPlayerUI();
+
+    topBar.appendChild(makeDivider());
+
     // FPS readout
     const fpsEl = document.createElement('span');
     fpsEl.className = 'hud-fps';
@@ -239,6 +370,7 @@ export function createHud(deps: HudDeps): Hud {
     function closeAllDropdowns() {
         avatarDropdown.hidden = true;
         biomeDropdown.hidden = true;
+        musicDropdown.hidden = true;
         openDropdown = null;
     }
 
@@ -267,7 +399,8 @@ export function createHud(deps: HudDeps): Hud {
     fullscreenBtn.className = 'hud-quick-btn';
     fullscreenBtn.title = 'Toggle Fullscreen';
     fullscreenBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
-    fullscreenBtn.addEventListener('click', () => {
+    fullscreenBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch((err) => {
                 console.error(`Fullscreen error: ${err.message}`);
@@ -289,30 +422,7 @@ export function createHud(deps: HudDeps): Hud {
         closeAllDropdowns();
         deps.onOpenSettings();
     });
-    const musicBtn = document.createElement('button');
-    musicBtn.className = 'hud-quick-btn' + (deps.audio.isMusicPlaying ? ' active' : '');
-    musicBtn.title = 'Music: Toggle / Right-click for Next Track';
-    musicBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
-
-    function updateMusicUI() {
-        const isPlaying = deps.audio.isMusicPlaying;
-        musicBtn.classList.toggle('active', isPlaying);
-        musicBtn.title = `Music: ${isPlaying ? deps.audio.getCurrentTrackName() : 'Off'} (Left-click: Toggle, Right-click: Next Track)`;
-    }
-
-    musicBtn.addEventListener('click', () => {
-        deps.audio.toggleMusic();
-        updateMusicUI();
-    });
-
-    musicBtn.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        deps.audio.nextTrack();
-        updateMusicUI();
-    });
-
-    quickBar.appendChild(musicBtn);
-    updateMusicUI();
+    quickBar.appendChild(settingsBtn);
 
     root.appendChild(quickBar);
 

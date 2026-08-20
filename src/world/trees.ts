@@ -5,7 +5,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { terrainHeightJS, getDominantBiome, BiomeId } from './noise';
 import { gradientMap } from './terrain';
-import { globalConfigManager, ModelVegetationConfig, getDefaultModelConfig } from '../core/config';
+import { globalConfigManager, ModelVegetationConfig, getDefaultModelConfig, VegetationTextureStyle } from '../core/config';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -835,6 +835,8 @@ export class TreeSystem {
         inst.geometry.setAttribute('aLeafColor', leafColorAttr);
         const colorModeAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1);
         inst.geometry.setAttribute('aColorMode', colorModeAttr);
+        const textureStyleAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1);
+        inst.geometry.setAttribute('aTextureStyle', textureStyleAttr);
         const glowFactorAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1);
         inst.geometry.setAttribute('aGlowFactor', glowFactorAttr);
         this.scene.add(inst);
@@ -873,6 +875,7 @@ export class TreeSystem {
                 attribute vec3 aTrunkColor;
                 attribute vec3 aLeafColor;
                 attribute float aColorMode;
+                attribute float aTextureStyle;
                 attribute float aGlowFactor;
                 varying float vPartType;
                 varying vec3 vOriginalColor;
@@ -880,6 +883,7 @@ export class TreeSystem {
                 varying vec3 vLeafColor;
                 varying vec3 vCanopyColor;
                 varying float vColorMode;
+                varying float vTextureStyle;
                 varying float vGlowFactor;
                 varying vec2 vTreeUv;
                 varying vec3 vTreeWorldNormal;
@@ -895,6 +899,7 @@ export class TreeSystem {
                 vTrunkColor = aTrunkColor;
                 vLeafColor = aLeafColor;
                 vColorMode = aColorMode;
+                vTextureStyle = aTextureStyle;
                 vGlowFactor = aGlowFactor;
                 vTreeWorldNormal = normalize(mat3(instanceMatrix) * normal);
                 vTreeWorldPos = (instanceMatrix * vec4(position, 1.0)).xyz;
@@ -924,6 +929,7 @@ export class TreeSystem {
                 varying vec3 vLeafColor;
                 varying vec3 vCanopyColor;
                 varying float vColorMode;
+                varying float vTextureStyle;
                 varying float vGlowFactor;
                 varying vec2 vTreeUv;
                 varying vec3 vTreeWorldNormal;
@@ -967,37 +973,58 @@ export class TreeSystem {
                 float spec = pow(NdotH, 32.0) * uCandyGloss;
 
                 float sparkle = pow(fract(sin(dot(vTreeWorldPos.xz * 2.0, vec2(12.9898, 78.233))) * 43758.5453), 14.0) * uSugarSparkle * (1.0 - NdotV);
-
                 vec3 candyGlossSheen = vec3(1.0, 0.96, 0.98) * (fresnel * uCandyGloss * 0.35 + spec * 0.75 + sparkle * 0.40);
 
-                // Diverse Procedural Canopy Textures: Cotton Candy Puff, Flutter Foliage, and Glossy Crystal
-                float styleRng = fract(sin(dot(floor(vTreeWorldPos.xz / 16.0), vec2(27.643, 89.412))) * 43758.5453);
+                // Multi-Style Texture Shaders:
+                // 0.0: Original Textures (Classic GLTF texture map with natural matte diffuse shading)
+                // 1.0: Candy Gloss & Reflectivity (Clearcoat enamel gloss, bright specular highlight, sugar sparkle)
+                // 2.0: Cotton Candy Puff (Soft volumetric cloud billows, subsurface light scattering, pillowy rim)
+                // 3.0: Foliage Flutter (Organic cellular leaf clusters, light dappling, leaf micro-texture)
+                // 4.0: Prismatic Crystal (Iridescent facet diffraction, rainbow specular glint, gemstone edges)
+                // 5.0: Woodland Moss & Bark (Fibrous bark striations, organic moss mottling, velvet forest dapple)
+                // 6.0: Velvet Petal Bloom (Soft velvet subsurface absorption, rich petal diffusion, peach fuzz rim)
 
-                if (vColorMode > 0.5) {
-                    // Original GLTF texture mode: Preserve classic original textured maps with natural matte shading
+                if (vColorMode > 0.5 || vTextureStyle < 0.5) {
+                    // 0. Original Textures: Preserve authentic GLTF diffuse texture maps with natural matte shading
                     diffuseColor.rgb = finalTreeColor;
-                } else {
-                    // Custom Candy / Stylized Shaders
+                } else if (vTextureStyle < 1.5) {
+                    // 1. Candy Gloss & Reflectivity: Clearcoat enamel gloss with sparkling sugar crystals
                     if (vPartType > 1.5) {
-                        if (styleRng < 0.35) {
-                            // 1. Cotton Candy: Soft pillowy volumetric billows with subsurface transmission
-                            float puff = sin(vTreeWorldPos.x * 3.2) * cos(vTreeWorldPos.y * 3.2) * sin(vTreeWorldPos.z * 3.2);
-                            vec3 cottonMod = vec3(0.94 + puff * 0.12);
-                            vec3 softSheen = candyGlossSheen * 0.35;
-                            diffuseColor.rgb = finalTreeColor * cottonMod + softSheen + finalTreeColor * (uCandyTranslucency * 0.65 * (1.0 - NdotV));
-                        } else if (styleRng < 0.70) {
-                            // 2. Flutter / Leafy: Organic cellular dappled foliage pattern
-                            float flutter = sin(vTreeWorldPos.x * 12.0) * cos(vTreeWorldPos.z * 12.0);
-                            float leafDapple = (smoothstep(-0.4, 0.4, flutter) - 0.5) * 0.22;
-                            vec3 leafMod = vec3(1.0 + leafDapple, 1.0 + leafDapple * 1.15, 1.0 + leafDapple * 0.85);
-                            diffuseColor.rgb = finalTreeColor * leafMod + candyGlossSheen * 0.55;
-                        } else {
-                            // 3. Hard Candy Crystal: High gloss clearcoat with sharp specular glint
-                            diffuseColor.rgb = finalTreeColor + candyGlossSheen * 1.25 + finalTreeColor * (uCandyTranslucency * 0.25 * (1.0 - NdotV));
-                        }
+                        diffuseColor.rgb = finalTreeColor + candyGlossSheen * 1.35 + finalTreeColor * (uCandyTranslucency * 0.35 * (1.0 - NdotV));
                     } else {
                         diffuseColor.rgb = finalTreeColor + candyGlossSheen * 0.45;
                     }
+                } else if (vTextureStyle < 2.5) {
+                    // 2. Cotton Candy Puff: Soft pillowy volumetric billows with subsurface transmission
+                    float puff = sin(vTreeWorldPos.x * 2.8) * cos(vTreeWorldPos.y * 2.8) * sin(vTreeWorldPos.z * 2.8);
+                    vec3 cottonMod = vec3(0.92 + puff * 0.15);
+                    vec3 softSheen = candyGlossSheen * 0.35;
+                    diffuseColor.rgb = finalTreeColor * cottonMod + softSheen + finalTreeColor * (uCandyTranslucency * 0.85 * pow(1.0 - NdotV, 2.0));
+                } else if (vTextureStyle < 3.5) {
+                    // 3. Foliage Flutter: Dynamic organic cellular dappling and leafy micro-structure
+                    float flutter = sin(vTreeWorldPos.x * 14.0) * cos(vTreeWorldPos.z * 14.0) * sin(vTreeWorldPos.y * 10.0);
+                    float leafDapple = (smoothstep(-0.4, 0.4, flutter) - 0.5) * 0.28;
+                    vec3 leafMod = vec3(1.0 + leafDapple * 0.85, 1.0 + leafDapple * 1.25, 1.0 + leafDapple * 0.70);
+                    diffuseColor.rgb = finalTreeColor * leafMod + candyGlossSheen * 0.45;
+                } else if (vTextureStyle < 4.5) {
+                    // 4. Prismatic Crystal: Gemstone facets with rainbow iridescence and prismatic specular
+                    float facet = fract(sin(dot(floor(vTreeWorldPos * 6.0), vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+                    vec3 rainbow = 0.5 + 0.5 * cos(6.28318 * (fresnel + facet + vec3(0.0, 0.33, 0.67)));
+                    vec3 crystalGlint = rainbow * (spec * 1.8 + sparkle * 0.85) * (0.8 + facet * 0.4);
+                    diffuseColor.rgb = mix(finalTreeColor, rainbow, 0.25 * fresnel) + crystalGlint + finalTreeColor * (uCandyTranslucency * 0.45);
+                } else if (vTextureStyle < 5.5) {
+                    // 5. Woodland Moss & Bark: Natural earthy moss patches, bark grain, and velvet forest dapple
+                    float barkGrain = sin(vTreeWorldPos.y * 22.0 + sin(vTreeWorldPos.x * 8.0) * 1.5);
+                    float mossPattern = sin(vTreeWorldPos.x * 5.0) * sin(vTreeWorldPos.z * 5.0);
+                    vec3 mossTint = vec3(0.24, 0.52, 0.18);
+                    float mossMask = smoothstep(0.1, 0.6, mossPattern) * (vPartType < 1.5 ? 0.35 : 0.65);
+                    vec3 woodBase = mix(finalTreeColor, mossTint, mossMask) * (0.90 + barkGrain * 0.10);
+                    diffuseColor.rgb = woodBase + candyGlossSheen * 0.20;
+                } else {
+                    // 6. Velvet Petal Bloom: Soft matte chromatic diffusion with velvety peach-fuzz rim
+                    float velvetRim = pow(1.0 - NdotV, 1.8);
+                    vec3 richHue = mix(finalTreeColor, finalTreeColor * 1.35 + vec3(0.08, 0.04, 0.08), velvetRim);
+                    diffuseColor.rgb = richHue + candyGlossSheen * 0.25 + finalTreeColor * (0.35 * velvetRim);
                 }
                 `
             );
@@ -1389,6 +1416,22 @@ export class TreeSystem {
                         colorModeAttr.setX(currentCount, isOriginal);
                     }
 
+                    // Independent Texture Style selection per model with biome fallback
+                    const styleKey = (mCfg.textureStyle) ? mCfg.textureStyle : (veg.textureStyle || 'candy');
+                    let styleCode = 1.0; // default candy
+                    if (styleKey === 'original' || isOriginal > 0.5) styleCode = 0.0;
+                    else if (styleKey === 'candy') styleCode = 1.0;
+                    else if (styleKey === 'cotton_candy') styleCode = 2.0;
+                    else if (styleKey === 'flutter') styleCode = 3.0;
+                    else if (styleKey === 'crystal') styleCode = 4.0;
+                    else if (styleKey === 'woodland') styleCode = 5.0;
+                    else if (styleKey === 'velvet') styleCode = 6.0;
+
+                    const styleAttr = selectedModel.treeInst.geometry.getAttribute('aTextureStyle') as THREE.InstancedBufferAttribute;
+                    if (styleAttr) {
+                        styleAttr.setX(currentCount, styleCode);
+                    }
+
                     // Glow-in-the-dark glow stick activator for subset of trees during dusk/twilight
                     const isGlowEnabled = veg.glowStickEnabled !== false;
                     const glowRatio = veg.glowStickRatio !== undefined ? veg.glowStickRatio : 0.18;
@@ -1421,6 +1464,8 @@ export class TreeSystem {
                 if (leafAttr) leafAttr.needsUpdate = true;
                 const colorModeAttr = entry.treeInst.geometry.getAttribute('aColorMode');
                 if (colorModeAttr) colorModeAttr.needsUpdate = true;
+                const textureStyleAttr = entry.treeInst.geometry.getAttribute('aTextureStyle');
+                if (textureStyleAttr) textureStyleAttr.needsUpdate = true;
                 const glowAttr = entry.treeInst.geometry.getAttribute('aGlowFactor');
                 if (glowAttr) glowAttr.needsUpdate = true;
             }
@@ -1528,8 +1573,21 @@ export class TreeSystem {
         cfg.useOriginalColors = useOriginal;
         if (useOriginal) {
             cfg.activePreset = 'original';
+            cfg.textureStyle = 'original';
         } else if (cfg.activePreset === 'original') {
             cfg.activePreset = 'custom';
+            cfg.textureStyle = 'candy';
+        }
+        this.forceRebuild();
+    }
+
+    public setModelTextureStyle(biomeId: BiomeId, modelId: string, style: VegetationTextureStyle): void {
+        const cfg = this.getModelConfig(biomeId, modelId);
+        cfg.textureStyle = style;
+        if (style === 'original') {
+            cfg.useOriginalColors = true;
+        } else {
+            cfg.useOriginalColors = false;
         }
         this.forceRebuild();
     }
@@ -1731,7 +1789,7 @@ export class TreeSystem {
         this.candyTranslucencyUniform.value = veg.candyTranslucency;
     }
 
-    public setBiomeTextureStyle(biomeId: BiomeId, style: 'original' | 'candy' | 'cotton_candy' | 'flutter'): void {
+    public setBiomeTextureStyle(biomeId: BiomeId, style: VegetationTextureStyle): void {
         const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
         veg.textureStyle = style;
         if (style === 'original') {

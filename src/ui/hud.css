@@ -153,6 +153,189 @@
     min-width: 260px;
 }
 
+/* ---------------------------------------------------------------------- */
+/* Top bar Music Player Widget                                            */
+/* ---------------------------------------------------------------------- */
+
+.hud-music-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.hud-music-player {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 3px 6px 3px 4px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: all 0.2s ease;
+}
+
+.hud-music-player.playing {
+    background: rgba(139, 92, 246, 0.18);
+    border-color: rgba(167, 139, 250, 0.45);
+    box-shadow: 0 0 14px rgba(139, 92, 246, 0.2);
+}
+
+.hud-music-ctrl-btn {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: rgba(255, 255, 255, 0.7);
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.12s ease, color 0.12s ease, transform 0.1s ease;
+}
+
+.hud-music-ctrl-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.hud-music-ctrl-btn:active {
+    transform: scale(0.9);
+}
+
+.hud-music-play-btn {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    outline: none;
+    color: #ffffff;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.15s ease;
+}
+
+.hud-music-play-btn:hover {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.hud-music-play-btn.playing {
+    background: #8b5cf6;
+    border-color: #a78bfa;
+    box-shadow: 0 0 10px rgba(167, 139, 250, 0.6);
+}
+
+.hud-music-play-btn:active {
+    transform: scale(0.92);
+}
+
+.hud-music-track-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 9999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hud-music-track-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.hud-music-note-icon {
+    display: flex;
+    align-items: center;
+    color: #a78bfa;
+}
+
+.hud-music-title {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hud-music-bars {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 10px;
+    margin-left: 2px;
+}
+
+.hud-music-bars .hud-bar {
+    width: 2px;
+    height: 3px;
+    background: #a78bfa;
+    border-radius: 1px;
+    transition: height 0.15s ease;
+}
+
+.hud-music-bars.playing .bar-1 {
+    animation: hud-eq-1 0.65s ease-in-out infinite alternate;
+}
+
+.hud-music-bars.playing .bar-2 {
+    animation: hud-eq-2 0.8s ease-in-out infinite alternate 0.15s;
+}
+
+.hud-music-bars.playing .bar-3 {
+    animation: hud-eq-3 0.7s ease-in-out infinite alternate 0.3s;
+}
+
+@keyframes hud-eq-1 {
+    0% { height: 3px; }
+    100% { height: 10px; }
+}
+
+@keyframes hud-eq-2 {
+    0% { height: 4px; }
+    100% { height: 9px; }
+}
+
+@keyframes hud-eq-3 {
+    0% { height: 2px; }
+    100% { height: 11px; }
+}
+
+.hud-music-dropdown {
+    min-width: 210px;
+}
+
+.hud-music-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.hud-music-bpm {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 9999px;
+}
+
 .hud-dropdown-item {
     display: block;
     width: 100%;
@@ -257,11 +440,18 @@
 .settings-overlay {
     display: none;
     position: fixed;
-    inset: 0;
-    background: rgba(8, 10, 16, 0.55);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(8, 10, 16, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     align-items: center;
     justify-content: center;
-    z-index: 200;
+    z-index: 99999;
     pointer-events: auto;
 }
 

@@ -9,8 +9,12 @@ export interface SettingsWindowContext {
 }
 
 function requireSettingsRoot(): HTMLElement {
-    const el = document.getElementById('settings-root');
-    if (!el) throw new Error('settingsWindow.ts: #settings-root not found in index.html');
+    let el = document.getElementById('settings-root');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'settings-root';
+        document.body.appendChild(el);
+    }
     return el;
 }
 
@@ -18,6 +22,7 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     open(): void;
     close(): void;
     toggle(): void;
+    isOpen(): boolean;
 } {
     const ctx: SettingsWindowContext = typeof contextOrHandler === 'function'
         ? { onOpenDeveloper: contextOrHandler }
@@ -26,7 +31,7 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     const root = requireSettingsRoot();
     root.innerHTML = '';
 
-    // Load initial settings from localStorage
+    // Load initial settings
     let soundEnabled = ctx.getSoundEnabled ? ctx.getSoundEnabled() : (localStorage.getItem('settings_sound_enabled') !== 'false');
     let graphicsProfile: GraphicsProfile = ctx.getGraphicsProfile
         ? ctx.getGraphicsProfile()
@@ -34,6 +39,7 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
 
     const overlay = document.createElement('div');
     overlay.className = 'settings-overlay';
+    overlay.style.display = 'none';
 
     const win = document.createElement('div');
     win.className = 'settings-window';
@@ -49,7 +55,10 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     const closeBtn = document.createElement('button');
     closeBtn.className = 'settings-close-btn';
     closeBtn.textContent = 'Close';
-    closeBtn.addEventListener('click', () => close());
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        close();
+    });
     header.appendChild(closeBtn);
 
     win.appendChild(header);
@@ -66,13 +75,19 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     const soundBtn = document.createElement('button');
     soundBtn.className = 'settings-toggle-btn' + (soundEnabled ? ' is-active' : '');
     soundBtn.textContent = soundEnabled ? 'On' : 'Off';
-    soundBtn.addEventListener('click', () => {
+    soundBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         soundEnabled = !soundEnabled;
-        soundBtn.className = 'settings-toggle-btn' + (soundEnabled ? ' is-active' : '');
-        soundBtn.textContent = soundEnabled ? 'On' : 'Off';
+        updateSoundUI();
         localStorage.setItem('settings_sound_enabled', String(soundEnabled));
         if (ctx.onToggleSound) ctx.onToggleSound(soundEnabled);
     });
+
+    function updateSoundUI() {
+        soundBtn.className = 'settings-toggle-btn' + (soundEnabled ? ' is-active' : '');
+        soundBtn.textContent = soundEnabled ? 'On' : 'Off';
+    }
+
     soundRow.appendChild(soundLabel);
     soundRow.appendChild(soundBtn);
     rowsWrap.appendChild(soundRow);
@@ -95,18 +110,23 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     regBtn.className = 'settings-segmented-btn' + (graphicsProfile === 'regular' ? ' is-selected' : '');
     regBtn.textContent = 'Regular';
 
-    highBtn.addEventListener('click', () => {
+    function updateGraphicsUI() {
+        highBtn.className = 'settings-segmented-btn' + (graphicsProfile === 'high_performance' ? ' is-selected' : '');
+        regBtn.className = 'settings-segmented-btn' + (graphicsProfile === 'regular' ? ' is-selected' : '');
+    }
+
+    highBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         graphicsProfile = 'high_performance';
-        highBtn.className = 'settings-segmented-btn is-selected';
-        regBtn.className = 'settings-segmented-btn';
+        updateGraphicsUI();
         localStorage.setItem('settings_graphics_profile', 'high_performance');
         if (ctx.onChangeGraphics) ctx.onChangeGraphics('high_performance');
     });
 
-    regBtn.addEventListener('click', () => {
+    regBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         graphicsProfile = 'regular';
-        regBtn.className = 'settings-segmented-btn is-selected';
-        highBtn.className = 'settings-segmented-btn';
+        updateGraphicsUI();
         localStorage.setItem('settings_graphics_profile', 'regular');
         if (ctx.onChangeGraphics) ctx.onChangeGraphics('regular');
     });
@@ -123,7 +143,8 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     const devBtn = document.createElement('button');
     devBtn.className = 'settings-dev-btn';
     devBtn.textContent = 'Developer Options';
-    devBtn.addEventListener('click', () => {
+    devBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         ctx.onOpenDeveloper();
     });
     win.appendChild(devBtn);
@@ -132,28 +153,43 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     root.appendChild(overlay);
 
     overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) close();
+        if (e.target === overlay) {
+            e.stopPropagation();
+            close();
+        }
     });
 
-    let isOpen = false;
+    let isModalOpen = false;
 
     function open() {
-        isOpen = true;
+        if (ctx.getSoundEnabled) {
+            soundEnabled = ctx.getSoundEnabled();
+            updateSoundUI();
+        }
+        if (ctx.getGraphicsProfile) {
+            graphicsProfile = ctx.getGraphicsProfile();
+            updateGraphicsUI();
+        }
+        isModalOpen = true;
         overlay.style.display = 'flex';
     }
 
     function close() {
-        isOpen = false;
+        isModalOpen = false;
         overlay.style.display = 'none';
     }
 
     function toggle() {
-        if (isOpen) {
+        if (isModalOpen) {
             close();
         } else {
             open();
         }
     }
 
-    return { open, close, toggle };
+    function isOpen() {
+        return isModalOpen;
+    }
+
+    return { open, close, toggle, isOpen };
 }
