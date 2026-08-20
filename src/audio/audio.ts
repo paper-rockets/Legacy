@@ -48,11 +48,11 @@ export function noteFreq(note: string | number): number {
     return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
-// 6 fun, lightweight procedural tracks with catchy grooves
+// 7 melodic, relaxing procedural tracks with lyrical phrasing and boost beat enhancement
 export const funTracks: FunTrackConfig[] = [
     {
         name: "Skyline Breeze",
-        bpm: 124,
+        bpm: 88,
         stepsPerBeat: 4,
         padOsc: 'triangle',
         leadOsc: 'sine',
@@ -138,7 +138,7 @@ export const funTracks: FunTrackConfig[] = [
     },
     {
         name: "Glider Groove",
-        bpm: 120,
+        bpm: 92,
         stepsPerBeat: 4,
         padOsc: 'sawtooth',
         leadOsc: 'triangle',
@@ -223,8 +223,8 @@ export const funTracks: FunTrackConfig[] = [
         ]
     },
     {
-        name: "Starbound Rush",
-        bpm: 132,
+        name: "Starbound Serenade",
+        bpm: 90,
         stepsPerBeat: 4,
         padOsc: 'sawtooth',
         leadOsc: 'square',
@@ -310,7 +310,7 @@ export const funTracks: FunTrackConfig[] = [
     },
     {
         name: "Sunny Meadows",
-        bpm: 116,
+        bpm: 84,
         stepsPerBeat: 4,
         padOsc: 'triangle',
         leadOsc: 'triangle',
@@ -396,7 +396,7 @@ export const funTracks: FunTrackConfig[] = [
     },
     {
         name: "Cloud Hopper",
-        bpm: 128,
+        bpm: 88,
         stepsPerBeat: 4,
         padOsc: 'triangle',
         leadOsc: 'square',
@@ -482,7 +482,7 @@ export const funTracks: FunTrackConfig[] = [
     },
     {
         name: "Rainbow Drift",
-        bpm: 136,
+        bpm: 94,
         stepsPerBeat: 4,
         padOsc: 'sawtooth',
         leadOsc: 'sawtooth',
@@ -568,7 +568,7 @@ export const funTracks: FunTrackConfig[] = [
     },
     {
         name: "Candy Carnival",
-        bpm: 130,
+        bpm: 92,
         stepsPerBeat: 4,
         padOsc: 'triangle',
         leadOsc: 'sine',
@@ -1241,9 +1241,8 @@ export class AmbientAudioEngine {
         const track = funTracks[this.currentTrack];
         if (!track || !track.bars || track.bars.length === 0) return;
 
-        // Dynamic tempo calculation: base BPM scales up by up to 38% during boost
-        const tempoMultiplier = 1.0 + this.boostFactor * 0.38;
-        const currentBpm = track.bpm * tempoMultiplier;
+        // Steady melodic BPM with NO tempo jumps or speed changes
+        const currentBpm = track.bpm;
         const secondsPerBeat = 60 / currentBpm;
         const stepDuration = secondsPerBeat / track.stepsPerBeat;
 
@@ -1259,30 +1258,47 @@ export class AmbientAudioEngine {
 
             if (stepData) {
                 const noteTime = this.nextStepTime;
+                const isBoosted = this.boostFactor > 0.15;
 
-                // Drums
+                // Base Drums
                 if (stepData.kick) this.playKick(noteTime);
                 if (stepData.snare) this.playSnare(noteTime);
                 if (stepData.hat) this.playHat(noteTime, Boolean(stepData.openHat));
 
+                // Dynamic Boost Beat Modifications (adds driving rhythmic syncopation while tempo stays steady)
+                if (isBoosted) {
+                    // 1. Offbeat 16th-note shimmer hi-hats for groove subdivision
+                    if (this.boostFactor > 0.22 && (this.currentStep % 2 === 1) && !stepData.hat) {
+                        this.playHat(noteTime, false);
+                    }
+                    // 2. Syncopated groove kick accents on steps 6 & 14
+                    if (this.boostFactor > 0.38 && (this.currentStep === 6 || this.currentStep === 14) && !stepData.kick) {
+                        this.playKick(noteTime);
+                    }
+                    // 3. Subtle syncopated ghost snare accent on step 11
+                    if (this.boostFactor > 0.55 && this.currentStep === 11 && !stepData.snare) {
+                        this.playSnare(noteTime);
+                    }
+                }
+
                 // Bass
                 if (stepData.bass) {
                     const bFreq = noteFreq(stepData.bass);
-                    this.playBass(bFreq, noteTime, stepDuration * 1.8, track.bassOsc);
+                    this.playBass(bFreq, noteTime, stepDuration * 2.0, track.bassOsc);
                 }
 
-                // Chord
+                // Chord Pads (warm, sustaining harmonies)
                 if (stepData.chord && Array.isArray(stepData.chord)) {
                     stepData.chord.forEach(cNote => {
                         const cFreq = noteFreq(cNote);
-                        this.playChordNote(cFreq, noteTime, stepDuration * 3.5, track.padOsc);
+                        this.playChordNote(cFreq, noteTime, stepDuration * 3.8, track.padOsc);
                     });
                 }
 
-                // Lead
+                // Lead Melody (soaring, expressive)
                 if (stepData.lead) {
                     const lFreq = noteFreq(stepData.lead);
-                    this.playLead(lFreq, noteTime, stepDuration * 1.6, track.leadOsc);
+                    this.playLead(lFreq, noteTime, stepDuration * 1.8, track.leadOsc);
                 }
             }
 
