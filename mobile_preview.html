@@ -3,212 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Device Simulator - iPhone, S25 Ultra, Galaxy Tab S6 Lite</title>
+    <title>Mobile Device Simulator</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        body {
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             background: #0d1117;
             color: #f0f6fc;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding: 20px;
-            overflow-x: auto;
-        }
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-        }
-        h1 {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-        }
-        .header-links {
-            display: flex;
-            gap: 12px;
-            font-size: 13px;
-        }
-        .header-links a {
-            color: #58a6ff;
-            text-decoration: none;
-            background: rgba(88, 166, 255, 0.1);
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(88, 166, 255, 0.2);
-            transition: all 0.15s ease;
-        }
-        .header-links a:hover {
-            background: rgba(88, 166, 255, 0.2);
-        }
-        .devices-container {
-            display: flex;
-            gap: 28px;
-            align-items: flex-start;
-            padding-bottom: 30px;
-        }
-        .device-card {
-            background: #161b22;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 16px;
-            padding: 16px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
         }
-        .device-header {
-            width: 100%;
+        /* Top Navigation Bar */
+        .simulator-nav {
+            flex-shrink: 0;
+            background: #161b22;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 10px 20px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            justify-content: space-between;
+            gap: 16px;
+            z-index: 100;
         }
-        .device-name {
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .nav-title {
             font-size: 14px;
             font-weight: 700;
+            letter-spacing: 0.02em;
             color: #ffffff;
         }
-        .device-res {
-            font-size: 11px;
-            color: #8b949e;
-            font-variant-numeric: tabular-nums;
+        .segmented-group {
+            display: inline-flex;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px;
+            padding: 3px;
+            gap: 2px;
         }
-        .frame-wrapper {
-            background: #000;
-            border-radius: 28px;
-            border: 4px solid #30363d;
-            overflow: hidden;
+        .segmented-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .segmented-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .segmented-btn.active {
+            background: #3b82f6;
+            color: #ffffff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-link-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: #c9d1d9;
+            font-family: inherit;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .nav-link-btn:hover {
+            background: rgba(255, 255, 255, 0.16);
+            color: #ffffff;
+        }
+        /* Viewport Canvas Stage */
+        .stage {
+            flex: 1;
+            width: 100%;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: radial-gradient(circle at center, #1b2230 0%, #0d1117 100%);
+        }
+        .device-wrapper {
             position: relative;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            background: #000000;
+            border: 6px solid #2d333b;
+            border-radius: 36px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            transition: width 0.25s ease, height 0.25s ease, transform 0.25s ease;
+            transform-origin: center center;
         }
-        iframe {
+        .device-screen {
+            width: 100%;
+            height: 100%;
             border: none;
             display: block;
             background: #62b1e8;
         }
-        .iphone-frame {
-            width: 393px;
-            height: 852px;
-        }
-        .s25-frame {
-            width: 412px;
-            height: 919px;
-        }
-        .tab-frame {
-            width: 800px;
-            height: 1280px;
-        }
-        .tab-wrapper {
-            width: 808px;
-            height: 1288px;
-        }
-        .device-controls {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            width: 100%;
-        }
-        .ctrl-btn {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.08);
+        .device-info-badge {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #c9d1d9;
+            color: rgba(255, 255, 255, 0.85);
             font-size: 11px;
             font-weight: 600;
-            padding: 6px 0;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.15s ease;
-        }
-        .ctrl-btn:hover {
-            background: rgba(255, 255, 255, 0.16);
-            color: #ffffff;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            pointer-events: none;
+            white-space: nowrap;
+            letter-spacing: 0.03em;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div>
-            <h1>Mobile Multi-Device Simulation Hub</h1>
-            <p style="font-size: 12px; color: #8b949e; margin-top: 4px;">Live previewing game UI, on-screen touch joystick, translucent boost button, and top menu.</p>
+    <header class="simulator-nav">
+        <div class="nav-left">
+            <span class="nav-title">Device View</span>
+
+            <!-- Device Selector -->
+            <div class="segmented-group" id="device-selector">
+                <button class="segmented-btn active" onclick="setDevice('iphone')">iPhone (15/16 Pro)</button>
+                <button class="segmented-btn" onclick="setDevice('s25')">Galaxy S25 Ultra</button>
+                <button class="segmented-btn" onclick="setDevice('tab_s6')">Galaxy Tab S6 Lite</button>
+            </div>
+
+            <!-- Orientation Selector -->
+            <div class="segmented-group" id="orientation-selector">
+                <button class="segmented-btn active" id="btn-portrait" onclick="setOrientation('portrait')">Portrait</button>
+                <button class="segmented-btn" id="btn-landscape" onclick="setOrientation('landscape')">Landscape</button>
+            </div>
+
+            <!-- Zoom / Scale Selector -->
+            <div class="segmented-group" id="scale-selector">
+                <button class="segmented-btn active" id="scale-fit" onclick="setScale('fit')">Auto Fit</button>
+                <button class="segmented-btn" id="scale-100" onclick="setScale('100')">100%</button>
+                <button class="segmented-btn" id="scale-75" onclick="setScale('75')">75%</button>
+                <button class="segmented-btn" id="scale-50" onclick="setScale('50')">50%</button>
+            </div>
         </div>
-        <div class="header-links">
-            <a href="/" target="_blank">Open Fullscreen Game</a>
-            <a href="http://192.168.0.22:8080" target="_blank">Local Wi-Fi Link (192.168.0.22:8080)</a>
+
+        <div class="nav-right">
+            <button class="nav-link-btn" onclick="reloadFrame()">Reload</button>
+            <a class="nav-link-btn" href="/" target="_blank">Full Window</a>
+            <a class="nav-link-btn" href="http://192.168.0.22:8080" target="_blank">Wi-Fi (192.168.0.22:8080)</a>
         </div>
     </header>
 
-    <div class="devices-container">
-        <!-- 1. iPhone 16 / 15 Pro -->
-        <div class="device-card">
-            <div class="device-header">
-                <div class="device-name">iPhone (15/16 Pro)</div>
-                <div class="device-res">393 x 852 (19.5:9)</div>
-            </div>
-            <div class="frame-wrapper">
-                <iframe id="frame-iphone" class="iphone-frame" src="/"></iframe>
-            </div>
-            <div class="device-controls">
-                <button class="ctrl-btn" onclick="rotate('frame-iphone', 393, 852)">Portrait</button>
-                <button class="ctrl-btn" onclick="rotate('frame-iphone', 852, 393)">Landscape</button>
-                <button class="ctrl-btn" onclick="reloadFrame('frame-iphone')">Reload</button>
-            </div>
+    <main class="stage" id="stage">
+        <div class="device-wrapper" id="device-wrapper">
+            <iframe id="device-frame" class="device-screen" src="/"></iframe>
+            <div class="device-info-badge" id="device-badge">iPhone (15/16 Pro) — 393 x 852</div>
         </div>
-
-        <!-- 2. Samsung Galaxy S25 Ultra -->
-        <div class="device-card">
-            <div class="device-header">
-                <div class="device-name">Samsung Galaxy S25 Ultra</div>
-                <div class="device-res">412 x 919 (20:9)</div>
-            </div>
-            <div class="frame-wrapper">
-                <iframe id="frame-s25" class="s25-frame" src="/"></iframe>
-            </div>
-            <div class="device-controls">
-                <button class="ctrl-btn" onclick="rotate('frame-s25', 412, 919)">Portrait</button>
-                <button class="ctrl-btn" onclick="rotate('frame-s25', 919, 412)">Landscape</button>
-                <button class="ctrl-btn" onclick="reloadFrame('frame-s25')">Reload</button>
-            </div>
-        </div>
-
-        <!-- 3. Samsung Galaxy Tab S6 Lite -->
-        <div class="device-card">
-            <div class="device-header">
-                <div class="device-name">Samsung Galaxy Tab S6 Lite</div>
-                <div class="device-res">800 x 1280 (16:10 Tablet)</div>
-            </div>
-            <div class="frame-wrapper tab-wrapper">
-                <iframe id="frame-tab" class="tab-frame" src="/"></iframe>
-            </div>
-            <div class="device-controls">
-                <button class="ctrl-btn" onclick="rotate('frame-tab', 800, 1280)">Portrait</button>
-                <button class="ctrl-btn" onclick="rotate('frame-tab', 1280, 800)">Landscape</button>
-                <button class="ctrl-btn" onclick="reloadFrame('frame-tab')">Reload</button>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script>
-        function rotate(frameId, w, h) {
-            const frame = document.getElementById(frameId);
-            frame.style.width = w + 'px';
-            frame.style.height = h + 'px';
-            const wrapper = frame.parentElement;
-            wrapper.style.width = (w + 8) + 'px';
-            wrapper.style.height = (h + 8) + 'px';
+        const DEVICES = {
+            iphone: {
+                name: 'iPhone (15/16 Pro)',
+                portrait: { w: 393, h: 852 },
+                landscape: { w: 852, h: 393 },
+                radius: '42px'
+            },
+            s25: {
+                name: 'Samsung Galaxy S25 Ultra',
+                portrait: { w: 412, h: 919 },
+                landscape: { w: 919, h: 412 },
+                radius: '28px'
+            },
+            tab_s6: {
+                name: 'Samsung Galaxy Tab S6 Lite',
+                portrait: { w: 800, h: 1280 },
+                landscape: { w: 1280, h: 800 },
+                radius: '24px'
+            }
+        };
+
+        let currentDeviceId = 'iphone';
+        let currentOrientation = 'portrait';
+        let currentScaleMode = 'fit';
+
+        const wrapper = document.getElementById('device-wrapper');
+        const frame = document.getElementById('device-frame');
+        const badge = document.getElementById('device-badge');
+        const stage = document.getElementById('stage');
+
+        function updateDisplay() {
+            const dev = DEVICES[currentDeviceId];
+            const dims = dev[currentOrientation];
+
+            wrapper.style.width = dims.w + 'px';
+            wrapper.style.height = dims.h + 'px';
+            wrapper.style.borderRadius = dev.radius;
+
+            // Apply scale
+            applyScale(dims.w, dims.h);
+
+            badge.textContent = `${dev.name} (${currentOrientation.toUpperCase()}) — ${dims.w} x ${dims.h}`;
+
+            // Sync Device buttons
+            document.querySelectorAll('#device-selector .segmented-btn').forEach((btn, idx) => {
+                const keys = ['iphone', 's25', 'tab_s6'];
+                btn.classList.toggle('active', keys[idx] === currentDeviceId);
+            });
+
+            // Sync Orientation buttons
+            document.getElementById('btn-portrait').classList.toggle('active', currentOrientation === 'portrait');
+            document.getElementById('btn-landscape').classList.toggle('active', currentOrientation === 'landscape');
         }
-        function reloadFrame(frameId) {
-            const frame = document.getElementById(frameId);
+
+        function applyScale(w, h) {
+            if (currentScaleMode === 'fit') {
+                const stageW = stage.clientWidth - 48;
+                const stageH = stage.clientHeight - 48;
+                const scaleW = stageW / w;
+                const scaleH = stageH / h;
+                const scale = Math.min(1.0, scaleW, scaleH);
+                wrapper.style.transform = `scale(${scale})`;
+            } else if (currentScaleMode === '100') {
+                wrapper.style.transform = 'scale(1.0)';
+            } else if (currentScaleMode === '75') {
+                wrapper.style.transform = 'scale(0.75)';
+            } else if (currentScaleMode === '50') {
+                wrapper.style.transform = 'scale(0.50)';
+            }
+
+            document.querySelectorAll('#scale-selector .segmented-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.id === 'scale-' + currentScaleMode);
+            });
+        }
+
+        function setDevice(devId) {
+            currentDeviceId = devId;
+            updateDisplay();
+        }
+
+        function setOrientation(ori) {
+            currentOrientation = ori;
+            updateDisplay();
+        }
+
+        function setScale(mode) {
+            currentScaleMode = mode;
+            const dims = DEVICES[currentDeviceId][currentOrientation];
+            applyScale(dims.w, dims.h);
+        }
+
+        function reloadFrame() {
             frame.src = frame.src;
         }
+
+        window.addEventListener('resize', () => {
+            if (currentScaleMode === 'fit') {
+                const dims = DEVICES[currentDeviceId][currentOrientation];
+                applyScale(dims.w, dims.h);
+            }
+        });
+
+        updateDisplay();
     </script>
 </body>
 </html>
