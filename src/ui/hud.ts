@@ -129,7 +129,7 @@ export function createHud(deps: HudDeps): Hud {
     const biomeWrap = document.createElement('div');
     biomeWrap.className = 'hud-dropdown-wrap';
     const biomeBtn = document.createElement('button');
-    biomeBtn.className = 'hud-btn';
+    biomeBtn.className = 'hud-btn hud-btn-biome';
     const biomeDropdown = document.createElement('div');
     biomeDropdown.className = 'hud-dropdown hud-dropdown-wide';
     biomeDropdown.hidden = true;

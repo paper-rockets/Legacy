@@ -18,8 +18,12 @@
     transform: translateX(-50%);
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     padding: 4px 10px;
+    width: auto;
+    min-width: 660px;
+    max-width: calc(100vw - 120px);
     background: rgba(18, 22, 32, 0.42);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -31,6 +35,9 @@
 }
 
 .hud-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: transparent;
     border: none;
     outline: none;
@@ -39,11 +46,18 @@
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.02em;
-    padding: 6px 12px;
+    padding: 6px 10px;
     border-radius: 9999px;
     cursor: pointer;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.hud-btn-biome {
+    width: 140px;
+    text-align: center;
 }
 
 .hud-btn:hover {
@@ -68,6 +82,7 @@
     border-radius: 9999px;
     padding: 2px;
     gap: 2px;
+    flex-shrink: 0;
 }
 
 .hud-seg-btn {
@@ -82,6 +97,7 @@
     font-size: 11.5px;
     font-weight: 600;
     padding: 5px 9px;
+    min-width: 48px;
     border-radius: 9999px;
     cursor: pointer;
     white-space: nowrap;
@@ -107,6 +123,7 @@
     width: 1px;
     height: 14px;
     background: rgba(255, 255, 255, 0.16);
+    flex-shrink: 0;
 }
 
 .hud-fps {
@@ -115,9 +132,12 @@
     font-variant-numeric: tabular-nums;
     font-size: 11px;
     font-weight: 600;
-    padding: 6px 10px;
+    width: 58px;
+    text-align: center;
+    padding: 6px 4px;
     pointer-events: none;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .hud-dropdown-wrap {
@@ -161,12 +181,15 @@
     position: relative;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .hud-music-player {
     display: flex;
     align-items: center;
     gap: 3px;
+    width: 228px;
+    flex-shrink: 0;
     background: rgba(255, 255, 255, 0.06);
     padding: 3px 6px 3px 4px;
     border-radius: 9999px;
@@ -187,6 +210,7 @@
     color: rgba(255, 255, 255, 0.7);
     width: 22px;
     height: 22px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -212,6 +236,7 @@
     color: #ffffff;
     width: 24px;
     height: 24px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -240,7 +265,10 @@
 .hud-music-track-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: space-between;
+    gap: 4px;
+    width: 145px;
+    flex-shrink: 0;
     background: transparent;
     border: none;
     outline: none;
@@ -248,7 +276,7 @@
     font-family: inherit;
     font-size: 11.5px;
     font-weight: 600;
-    padding: 4px 8px;
+    padding: 4px 6px;
     border-radius: 9999px;
     cursor: pointer;
     white-space: nowrap;
@@ -264,13 +292,17 @@
     display: flex;
     align-items: center;
     color: #a78bfa;
+    flex-shrink: 0;
 }
 
 .hud-music-title {
-    max-width: 110px;
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-align: left;
 }
 
 .hud-music-bars {
