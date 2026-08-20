@@ -88,7 +88,10 @@ export class RenderPipeline {
         const targetRadius = bloom.globalRadius !== undefined ? Math.max(0, Math.min(2.0, bloom.globalRadius)) : this.bloomPass.radius;
         const targetThreshold = bloom.globalThreshold !== undefined ? Math.max(0, Math.min(1.0, bloom.globalThreshold)) : this.bloomPass.threshold;
 
-        if (lerpFactor !== undefined && lerpFactor < 1.0) {
+        if (timePhase === 0) {
+            this.bloomPass.strength = 0.0;
+            this.bloomPass.enabled = false;
+        } else if (lerpFactor !== undefined && lerpFactor < 1.0) {
             this.bloomPass.strength = THREE.MathUtils.lerp(this.bloomPass.strength, targetStrength, lerpFactor);
             this.bloomPass.radius = THREE.MathUtils.lerp(this.bloomPass.radius, targetRadius, lerpFactor);
             this.bloomPass.threshold = THREE.MathUtils.lerp(this.bloomPass.threshold, targetThreshold, lerpFactor);

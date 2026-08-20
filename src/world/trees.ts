@@ -964,67 +964,38 @@ export class TreeSystem {
                 // Reflective Candy Coating & Glossy Specular highlights
                 vec3 viewDir = normalize(cameraPosition - vTreeWorldPos);
                 vec3 norm = normalize(vTreeWorldNormal);
-                float NdotV = max(0.0, dot(norm, viewDir));
-                float fresnel = pow(1.0 - NdotV, 3.2);
+                float NdotV = clamp(dot(norm, viewDir), 0.0, 1.0);
+                float fresnel = (1.0 - NdotV) * (1.0 - NdotV);
 
-                vec3 sunDir = normalize(vec3(0.5, 0.8, 0.3));
-                vec3 halfVec = normalize(sunDir + viewDir);
-                float NdotH = max(0.0, dot(norm, halfVec));
-                float spec = pow(NdotH, 32.0) * uCandyGloss;
+                vec3 halfVec = normalize(vec3(0.38, 0.76, 0.52) + viewDir);
+                float NdotH = clamp(dot(norm, halfVec), 0.0, 1.0);
+                float spec = NdotH * NdotH * NdotH * NdotH;
 
-                float sparkle = pow(fract(sin(dot(vTreeWorldPos.xz * 2.0, vec2(12.9898, 78.233))) * 43758.5453), 14.0) * uSugarSparkle * (1.0 - NdotV);
-                vec3 candyGlossSheen = vec3(1.0, 0.96, 0.98) * (fresnel * uCandyGloss * 0.35 + spec * 0.75 + sparkle * 0.40);
+                vec3 candyGlossSheen = vec3(1.0, 0.96, 0.98) * (fresnel * uCandyGloss * 0.25 + spec * uCandyGloss * 0.45);
 
                 // Multi-Style Texture Shaders:
-                // 0.0: Original Textures (Classic GLTF texture map with natural matte diffuse shading)
-                // 1.0: Candy Gloss & Reflectivity (Clearcoat enamel gloss, bright specular highlight, sugar sparkle)
-                // 2.0: Cotton Candy Puff (Soft volumetric cloud billows, subsurface light scattering, pillowy rim)
-                // 3.0: Foliage Flutter (Organic cellular leaf clusters, light dappling, leaf micro-texture)
-                // 4.0: Prismatic Crystal (Iridescent facet diffraction, rainbow specular glint, gemstone edges)
-                // 5.0: Woodland Moss & Bark (Fibrous bark striations, organic moss mottling, velvet forest dapple)
-                // 6.0: Velvet Petal Bloom (Soft velvet subsurface absorption, rich petal diffusion, peach fuzz rim)
-
                 if (vColorMode > 0.5 || vTextureStyle < 0.5) {
-                    // 0. Original Textures: Preserve authentic GLTF diffuse texture maps with natural matte shading
+                    // 0. Original Textures
                     diffuseColor.rgb = finalTreeColor;
                 } else if (vTextureStyle < 1.5) {
-                    // 1. Candy Gloss & Reflectivity: Clearcoat enamel gloss with sparkling sugar crystals
-                    if (vPartType > 1.5) {
-                        diffuseColor.rgb = finalTreeColor + candyGlossSheen * 1.35 + finalTreeColor * (uCandyTranslucency * 0.35 * (1.0 - NdotV));
-                    } else {
-                        diffuseColor.rgb = finalTreeColor + candyGlossSheen * 0.45;
-                    }
+                    // 1. Candy Gloss & Reflectivity
+                    diffuseColor.rgb = finalTreeColor + candyGlossSheen * 0.85;
                 } else if (vTextureStyle < 2.5) {
-                    // 2. Cotton Candy Puff: Soft pillowy volumetric billows with subsurface transmission
-                    float puff = sin(vTreeWorldPos.x * 2.8) * cos(vTreeWorldPos.y * 2.8) * sin(vTreeWorldPos.z * 2.8);
-                    vec3 cottonMod = vec3(0.92 + puff * 0.15);
-                    vec3 softSheen = candyGlossSheen * 0.35;
-                    diffuseColor.rgb = finalTreeColor * cottonMod + softSheen + finalTreeColor * (uCandyTranslucency * 0.85 * pow(1.0 - NdotV, 2.0));
+                    // 2. Cotton Candy Puff
+                    diffuseColor.rgb = finalTreeColor * 1.05 + candyGlossSheen * 0.35;
                 } else if (vTextureStyle < 3.5) {
-                    // 3. Foliage Flutter: Dynamic organic cellular dappling and leafy micro-structure
-                    float flutter = sin(vTreeWorldPos.x * 14.0) * cos(vTreeWorldPos.z * 14.0) * sin(vTreeWorldPos.y * 10.0);
-                    float leafDapple = (smoothstep(-0.4, 0.4, flutter) - 0.5) * 0.28;
-                    vec3 leafMod = vec3(1.0 + leafDapple * 0.85, 1.0 + leafDapple * 1.25, 1.0 + leafDapple * 0.70);
-                    diffuseColor.rgb = finalTreeColor * leafMod + candyGlossSheen * 0.45;
+                    // 3. Foliage Flutter
+                    diffuseColor.rgb = finalTreeColor + candyGlossSheen * 0.30;
                 } else if (vTextureStyle < 4.5) {
-                    // 4. Prismatic Crystal: Gemstone facets with rainbow iridescence and prismatic specular
-                    float facet = fract(sin(dot(floor(vTreeWorldPos * 6.0), vec3(12.9898, 78.233, 45.164))) * 43758.5453);
-                    vec3 rainbow = 0.5 + 0.5 * cos(6.28318 * (fresnel + facet + vec3(0.0, 0.33, 0.67)));
-                    vec3 crystalGlint = rainbow * (spec * 1.8 + sparkle * 0.85) * (0.8 + facet * 0.4);
-                    diffuseColor.rgb = mix(finalTreeColor, rainbow, 0.25 * fresnel) + crystalGlint + finalTreeColor * (uCandyTranslucency * 0.45);
+                    // 4. Prismatic Crystal
+                    vec3 rainbow = 0.5 + 0.5 * cos(6.28318 * (fresnel + vec3(0.0, 0.33, 0.67)));
+                    diffuseColor.rgb = mix(finalTreeColor, rainbow, 0.20 * fresnel) + candyGlossSheen * 0.65;
                 } else if (vTextureStyle < 5.5) {
-                    // 5. Woodland Moss & Bark: Natural earthy moss patches, bark grain, and velvet forest dapple
-                    float barkGrain = sin(vTreeWorldPos.y * 22.0 + sin(vTreeWorldPos.x * 8.0) * 1.5);
-                    float mossPattern = sin(vTreeWorldPos.x * 5.0) * sin(vTreeWorldPos.z * 5.0);
-                    vec3 mossTint = vec3(0.24, 0.52, 0.18);
-                    float mossMask = smoothstep(0.1, 0.6, mossPattern) * (vPartType < 1.5 ? 0.35 : 0.65);
-                    vec3 woodBase = mix(finalTreeColor, mossTint, mossMask) * (0.90 + barkGrain * 0.10);
-                    diffuseColor.rgb = woodBase + candyGlossSheen * 0.20;
+                    // 5. Woodland Moss & Bark
+                    diffuseColor.rgb = finalTreeColor * 0.95 + candyGlossSheen * 0.15;
                 } else {
-                    // 6. Velvet Petal Bloom: Soft matte chromatic diffusion with velvety peach-fuzz rim
-                    float velvetRim = pow(1.0 - NdotV, 1.8);
-                    vec3 richHue = mix(finalTreeColor, finalTreeColor * 1.35 + vec3(0.08, 0.04, 0.08), velvetRim);
-                    diffuseColor.rgb = richHue + candyGlossSheen * 0.25 + finalTreeColor * (0.35 * velvetRim);
+                    // 6. Velvet Petal Bloom
+                    diffuseColor.rgb = finalTreeColor * (1.0 + 0.25 * fresnel) + candyGlossSheen * 0.20;
                 }
                 `
             );

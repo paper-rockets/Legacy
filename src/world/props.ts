@@ -11,12 +11,12 @@ const COTTON_CANDY_COLORS = [
 ];
 
 function buildCottonCandyCloudGeometry(): THREE.BufferGeometry {
-    const puffCenter = new THREE.IcosahedronGeometry(24, 2).scale(1.8, 0.95, 1.3);
-    const puffL = new THREE.IcosahedronGeometry(18, 2).scale(1.3, 0.85, 1.1).translate(-22, 3, 5);
-    const puffR = new THREE.IcosahedronGeometry(19, 2).scale(1.4, 0.85, 1.2).translate(23, 2, -4);
-    const puffTop = new THREE.IcosahedronGeometry(16, 2).scale(1.2, 0.9, 1.1).translate(4, 12, 2);
-    const puffFront = new THREE.IcosahedronGeometry(15, 2).scale(1.1, 0.8, 1.2).translate(-6, -2, 16);
-    const puffBack = new THREE.IcosahedronGeometry(16, 2).scale(1.2, 0.8, 1.1).translate(8, 2, -14);
+    const puffCenter = new THREE.IcosahedronGeometry(24, 1).scale(1.8, 0.95, 1.3);
+    const puffL = new THREE.IcosahedronGeometry(18, 1).scale(1.3, 0.85, 1.1).translate(-22, 3, 5);
+    const puffR = new THREE.IcosahedronGeometry(19, 1).scale(1.4, 0.85, 1.2).translate(23, 2, -4);
+    const puffTop = new THREE.IcosahedronGeometry(16, 1).scale(1.2, 0.9, 1.1).translate(4, 12, 2);
+    const puffFront = new THREE.IcosahedronGeometry(15, 1).scale(1.1, 0.8, 1.2).translate(-6, -2, 16);
+    const puffBack = new THREE.IcosahedronGeometry(16, 1).scale(1.2, 0.8, 1.1).translate(8, 2, -14);
 
     const merged = mergeGeometries([puffCenter, puffL, puffR, puffTop, puffFront, puffBack], false) || puffCenter;
 
