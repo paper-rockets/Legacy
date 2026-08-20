@@ -9,7 +9,6 @@ import { PropsSystem } from '../world/props';
 import { TreeSystem } from '../world/trees';
 import { SkyCastleSystem } from '../world/skyCastles';
 import { AmbientAudioEngine } from '../audio/audio';
-import { FLIGHT_MODELS } from '../player/FlightModels';
 import { BIOME_LOCATIONS } from '../world/noise';
 import { globalConfigManager } from '../core/config';
 
@@ -125,49 +124,6 @@ export function createHud(deps: HudDeps): Hud {
     setTimeActive(deps.lighting.timePhase || 0);
 
     topBar.appendChild(makeDivider());
-
-    // Avatar / flight model selector
-    const avatarWrap = document.createElement('div');
-    avatarWrap.className = 'hud-dropdown-wrap';
-    const avatarBtn = document.createElement('button');
-    avatarBtn.className = 'hud-btn';
-    const avatarDropdown = document.createElement('div');
-    avatarDropdown.className = 'hud-dropdown';
-    avatarDropdown.hidden = true;
-    avatarWrap.appendChild(avatarBtn);
-    avatarWrap.appendChild(avatarDropdown);
-    topBar.appendChild(avatarWrap);
-
-    const modelButtons: HTMLButtonElement[] = [];
-    FLIGHT_MODELS.forEach((m, idx) => {
-        const optBtn = document.createElement('button');
-        optBtn.className = 'hud-dropdown-item';
-        optBtn.textContent = m.name;
-        optBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deps.player.setModel(idx);
-            deps.audio.onFlightModelChanged(deps.player.getCurrentModelDef());
-            updateModelButtonUI();
-            closeAllDropdowns();
-        });
-        avatarDropdown.appendChild(optBtn);
-        modelButtons.push(optBtn);
-    });
-
-    function updateModelButtonUI() {
-        const def = deps.player.getCurrentModelDef();
-        avatarBtn.textContent = def.name;
-        modelButtons.forEach((btn, idx) => {
-            btn.classList.toggle('active', idx === deps.player.currentModelIndex);
-        });
-    }
-    deps.player.onModelChanged = () => updateModelButtonUI();
-    updateModelButtonUI();
-
-    avatarBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleDropdown(avatarDropdown);
-    });
 
     // Biome / destination selector
     const biomeWrap = document.createElement('div');
@@ -368,7 +324,6 @@ export function createHud(deps: HudDeps): Hud {
     let openDropdown: HTMLElement | null = null;
 
     function closeAllDropdowns() {
-        avatarDropdown.hidden = true;
         biomeDropdown.hidden = true;
         musicDropdown.hidden = true;
         openDropdown = null;

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Device Simulator - iPhone, S25 Ultra, Galaxy Tab S6 Lite</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #0d1117;
+            color: #f0f6fc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .header-links {
+            display: flex;
+            gap: 12px;
+            font-size: 13px;
+        }
+        .header-links a {
+            color: #58a6ff;
+            text-decoration: none;
+            background: rgba(88, 166, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            transition: all 0.15s ease;
+        }
+        .header-links a:hover {
+            background: rgba(88, 166, 255, 0.2);
+        }
+        .devices-container {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+            padding-bottom: 30px;
+        }
+        .device-card {
+            background: #161b22;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+        }
+        .device-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .device-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .device-res {
+            font-size: 11px;
+            color: #8b949e;
+            font-variant-numeric: tabular-nums;
+        }
+        .frame-wrapper {
+            background: #000;
+            border-radius: 28px;
+            border: 4px solid #30363d;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        iframe {
+            border: none;
+            display: block;
+            background: #62b1e8;
+        }
+        .iphone-frame {
+            width: 393px;
+            height: 852px;
+        }
+        .s25-frame {
+            width: 412px;
+            height: 919px;
+        }
+        .tab-frame {
+            width: 800px;
+            height: 1280px;
+        }
+        .tab-wrapper {
+            width: 808px;
+            height: 1288px;
+        }
+        .device-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .ctrl-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #c9d1d9;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+        .ctrl-btn:hover {
+            background: rgba(255, 255, 255, 0.16);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Mobile Multi-Device Simulation Hub</h1>
+            <p style="font-size: 12px; color: #8b949e; margin-top: 4px;">Live previewing game UI, on-screen touch joystick, translucent boost button, and top menu.</p>
+        </div>
+        <div class="header-links">
+            <a href="/" target="_blank">Open Fullscreen Game</a>
+            <a href="http://192.168.0.22:8080" target="_blank">Local Wi-Fi Link (192.168.0.22:8080)</a>
+        </div>
+    </header>
+
+    <div class="devices-container">
+        <!-- 1. iPhone 16 / 15 Pro -->
+        <div class="device-card">
+            <div class="device-header">
+                <div class="device-name">iPhone (15/16 Pro)</div>
+                <div class="device-res">393 x 852 (19.5:9)</div>
+            </div>
+            <div class="frame-wrapper">
+                <iframe id="frame-iphone" class="iphone-frame" src="/"></iframe>
+            </div>
+            <div class="device-controls">
+                <button class="ctrl-btn" onclick="rotate('frame-iphone', 393, 852)">Portrait</button>
+                <button class="ctrl-btn" onclick="rotate('frame-iphone', 852, 393)">Landscape</button>
+                <button class="ctrl-btn" onclick="reloadFrame('frame-iphone')">Reload</button>
+            </div>
+        </div>
+
+        <!-- 2. Samsung Galaxy S25 Ultra -->
+        <div class="device-card">
+            <div class="device-header">
+                <div class="device-name">Samsung Galaxy S25 Ultra</div>
+                <div class="device-res">412 x 919 (20:9)</div>
+            </div>
+            <div class="frame-wrapper">
+                <iframe id="frame-s25" class="s25-frame" src="/"></iframe>
+            </div>
+            <div class="device-controls">
+                <button class="ctrl-btn" onclick="rotate('frame-s25', 412, 919)">Portrait</button>
+                <button class="ctrl-btn" onclick="rotate('frame-s25', 919, 412)">Landscape</button>
+                <button class="ctrl-btn" onclick="reloadFrame('frame-s25')">Reload</button>
+            </div>
+        </div>
+
+        <!-- 3. Samsung Galaxy Tab S6 Lite -->
+        <div class="device-card">
+            <div class="device-header">
+                <div class="device-name">Samsung Galaxy Tab S6 Lite</div>
+                <div class="device-res">800 x 1280 (16:10 Tablet)</div>
+            </div>
+            <div class="frame-wrapper tab-wrapper">
+                <iframe id="frame-tab" class="tab-frame" src="/"></iframe>
+            </div>
+            <div class="device-controls">
+                <button class="ctrl-btn" onclick="rotate('frame-tab', 800, 1280)">Portrait</button>
+                <button class="ctrl-btn" onclick="rotate('frame-tab', 1280, 800)">Landscape</button>
+                <button class="ctrl-btn" onclick="reloadFrame('frame-tab')">Reload</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function rotate(frameId, w, h) {
+            const frame = document.getElementById(frameId);
+            frame.style.width = w + 'px';
+            frame.style.height = h + 'px';
+            const wrapper = frame.parentElement;
+            wrapper.style.width = (w + 8) + 'px';
+            wrapper.style.height = (h + 8) + 'px';
+        }
+        function reloadFrame(frameId) {
+            const frame = document.getElementById(frameId);
+            frame.src = frame.src;
+        }
+    </script>
+</body>
+</html>

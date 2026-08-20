@@ -231,8 +231,13 @@ async function bootstrap() {
             trees.setGraphicsProfile(profile);
             terrain.setGraphicsProfile(profile);
         },
+        onChangeFlightModel: (index: number) => {
+            player.setModel(index);
+            audio.onFlightModelChanged(player.getCurrentModelDef());
+        },
         getSoundEnabled: () => !audio.getMuted(),
-        getGraphicsProfile: () => trees.graphicsProfile
+        getGraphicsProfile: () => trees.graphicsProfile,
+        getCurrentFlightModel: () => player.currentModelIndex
     });
     const hud = createHud({
         pipeline, player, controls, lighting, terrain, water, props, trees, skyCastles, audio,

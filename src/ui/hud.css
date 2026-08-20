@@ -530,6 +530,31 @@
     color: rgba(255, 255, 255, 0.5);
 }
 
+.settings-select-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 7px;
+    outline: none;
+    cursor: pointer;
+    max-width: 175px;
+    transition: all 0.15s ease;
+}
+
+.settings-select-input:hover, .settings-select-input:focus {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(167, 139, 250, 0.6);
+}
+
+.settings-select-input option {
+    background: #161a24;
+    color: #ffffff;
+}
+
 .settings-toggle-btn {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.16);

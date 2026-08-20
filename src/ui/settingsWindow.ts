@@ -1,11 +1,15 @@
+import { FLIGHT_MODELS } from '../player/FlightModels';
+
 export type GraphicsProfile = 'high_performance' | 'regular';
 
 export interface SettingsWindowContext {
     onOpenDeveloper: () => void;
     onToggleSound?: (enabled: boolean) => void;
     onChangeGraphics?: (profile: GraphicsProfile) => void;
+    onChangeFlightModel?: (index: number) => void;
     getSoundEnabled?: () => boolean;
     getGraphicsProfile?: () => GraphicsProfile;
+    getCurrentFlightModel?: () => number;
 }
 
 function requireSettingsRoot(): HTMLElement {
@@ -66,7 +70,41 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     const rowsWrap = document.createElement('div');
     rowsWrap.className = 'settings-rows';
 
-    // ── 1. Sound Row (Interactive) ──────────────────────────────────────────
+    // ── 1. Flight Model Row (Interactive) ───────────────────────────────────
+    let modelSelect: HTMLSelectElement | null = null;
+    if (ctx.onChangeFlightModel) {
+        const modelRow = document.createElement('div');
+        modelRow.className = 'settings-row';
+        const modelLabel = document.createElement('span');
+        modelLabel.className = 'settings-row-label';
+        modelLabel.textContent = 'Flight Model';
+
+        modelSelect = document.createElement('select');
+        modelSelect.className = 'settings-select-input';
+
+        FLIGHT_MODELS.forEach((m, idx) => {
+            const opt = document.createElement('option');
+            opt.value = String(idx);
+            opt.textContent = m.name;
+            modelSelect!.appendChild(opt);
+        });
+
+        if (ctx.getCurrentFlightModel) {
+            modelSelect.value = String(ctx.getCurrentFlightModel());
+        }
+
+        modelSelect.addEventListener('change', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(modelSelect!.value, 10);
+            if (ctx.onChangeFlightModel) ctx.onChangeFlightModel(idx);
+        });
+
+        modelRow.appendChild(modelLabel);
+        modelRow.appendChild(modelSelect);
+        rowsWrap.appendChild(modelRow);
+    }
+
+    // ── 2. Sound Row (Interactive) ──────────────────────────────────────────
     const soundRow = document.createElement('div');
     soundRow.className = 'settings-row';
     const soundLabel = document.createElement('span');
@@ -92,7 +130,7 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
     soundRow.appendChild(soundBtn);
     rowsWrap.appendChild(soundRow);
 
-    // ── 2. Graphics Row (Interactive: High Performance vs Regular) ───────────
+    // ── 3. Graphics Row (Interactive: High Performance vs Regular) ───────────
     const graphicsRow = document.createElement('div');
     graphicsRow.className = 'settings-row';
     const graphicsLabel = document.createElement('span');
@@ -169,6 +207,9 @@ export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWi
         if (ctx.getGraphicsProfile) {
             graphicsProfile = ctx.getGraphicsProfile();
             updateGraphicsUI();
+        }
+        if (ctx.getCurrentFlightModel && modelSelect) {
+            modelSelect.value = String(ctx.getCurrentFlightModel());
         }
         isModalOpen = true;
         overlay.style.display = 'flex';
