@@ -408,7 +408,10 @@ export class PlayerSystem {
         // 3D Model & Castle Collision Resolution (prevents clipping)
         if (skyCastles && typeof skyCastles.resolveCollisions === 'function') {
             const flightVel = moveDir.clone().multiplyScalar(this.velocity);
-            skyCastles.resolveCollisions(this.playerGrp.position, 2.8, flightVel);
+            const didCollide = skyCastles.resolveCollisions(this.playerGrp.position, 3.6, flightVel);
+            if (didCollide) {
+                this.velocity = Math.max(6.0, this.velocity * 0.7);
+            }
         }
 
         if (this.isUpdraftLift) {

@@ -83,48 +83,64 @@ export const CASTLE_COLOR_PRESETS: Record<string, CastleColorSettings> = {
     original: { preset: 'original' },
     ruby: {
         preset: 'ruby',
-        roofColor: '#e11d48',
-        wallColor: '#fdf2f8',
+        roofColor: '#be123c',
+        wallColor: '#f3e8e2',
         trimColor: '#f59e0b',
         crystalColor: '#ec4899',
         crystalBloom: 0.6
     },
     sapphire: {
         preset: 'sapphire',
-        roofColor: '#2563eb',
-        wallColor: '#f0fdf4',
+        roofColor: '#1d4ed8',
+        wallColor: '#cbd5e1',
         trimColor: '#93c5fd',
         crystalColor: '#06b6d4',
         crystalBloom: 0.7
     },
     amethyst: {
         preset: 'amethyst',
-        roofColor: '#9333ea',
-        wallColor: '#fdf4ff',
+        roofColor: '#7e22ce',
+        wallColor: '#e9d5ff',
         trimColor: '#facc15',
         crystalColor: '#d946ef',
         crystalBloom: 0.8
     },
     golden: {
         preset: 'golden',
-        roofColor: '#eab308',
-        wallColor: '#fffbeb',
-        trimColor: '#d97706',
+        roofColor: '#d97706',
+        wallColor: '#fed7aa',
+        trimColor: '#b45309',
         crystalColor: '#fbbf24',
         crystalBloom: 0.9
     },
     emerald: {
         preset: 'emerald',
-        roofColor: '#059669',
-        wallColor: '#f1f5f9',
-        trimColor: '#b45309',
+        roofColor: '#047857',
+        wallColor: '#bbf7d0',
+        trimColor: '#92400e',
         crystalColor: '#34d399',
         crystalBloom: 0.7
+    },
+    obsidian: {
+        preset: 'obsidian',
+        roofColor: '#312e81',
+        wallColor: '#64748b',
+        trimColor: '#38bdf8',
+        crystalColor: '#818cf8',
+        crystalBloom: 0.8
+    },
+    terracotta: {
+        preset: 'terracotta',
+        roofColor: '#c2410c',
+        wallColor: '#ffedd5',
+        trimColor: '#d97706',
+        crystalColor: '#f97316',
+        crystalBloom: 0.6
     },
     pastel: {
         preset: 'pastel',
         roofColor: '#f472b6',
-        wallColor: '#ffffff',
+        wallColor: '#fce7f3',
         trimColor: '#fed7aa',
         crystalColor: '#fb7185',
         crystalBloom: 0.5
@@ -143,7 +159,7 @@ export const DEFAULT_SKY_CASTLE_ISLANDS: SkyCastleIslandDef[] = [
         scale: 2.4,
         cloudRadius: 36,
         cloudPuffCount: 16,
-        colors: { preset: 'ruby', roofColor: '#e11d48', wallColor: '#fdf2f8', trimColor: '#f59e0b', crystalColor: '#ec4899', crystalBloom: 0.6 }
+        colors: { preset: 'ruby', roofColor: '#be123c', wallColor: '#f3e8e2', trimColor: '#f59e0b', crystalColor: '#ec4899', crystalBloom: 0.6 }
     },
     {
         id: 'sky_castle_high_1',
@@ -156,7 +172,7 @@ export const DEFAULT_SKY_CASTLE_ISLANDS: SkyCastleIslandDef[] = [
         scale: 2.2,
         cloudRadius: 32,
         cloudPuffCount: 14,
-        colors: { preset: 'ruby', roofColor: '#e11d48', wallColor: '#fdf2f8', trimColor: '#f59e0b', crystalColor: '#ec4899', crystalBloom: 0.6 }
+        colors: { preset: 'sapphire', roofColor: '#1d4ed8', wallColor: '#cbd5e1', trimColor: '#93c5fd', crystalColor: '#06b6d4', crystalBloom: 0.7 }
     },
     {
         id: 'sky_castle_med_2_top',
@@ -169,7 +185,7 @@ export const DEFAULT_SKY_CASTLE_ISLANDS: SkyCastleIslandDef[] = [
         scale: 2.1,
         cloudRadius: 30,
         cloudPuffCount: 12,
-        colors: { preset: 'amethyst', roofColor: '#9333ea', wallColor: '#fdf4ff', trimColor: '#facc15', crystalColor: '#d946ef', crystalBloom: 0.8 }
+        colors: { preset: 'amethyst', roofColor: '#7e22ce', wallColor: '#e9d5ff', trimColor: '#facc15', crystalColor: '#d946ef', crystalBloom: 0.8 }
     },
     {
         id: 'sky_castle_med_0',
@@ -182,11 +198,11 @@ export const DEFAULT_SKY_CASTLE_ISLANDS: SkyCastleIslandDef[] = [
         scale: 2.0,
         cloudRadius: 28,
         cloudPuffCount: 12,
-        colors: { preset: 'sapphire', roofColor: '#2563eb', wallColor: '#f0fdf4', trimColor: '#93c5fd', crystalColor: '#06b6d4', crystalBloom: 0.7 }
+        colors: { preset: 'emerald', roofColor: '#047857', wallColor: '#bbf7d0', trimColor: '#92400e', crystalColor: '#34d399', crystalBloom: 0.7 }
     },
     {
         id: 'sky_castle_med_2',
-        name: 'Eastern Spire Gate',
+        name: 'Sunstone Bastion',
         modelPath: '/Assets/Sky/fairytale_castle_med_compressed (2).glb',
         x: 1050,
         y: 480,
@@ -195,7 +211,7 @@ export const DEFAULT_SKY_CASTLE_ISLANDS: SkyCastleIslandDef[] = [
         scale: 2.1,
         cloudRadius: 30,
         cloudPuffCount: 12,
-        colors: { preset: 'golden', roofColor: '#eab308', wallColor: '#fffbeb', trimColor: '#d97706', crystalColor: '#fbbf24', crystalBloom: 0.9 }
+        colors: { preset: 'golden', roofColor: '#d97706', wallColor: '#fed7aa', trimColor: '#b45309', crystalColor: '#fbbf24', crystalBloom: 0.9 }
     },
     {
         id: 'sky_castle_med_3',
@@ -208,7 +224,7 @@ export const DEFAULT_SKY_CASTLE_ISLANDS: SkyCastleIslandDef[] = [
         scale: 2.1,
         cloudRadius: 30,
         cloudPuffCount: 12,
-        colors: { preset: 'ruby', roofColor: '#e11d48', wallColor: '#fdf2f8', trimColor: '#f59e0b', crystalColor: '#ec4899', crystalBloom: 0.6 }
+        colors: { preset: 'terracotta', roofColor: '#c2410c', wallColor: '#ffedd5', trimColor: '#d97706', crystalColor: '#f97316', crystalBloom: 0.6 }
     },
     {
         id: 'sky_castle_med_4',
@@ -221,7 +237,7 @@ export const DEFAULT_SKY_CASTLE_ISLANDS: SkyCastleIslandDef[] = [
         scale: 2.1,
         cloudRadius: 30,
         cloudPuffCount: 12,
-        colors: { preset: 'golden', roofColor: '#eab308', wallColor: '#fffbeb', trimColor: '#d97706', crystalColor: '#fbbf24', crystalBloom: 0.9 }
+        colors: { preset: 'obsidian', roofColor: '#312e81', wallColor: '#64748b', trimColor: '#38bdf8', crystalColor: '#818cf8', crystalBloom: 0.8 }
     },
     {
         id: 'sky_castle_med_5',
@@ -234,7 +250,7 @@ export const DEFAULT_SKY_CASTLE_ISLANDS: SkyCastleIslandDef[] = [
         scale: 2.2,
         cloudRadius: 32,
         cloudPuffCount: 14,
-        colors: { preset: 'emerald', roofColor: '#059669', wallColor: '#f1f5f9', trimColor: '#b45309', crystalColor: '#34d399', crystalBloom: 0.7 }
+        colors: { preset: 'pastel', roofColor: '#f472b6', wallColor: '#fce7f3', trimColor: '#fed7aa', crystalColor: '#fb7185', crystalBloom: 0.5 }
     },
     {
         id: 'sky_castle_med_6',
@@ -247,7 +263,7 @@ export const DEFAULT_SKY_CASTLE_ISLANDS: SkyCastleIslandDef[] = [
         scale: 2.1,
         cloudRadius: 30,
         cloudPuffCount: 12,
-        colors: { preset: 'amethyst', roofColor: '#9333ea', wallColor: '#fdf4ff', trimColor: '#facc15', crystalColor: '#d946ef', crystalBloom: 0.8 }
+        colors: { preset: 'amethyst', roofColor: '#7e22ce', wallColor: '#e9d5ff', trimColor: '#facc15', crystalColor: '#d946ef', crystalBloom: 0.8 }
     }
 ];
 
@@ -1026,7 +1042,7 @@ export class SkyCastleSystem {
 
     // ── Collision Resolution Engine ──────────────────────────────────────────
 
-    public resolveCollisions(playerPos: THREE.Vector3, playerRadius: number = 2.5, velocity?: THREE.Vector3): boolean {
+    public resolveCollisions(playerPos: THREE.Vector3, playerRadius: number = 3.5, velocity?: THREE.Vector3): boolean {
         let collided = false;
         const px = playerPos.x;
         const py = playerPos.y;
@@ -1039,75 +1055,71 @@ export class SkyCastleSystem {
             const horizDistSq = dx * dx + dz * dz;
             const horizDist = Math.sqrt(horizDistSq);
 
-            const maxIslandRadius = Math.max(isl.cloudRadius, 32.0) * (isl.scale / 2.0) + 45.0;
+            const maxIslandRadius = Math.max(isl.cloudRadius, 40.0) * (isl.scale / 2.0) + 60.0;
             if (horizDist > maxIslandRadius) continue;
 
-            // 1. Cloud Skirt Base collider
-            const skirtBottom = isl.y - 28.0 * (isl.scale / 2.0);
+            const islandScaleFactor = Math.max(0.8, isl.scale / 2.0);
+
+            // 1. Cloud Skirt & Rock Foundation Base
+            const skirtBottom = isl.y - 32.0 * islandScaleFactor;
             const skirtTop = isl.y + 4.0;
             if (py >= skirtBottom && py <= skirtTop) {
-                const skirtRad = isl.cloudRadius * 0.95;
+                const skirtRad = Math.max(isl.cloudRadius * 0.96, 36.0 * islandScaleFactor);
                 if (horizDist < skirtRad + playerRadius) {
                     collided = true;
                     const pushDist = (skirtRad + playerRadius) - horizDist;
-                    if (horizDist > 0.001) {
-                        playerPos.x += (dx / horizDist) * pushDist;
-                        playerPos.z += (dz / horizDist) * pushDist;
-                    } else {
-                        playerPos.x += pushDist;
-                    }
+                    const nx = horizDist > 0.001 ? dx / horizDist : 1;
+                    const nz = horizDist > 0.001 ? dz / horizDist : 0;
+                    playerPos.x += nx * pushDist;
+                    playerPos.z += nz * pushDist;
                     if (py < isl.y) {
-                        playerPos.y = THREE.MathUtils.lerp(playerPos.y, skirtBottom - playerRadius, 0.2);
+                        playerPos.y = THREE.MathUtils.lerp(playerPos.y, skirtBottom - playerRadius, 0.25);
                     }
                 }
             }
 
-            // 2. Castle Main Body / Walls collider
-            const wallBottom = isl.y - 2.0;
-            const wallTop = isl.y + 55.0 * (isl.scale / 2.0);
+            // 2. Castle Main Body, Courtyards, & Outer Bastion Walls
+            const wallBottom = isl.y - 3.0;
+            const wallTop = isl.y + 65.0 * islandScaleFactor;
             if (py >= wallBottom && py <= wallTop) {
-                const wallRad = 19.5 * (isl.scale / 2.0);
+                const wallRad = 36.0 * islandScaleFactor;
                 if (horizDist < wallRad + playerRadius) {
                     collided = true;
                     const pushDist = (wallRad + playerRadius) - horizDist;
-                    if (horizDist > 0.001) {
-                        const nx = dx / horizDist;
-                        const nz = dz / horizDist;
-                        playerPos.x += nx * pushDist;
-                        playerPos.z += nz * pushDist;
+                    const nx = horizDist > 0.001 ? dx / horizDist : 1;
+                    const nz = horizDist > 0.001 ? dz / horizDist : 0;
+                    playerPos.x += nx * pushDist;
+                    playerPos.z += nz * pushDist;
 
-                        if (velocity) {
-                            const dot = velocity.x * nx + velocity.z * nz;
-                            if (dot < 0) {
-                                velocity.x -= dot * nx * 1.15;
-                                velocity.z -= dot * nz * 1.15;
-                            }
+                    if (velocity) {
+                        const dot = velocity.x * nx + velocity.z * nz;
+                        if (dot < 0) {
+                            velocity.x -= dot * nx * 1.25;
+                            velocity.z -= dot * nz * 1.25;
                         }
                     }
                 }
             }
 
-            // 3. Castle Upper Keep / Central Spire
+            // 3. Castle Upper Keep, Central Spire & Spires
             const spireBottom = wallTop;
-            const spireTop = isl.y + 120.0 * (isl.scale / 2.0);
+            const spireTop = isl.y + 145.0 * islandScaleFactor;
             if (py >= spireBottom && py <= spireTop) {
-                const spireProgress = (py - spireBottom) / (spireTop - spireBottom);
-                const spireRad = THREE.MathUtils.lerp(12.0, 4.5, spireProgress) * (isl.scale / 2.0);
+                const spireProgress = Math.min(1.0, Math.max(0.0, (py - spireBottom) / (spireTop - spireBottom)));
+                const spireRad = THREE.MathUtils.lerp(26.0, 7.5, spireProgress) * islandScaleFactor;
                 if (horizDist < spireRad + playerRadius) {
                     collided = true;
                     const pushDist = (spireRad + playerRadius) - horizDist;
-                    if (horizDist > 0.001) {
-                        const nx = dx / horizDist;
-                        const nz = dz / horizDist;
-                        playerPos.x += nx * pushDist;
-                        playerPos.z += nz * pushDist;
+                    const nx = horizDist > 0.001 ? dx / horizDist : 1;
+                    const nz = horizDist > 0.001 ? dz / horizDist : 0;
+                    playerPos.x += nx * pushDist;
+                    playerPos.z += nz * pushDist;
 
-                        if (velocity) {
-                            const dot = velocity.x * nx + velocity.z * nz;
-                            if (dot < 0) {
-                                velocity.x -= dot * nx * 1.15;
-                                velocity.z -= dot * nz * 1.15;
-                            }
+                    if (velocity) {
+                        const dot = velocity.x * nx + velocity.z * nz;
+                        if (dot < 0) {
+                            velocity.x -= dot * nx * 1.25;
+                            velocity.z -= dot * nz * 1.25;
                         }
                     }
                 }
