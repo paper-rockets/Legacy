@@ -688,15 +688,7 @@ export class SkyCastleSystem {
 
         mat.onBeforeCompile = (shader) => {
             shader.uniforms.uCastleNightGlow = this.castleNightGlowUniform;
-            shader.vertexShader = `varying vec3 vCastleWorldPos;\n` + shader.vertexShader;
-            shader.vertexShader = shader.vertexShader.replace(
-                '#include <worldpos_vertex>',
-                `
-                #include <worldpos_vertex>
-                vCastleWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
-                `
-            );
-            shader.fragmentShader = `uniform float uCastleNightGlow;\nvarying vec3 vCastleWorldPos;\n` + shader.fragmentShader;
+            shader.fragmentShader = `uniform float uCastleNightGlow;\n` + shader.fragmentShader;
 
             // Reduce fog factor by 65% so high-altitude castles and spires remain clear and colorful
             shader.fragmentShader = shader.fragmentShader.replace(
@@ -714,20 +706,13 @@ export class SkyCastleSystem {
                 `
             );
 
-            // Inject illuminated glowing warm amber windows and ground facade bounce at dusk/night
+            // Natural ambient architectural illumination and brightness at dusk and night
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <emissivemap_fragment>',
                 `
                 #include <emissivemap_fragment>
                 if (uCastleNightGlow > 0.001) {
-                    vec3 wp = vCastleWorldPos;
-                    float winX = fract(wp.x * 0.16 + wp.z * 0.16);
-                    float winY = fract(wp.y * 0.22);
-                    if (winX > 0.42 && winX < 0.82 && winY > 0.42 && winY < 0.82) {
-                        vec3 warmWindowGold = vec3(1.0, 0.84, 0.38) * (uCastleNightGlow * 3.4);
-                        totalEmissiveRadiance += warmWindowGold;
-                    }
-                    totalEmissiveRadiance += vec3(0.16, 0.13, 0.08) * uCastleNightGlow;
+                    totalEmissiveRadiance += diffuseColor.rgb * (uCastleNightGlow * 0.40);
                 }
                 `
             );
