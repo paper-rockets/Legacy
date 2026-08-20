@@ -79,52 +79,52 @@ export const BIOME_LOCATIONS: BiomeLocation[] = [
     {
         id: 'candyland',
         name: 'Candyland',
-        description: 'Pastel marshmallow hills, lollipop trees, and the Candy Heart centerpiece',
+        description: '',
         x: 0,
         z: 0
     },
     {
         id: 'meadow',
-        name: 'Lush Meadow',
-        description: 'Classic Ghibli rolling green hills and flower paths',
+        name: 'Meadow',
+        description: '',
         x: 0,
         z: 2560
     },
     {
         id: 'archipelago',
-        name: 'Floating Archipelago',
-        description: 'High spires, plateaus and soaring updrafts',
+        name: 'Archipelago',
+        description: '',
         x: 3200,
         z: 3200
     },
     {
         id: 'geothermal',
-        name: 'Geothermal Ridge',
-        description: 'Terraced volcanic cliffs and caldera basins',
+        name: 'Geothermal',
+        description: '',
         x: 3200,
         z: -3200
     },
     {
         id: 'estuary',
-        name: 'Bioluminescent Estuary',
-        description: 'Shallow tidal waters and water-skimming speed channels',
+        name: 'Estuary',
+        description: '',
         x: -3200,
         z: 3200
     },
     {
         id: 'redwood',
-        name: 'Colossal Redwood',
-        description: 'Grand mountain slopes and giant ancient cedar canopies',
+        name: 'Redwood',
+        description: '',
         x: -3200,
         z: -3200
     },
     {
         id: 'sky_citadel',
-        name: 'Floating Cloud Citadel',
-        description: 'Celestial fairytale castles floating atop mystical cloud islands',
+        name: 'Citadel',
+        description: '',
         x: 0,
-        z: -160,
-        y: 510
+        z: -200,
+        y: 650
     }
 ];
 
@@ -187,12 +187,12 @@ export function getDominantBiomeName(x: number, z: number, y?: number): string {
     const id = getDominantBiome(x, z, y);
     switch (id) {
         case 'candyland': return 'Candyland';
-        case 'meadow': return 'Lush Meadow';
-        case 'archipelago': return 'Floating Archipelago';
-        case 'geothermal': return 'Geothermal Ridge';
-        case 'estuary': return 'Bioluminescent Estuary';
-        case 'redwood': return 'Colossal Redwood';
-        case 'sky_citadel': return 'Floating Cloud Citadel';
+        case 'meadow': return 'Meadow';
+        case 'archipelago': return 'Archipelago';
+        case 'geothermal': return 'Geothermal';
+        case 'estuary': return 'Estuary';
+        case 'redwood': return 'Redwood';
+        case 'sky_citadel': return 'Citadel';
     }
 }
 
@@ -213,16 +213,19 @@ function heightMeadow(x: number, z: number): number {
     return Math.max(3.5, y);
 }
 
-// 2. Floating Archipelago: Soaring needle rock spires (140m), flat mesa plateaus (90m), and deep canyon chasms (3m)
+// 2. Floating Archipelago: Smooth soaring island mountains, gentle plateaus, and rolling ocean knolls
 function heightArchipelago(x: number, z: number): number {
-    const spireRaw = Math.max(0, snoise(x * 0.0055 + 250, z * 0.0055 - 250));
-    const spires = Math.pow(spireRaw, 3.0) * 145.0;
+    // Smooth broad mountain domes and gentle peaks
+    const mountainRaw = Math.max(0, snoise(x * 0.0032 + 250, z * 0.0032 - 250));
+    const smoothMountains = Math.pow(mountainRaw, 1.75) * 85.0;
 
-    const mesaBase = snoise(x * 0.0022 + 500, z * 0.0022 + 500);
-    const mesaPlateau = smoothstep(0.12, 0.52, mesaBase) * 86.0;
+    // Gentle rolling plateaus
+    const plateauBase = snoise(x * 0.0020 + 500, z * 0.0020 + 500);
+    const plateau = smoothstep(0.08, 0.60, plateauBase) * 42.0;
 
-    const crag = snoise(x * 0.016, z * 0.016) * 8.0;
-    let y = 3.5 + spires + mesaPlateau + crag;
+    // Soft rolling secondary swells (smooth low-frequency, no sharp crags)
+    const softSwell = snoise(x * 0.006, z * 0.006) * 4.5;
+    let y = 3.5 + smoothMountains + plateau + softSwell;
     return Math.max(2.8, y);
 }
 

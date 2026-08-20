@@ -85,10 +85,14 @@ export function createHud(deps: HudDeps): Hud {
     // Pause / resume
     const pauseBtn = document.createElement('button');
     pauseBtn.className = 'hud-btn';
+    pauseBtn.title = 'Pause / Resume';
     topBar.appendChild(pauseBtn);
 
+    const pauseIconSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="4" height="16" rx="1"/><rect x="15" y="4" width="4" height="16" rx="1"/></svg>';
+    const playIconSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>';
+
     function updatePauseUI() {
-        pauseBtn.textContent = deps.controls.isFlightPaused ? 'Resume' : 'Pause';
+        pauseBtn.innerHTML = deps.controls.isFlightPaused ? playIconSvg : pauseIconSvg;
         pauseBtn.classList.toggle('paused', deps.controls.isFlightPaused);
     }
     pauseBtn.addEventListener('click', () => {
@@ -186,12 +190,7 @@ export function createHud(deps: HudDeps): Hud {
         title.className = 'hud-dropdown-item-title';
         title.textContent = loc.name;
 
-        const subtitle = document.createElement('div');
-        subtitle.className = 'hud-dropdown-item-subtitle';
-        subtitle.textContent = loc.description;
-
         optBtn.appendChild(title);
-        optBtn.appendChild(subtitle);
 
         optBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -266,7 +265,8 @@ export function createHud(deps: HudDeps): Hud {
 
     const fullscreenBtn = document.createElement('button');
     fullscreenBtn.className = 'hud-quick-btn';
-    fullscreenBtn.textContent = 'Fullscreen';
+    fullscreenBtn.title = 'Toggle Fullscreen';
+    fullscreenBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
     fullscreenBtn.addEventListener('click', () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch((err) => {
@@ -282,7 +282,8 @@ export function createHud(deps: HudDeps): Hud {
 
     const settingsBtn = document.createElement('button');
     settingsBtn.className = 'hud-quick-btn';
-    settingsBtn.textContent = 'Settings';
+    settingsBtn.title = 'Settings';
+    settingsBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
     settingsBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         closeAllDropdowns();

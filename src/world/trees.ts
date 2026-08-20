@@ -261,19 +261,42 @@ function attachStripedAttributes(geo: THREE.BufferGeometry, partType: number): T
 }
 
 function buildSpiralLollipopGeometry(): THREE.BufferGeometry {
-    const stick = attachAttributes(new THREE.CylinderGeometry(0.12, 0.14, 5.0, 16).translate(0, 2.5, 0), 0.0, [1, 1, 1]);
-    const disc = attachAttributes(new THREE.CylinderGeometry(2.0, 2.0, 0.45, 32).rotateX(Math.PI / 2).translate(0, 5.0, 0), 2.0, [0.96, 0.50, 0.72]);
-    const ring = attachAttributes(new THREE.TorusGeometry(1.5, 0.28, 16, 32).translate(0, 5.0, 0), 2.0, [0.70, 0.85, 1.0]);
-    const center = attachAttributes(new THREE.SphereGeometry(0.65, 16, 16).scale(1, 1, 0.5).translate(0, 5.0, 0), 2.0, [1.0, 0.95, 0.65]);
-    const merged = mergeGeometries([stick, disc, ring, center], false) || disc;
+    // White sweet treat stick with candy cane red spiral stripe
+    const stickRaw = new THREE.CylinderGeometry(0.13, 0.15, 5.2, 20).translate(0, 2.6, 0);
+    const stick = attachStripedAttributes(stickRaw, 0.0);
+
+    // Thick glossy candy disc with smooth round bevel
+    const disc = attachAttributes(new THREE.CylinderGeometry(2.3, 2.3, 0.55, 48).rotateX(Math.PI / 2).translate(0, 5.2, 0), 2.0, [0.96, 0.48, 0.74]);
+
+    // Concentric high-poly swirl rings
+    const ringOuter = attachAttributes(new THREE.TorusGeometry(1.75, 0.32, 20, 48).translate(0, 5.2, 0), 1.0, [0.72, 0.88, 1.0]);
+    const ringMid = attachAttributes(new THREE.TorusGeometry(1.10, 0.26, 20, 48).translate(0, 5.2, 0), 2.0, [1.0, 0.95, 0.60]);
+    const ringInner = attachAttributes(new THREE.TorusGeometry(0.52, 0.20, 16, 36).translate(0, 5.2, 0), 1.0, [0.98, 0.60, 0.82]);
+    const center = attachAttributes(new THREE.SphereGeometry(0.48, 20, 20).scale(1, 1, 0.7).translate(0, 5.2, 0), 2.0, [1.0, 1.0, 1.0]);
+
+    // Decorative candy ribbon wrapper collar
+    const collar = attachAttributes(new THREE.TorusGeometry(0.48, 0.16, 16, 24).rotateX(Math.PI / 2).translate(0, 2.7, 0), 1.0, [1.0, 0.95, 0.98]);
+
+    const merged = mergeGeometries([stick, disc, ringOuter, ringMid, ringInner, center, collar], false) || disc;
     return merged;
 }
 
 function buildSphericalLollipopGeometry(): THREE.BufferGeometry {
-    const stick = attachAttributes(new THREE.CylinderGeometry(0.12, 0.14, 4.5, 16).translate(0, 2.25, 0), 0.0, [1, 1, 1]);
-    const sphere = attachAttributes(new THREE.SphereGeometry(1.65, 24, 20).translate(0, 4.6, 0), 2.0, [0.85, 0.65, 0.98]);
-    const collar = attachAttributes(new THREE.TorusGeometry(0.5, 0.16, 12, 20).rotateX(Math.PI / 2).translate(0, 3.2, 0), 1.0, [1.0, 1.0, 1.0]);
-    const merged = mergeGeometries([stick, sphere, collar], false) || sphere;
+    // Treat stick
+    const stickRaw = new THREE.CylinderGeometry(0.13, 0.15, 4.8, 20).translate(0, 2.4, 0);
+    const stick = attachStripedAttributes(stickRaw, 0.0);
+
+    // Big round glossy pop
+    const sphere = attachAttributes(new THREE.SphereGeometry(1.85, 36, 30).translate(0, 4.8, 0), 2.0, [0.85, 0.65, 0.98]);
+
+    // Tilted sugar crystal halo ring
+    const ring = attachAttributes(new THREE.TorusGeometry(1.55, 0.22, 18, 48).rotateX(Math.PI / 3.8).rotateZ(0.2).translate(0, 4.8, 0), 1.0, [1.0, 0.92, 0.55]);
+
+    // Fluted wrapper twist collar
+    const collar = attachAttributes(new THREE.ConeGeometry(0.65, 0.75, 18).rotateX(Math.PI).translate(0, 3.2, 0), 1.0, [1.0, 1.0, 1.0]);
+    const gemTop = attachAttributes(new THREE.SphereGeometry(0.38, 16, 16).translate(0, 6.7, 0), 2.0, [0.98, 0.40, 0.65]);
+
+    const merged = mergeGeometries([stick, sphere, ring, collar, gemTop], false) || sphere;
     return merged;
 }
 
@@ -306,6 +329,30 @@ function buildCandyCaneClusterGeometry(): THREE.BufferGeometry {
     return merged;
 }
 
+function buildCottonCandyTreeGeometry(): THREE.BufferGeometry {
+    const stick = attachAttributes(new THREE.CylinderGeometry(0.18, 0.22, 4.5, 16).translate(0, 2.25, 0), 0.0, [1, 0.95, 0.98]);
+    const puffCenter = attachAttributes(new THREE.IcosahedronGeometry(1.7, 2).scale(1.15, 0.95, 1.1).translate(0, 5.2, 0), 2.0, [0.98, 0.60, 0.82]);
+    const puffL = attachAttributes(new THREE.IcosahedronGeometry(1.25, 2).scale(1.0, 0.85, 0.95).translate(-1.1, 4.6, 0.35), 2.0, [0.60, 0.85, 1.0]);
+    const puffR = attachAttributes(new THREE.IcosahedronGeometry(1.3, 2).scale(1.0, 0.9, 1.0).translate(1.05, 4.7, -0.3), 1.0, [1.0, 0.92, 0.55]);
+    const puffF = attachAttributes(new THREE.IcosahedronGeometry(1.15, 2).scale(0.95, 0.85, 1.0).translate(0.2, 4.4, 0.95), 2.0, [0.95, 0.55, 0.78]);
+    const puffB = attachAttributes(new THREE.IcosahedronGeometry(1.2, 2).scale(1.0, 0.85, 0.9).translate(-0.3, 4.5, -0.95), 1.0, [0.75, 0.65, 1.0]);
+
+    const merged = mergeGeometries([stick, puffCenter, puffL, puffR, puffF, puffB], false) || puffCenter;
+    return merged;
+}
+
+function buildGummyFlowerGeometry(): THREE.BufferGeometry {
+    const stem = attachAttributes(new THREE.CylinderGeometry(0.09, 0.11, 2.2, 12).translate(0, 1.1, 0), 0.0, [0.15, 0.85, 0.45]);
+    const p1 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(0, 2.2, 0.6), 2.0, [1.0, 0.85, 0.2]);
+    const p2 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(0.57, 2.2, 0.18), 2.0, [1.0, 0.85, 0.2]);
+    const p3 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(0.35, 2.2, -0.48), 2.0, [1.0, 0.85, 0.2]);
+    const p4 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(-0.35, 2.2, -0.48), 2.0, [1.0, 0.85, 0.2]);
+    const p5 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(-0.57, 2.2, 0.18), 2.0, [1.0, 0.85, 0.2]);
+    const center = attachAttributes(new THREE.SphereGeometry(0.42, 14, 14).translate(0, 2.35, 0), 1.0, [0.98, 0.25, 0.45]);
+    const merged = mergeGeometries([stem, p1, p2, p3, p4, p5, center], false) || center;
+    return merged;
+}
+
 async function loadTreeGeometries(
     source: string | ArrayBuffer,
     loader: GLTFLoader,
@@ -314,7 +361,9 @@ async function loadTreeGeometries(
     if (typeof source === 'string' && source.startsWith('procedural:')) {
         const type = source.replace('procedural:', '');
         let geo: THREE.BufferGeometry;
-        if (type === 'candy_lollipop_spiral') {
+        if (type === 'candy_cotton_cloud') {
+            geo = buildCottonCandyTreeGeometry();
+        } else if (type === 'candy_lollipop_spiral') {
             geo = buildSpiralLollipopGeometry();
         } else if (type === 'candy_lollipop_sphere') {
             geo = buildSphericalLollipopGeometry();
@@ -322,6 +371,8 @@ async function loadTreeGeometries(
             geo = buildCandyCaneGeometry();
         } else if (type === 'candy_cane_cluster') {
             geo = buildCandyCaneClusterGeometry();
+        } else if (type === 'candy_gummy_flower') {
+            geo = buildGummyFlowerGeometry();
         } else {
             geo = buildSpiralLollipopGeometry();
         }
@@ -632,11 +683,13 @@ export interface TreeCatalogItem {
 }
 
 export const TREE_CATALOG: TreeCatalogItem[] = [
-    // Candyland (4 procedural candy models)
-    { id: 'candy_lollipop_spiral', name: 'Spiral Lollipop Tree', category: 'Trees', path: 'procedural:candy_lollipop_spiral', previewImage: '/Assets/Previews/veg_cartoon_7.png', scaleMultiplier: 1.1, description: 'Swirling pastel lollipop tree on a white stick' },
-    { id: 'candy_lollipop_sphere', name: 'Round Candy Pop', category: 'Trees', path: 'procedural:candy_lollipop_sphere', previewImage: '/Assets/Previews/veg_cartoon_8.png', scaleMultiplier: 1.0, description: 'Glossy spherical pastel lollipop' },
+    // Candyland (5 colorful procedural candy models)
+    { id: 'candy_cotton_cloud', name: 'Cotton Candy Tree', category: 'Trees', path: 'procedural:candy_cotton_cloud', previewImage: '/Assets/Previews/candy_cotton_cloud.png', scaleMultiplier: 1.2, description: 'Fluffy pastel cloud of cotton candy on a sweet stick' },
+    { id: 'candy_lollipop_spiral', name: 'Spiral Lollipop Tree', category: 'Trees', path: 'procedural:candy_lollipop_spiral', previewImage: '/Assets/Previews/candy_lollipop_spiral.png', scaleMultiplier: 1.1, description: 'Swirling pastel lollipop tree on a white stick' },
+    { id: 'candy_lollipop_sphere', name: 'Round Candy Pop', category: 'Trees', path: 'procedural:candy_lollipop_sphere', previewImage: '/Assets/Previews/candy_lollipop_sphere.png', scaleMultiplier: 1.0, description: 'Glossy spherical pastel lollipop' },
+    { id: 'candy_cane_cluster', name: 'Candy Cane Cluster', category: 'Flowers & Flora', path: 'procedural:candy_cane_cluster', previewImage: '/Assets/Previews/candy_cane_cluster.png', scaleMultiplier: 0.85, description: 'Cluster of sweet candy canes' },
+    { id: 'candy_gummy_flower', name: 'Gummy Blossom Flora', category: 'Flowers & Flora', path: 'procedural:candy_gummy_flower', previewImage: '/Assets/Previews/candy_gummy_flower.png', scaleMultiplier: 0.75, description: 'Bright gummy blossom with sweet gumdrop center' },
     { id: 'candy_cane_single', name: 'Candy Cane Flora', category: 'Flowers & Flora', path: 'procedural:candy_cane_single', previewImage: '/Assets/Previews/veg_flower3_single.png', scaleMultiplier: 0.75, description: 'Classic striped candy cane flower' },
-    { id: 'candy_cane_cluster', name: 'Candy Cane Cluster', category: 'Flowers & Flora', path: 'procedural:candy_cane_cluster', previewImage: '/Assets/Previews/veg_flower3_group.png', scaleMultiplier: 0.85, description: 'Cluster of sweet candy canes' },
 
     // Vegetation (23 models)
     { id: 'veg_bigtree_1', name: 'Big Tree Var 1', category: 'Trees', path: '/Assets/Vegetation/BigTree2_Var1.glb', previewImage: '/Assets/Previews/veg_bigtree_1.png', scaleMultiplier: 1.1, description: 'Large branching deciduous tree' },
@@ -684,7 +737,7 @@ export const TREE_CATALOG: TreeCatalogItem[] = [
 ];
 
 export const DEFAULT_BIOME_TREE_IDS: Record<BiomeId, string[]> = {
-    candyland: ['candy_lollipop_spiral', 'candy_lollipop_sphere', 'candy_cane_single', 'candy_cane_cluster'],
+    candyland: ['candy_cotton_cloud', 'candy_lollipop_spiral', 'candy_lollipop_sphere', 'candy_cane_cluster', 'candy_gummy_flower'],
     meadow: ['veg_cartoon_1', 'veg_cartoon_2', 'veg_bigtree_1', 'veg_tree_broadleaf_1'],
     archipelago: ['veg_cherry_blossom', 'veg_palm_a', 'veg_cartoon_7', 'veg_clover_2'],
     geothermal: ['veg_cartoon_8', 'veg_cartoon_10', 'veg_tree_var4'],
@@ -743,6 +796,11 @@ export class TreeSystem {
     private timePhaseGlowUniform = { value: 0.0 };
     private useOriginalColorUniform = { value: 0.0 };
     private leafColorUniform = { value: new THREE.Color(0.20, 0.58, 0.22) };
+
+    // Candy Specular & Reflectivity Uniforms
+    private candyGlossUniform = { value: 1.35 };
+    private sugarSparkleUniform = { value: 0.85 };
+    private candyTranslucencyUniform = { value: 0.70 };
 
     // Glow State
     private currentTimePhaseGlow = 0.0;
@@ -804,6 +862,9 @@ export class TreeSystem {
         this.treeMat.onBeforeCompile = (shader) => {
             shader.uniforms.uBioluminescence = this.bioluminescenceUniform;
             shader.uniforms.uTimePhaseGlow = this.timePhaseGlowUniform;
+            shader.uniforms.uCandyGloss = this.candyGlossUniform;
+            shader.uniforms.uSugarSparkle = this.sugarSparkleUniform;
+            shader.uniforms.uCandyTranslucency = this.candyTranslucencyUniform;
             shader.uniforms.uLeafColor = this.leafColorUniform;
 
             shader.vertexShader = `
@@ -821,6 +882,8 @@ export class TreeSystem {
                 varying float vColorMode;
                 varying float vGlowFactor;
                 varying vec2 vTreeUv;
+                varying vec3 vTreeWorldNormal;
+                varying vec3 vTreeWorldPos;
             ` + shader.vertexShader;
 
             shader.vertexShader = shader.vertexShader.replace(
@@ -833,6 +896,8 @@ export class TreeSystem {
                 vLeafColor = aLeafColor;
                 vColorMode = aColorMode;
                 vGlowFactor = aGlowFactor;
+                vTreeWorldNormal = normalize(mat3(instanceMatrix) * normal);
+                vTreeWorldPos = (instanceMatrix * vec4(position, 1.0)).xyz;
                 #ifdef USE_UV
                     vTreeUv = uv;
                 #else
@@ -849,6 +914,9 @@ export class TreeSystem {
             shader.fragmentShader = `
                 uniform float uBioluminescence;
                 uniform float uTimePhaseGlow;
+                uniform float uCandyGloss;
+                uniform float uSugarSparkle;
+                uniform float uCandyTranslucency;
                 uniform vec3 uLeafColor;
                 varying float vPartType;
                 varying vec3 vOriginalColor;
@@ -858,6 +926,8 @@ export class TreeSystem {
                 varying float vColorMode;
                 varying float vGlowFactor;
                 varying vec2 vTreeUv;
+                varying vec3 vTreeWorldNormal;
+                varying vec3 vTreeWorldPos;
             ` + shader.fragmentShader;
 
             shader.fragmentShader = shader.fragmentShader.replace(
@@ -884,7 +954,45 @@ export class TreeSystem {
                         finalTreeColor = vTrunkColor;
                     }
                 }
-                diffuseColor.rgb = finalTreeColor;
+
+                // Reflective Candy Coating & Glossy Specular highlights
+                vec3 viewDir = normalize(cameraPosition - vTreeWorldPos);
+                vec3 norm = normalize(vTreeWorldNormal);
+                float NdotV = max(0.0, dot(norm, viewDir));
+                float fresnel = pow(1.0 - NdotV, 3.2);
+
+                vec3 sunDir = normalize(vec3(0.5, 0.8, 0.3));
+                vec3 halfVec = normalize(sunDir + viewDir);
+                float NdotH = max(0.0, dot(norm, halfVec));
+                float spec = pow(NdotH, 32.0) * uCandyGloss;
+
+                float sparkle = pow(fract(sin(dot(vTreeWorldPos.xz * 2.0, vec2(12.9898, 78.233))) * 43758.5453), 14.0) * uSugarSparkle * (1.0 - NdotV);
+
+                vec3 candyGlossSheen = vec3(1.0, 0.96, 0.98) * (fresnel * uCandyGloss * 0.35 + spec * 0.75 + sparkle * 0.40);
+
+                // Diverse Procedural Canopy Textures: Cotton Candy Puff, Flutter Foliage, and Glossy Crystal
+                float styleRng = fract(sin(dot(floor(vTreeWorldPos.xz / 16.0), vec2(27.643, 89.412))) * 43758.5453);
+
+                if (vPartType > 1.5) {
+                    if (styleRng < 0.35) {
+                        // 1. Cotton Candy: Soft pillowy volumetric billows with subsurface transmission
+                        float puff = sin(vTreeWorldPos.x * 3.2) * cos(vTreeWorldPos.y * 3.2) * sin(vTreeWorldPos.z * 3.2);
+                        vec3 cottonMod = vec3(0.94 + puff * 0.12);
+                        vec3 softSheen = candyGlossSheen * 0.35;
+                        diffuseColor.rgb = finalTreeColor * cottonMod + softSheen + finalTreeColor * (uCandyTranslucency * 0.65 * (1.0 - NdotV));
+                    } else if (styleRng < 0.70) {
+                        // 2. Flutter / Leafy: Organic cellular dappled foliage pattern
+                        float flutter = sin(vTreeWorldPos.x * 12.0) * cos(vTreeWorldPos.z * 12.0);
+                        float leafDapple = (smoothstep(-0.4, 0.4, flutter) - 0.5) * 0.22;
+                        vec3 leafMod = vec3(1.0 + leafDapple, 1.0 + leafDapple * 1.15, 1.0 + leafDapple * 0.85);
+                        diffuseColor.rgb = finalTreeColor * leafMod + candyGlossSheen * 0.55;
+                    } else {
+                        // 3. Hard Candy Crystal: High gloss clearcoat with sharp specular glint
+                        diffuseColor.rgb = finalTreeColor + candyGlossSheen * 1.25 + finalTreeColor * (uCandyTranslucency * 0.25 * (1.0 - NdotV));
+                    }
+                } else {
+                    diffuseColor.rgb = finalTreeColor + candyGlossSheen * 0.45;
+                }
                 `
             );
 
@@ -892,11 +1000,22 @@ export class TreeSystem {
                 '#include <emissivemap_fragment>',
                 `
                 #include <emissivemap_fragment>
-                vec3 glowCol = (vColorMode > 0.5) ? vOriginalColor : ((vPartType > 1.5) ? vCanopyColor : ((vPartType > 0.5) ? vLeafColor : vTrunkColor));
-                float maxC = max(glowCol.r, max(glowCol.g, glowCol.b));
-                vec3 normCol = maxC > 0.01 ? (glowCol / maxC) : glowCol;
-                float glow = uBioluminescence * uTimePhaseGlow * vGlowFactor * 2.2;
-                totalEmissiveRadiance += normCol * glow;
+                vec3 baseCanopyCol = (vColorMode > 0.5) ? vOriginalColor : vCanopyColor;
+                vec3 baseLeafCol   = (vColorMode > 0.5) ? vOriginalColor : vLeafColor;
+
+                // Glowing neon glow stick: trunk remains white, canopy & leaves glow their vivid saturated color
+                vec3 glowStickCol;
+                if (vPartType < 0.5) {
+                    glowStickCol = vec3(0.95, 0.95, 1.0); // Trunk remains pure crisp white
+                } else {
+                    vec3 col = (vPartType > 1.5) ? baseCanopyCol : baseLeafCol;
+                    float maxC = max(col.r, max(col.g, max(col.b, 0.001)));
+                    vec3 saturatedHue = col / maxC; // Saturated chromatic hue
+                    glowStickCol = mix(saturatedHue, col, 0.2) * 1.75;
+                }
+
+                float glow = uBioluminescence * uTimePhaseGlow * vGlowFactor;
+                totalEmissiveRadiance += glowStickCol * glow;
                 `
             );
         };
@@ -922,11 +1041,12 @@ export class TreeSystem {
                 #include <emissivemap_fragment>
                 #ifdef USE_INSTANCING_COLOR
                     vec3 col = vInstanceColor.rgb;
-                    float maxC = max(col.r, max(col.g, col.b));
-                    vec3 normCol = maxC > 0.01 ? (col / maxC) : col;
-                    totalEmissiveRadiance += normCol * (uBioluminescence * uTimePhaseGlow * 1.8);
+                    float maxC = max(col.r, max(col.g, max(col.b, 0.001)));
+                    vec3 saturatedHue = col / maxC;
+                    vec3 glowCol = mix(saturatedHue, col, 0.2) * 1.75;
+                    totalEmissiveRadiance += glowCol * (uBioluminescence * uTimePhaseGlow * 1.5);
                 #else
-                    totalEmissiveRadiance += diffuseColor.rgb * (uBioluminescence * uTimePhaseGlow * 1.8);
+                    totalEmissiveRadiance += diffuseColor.rgb * (uBioluminescence * uTimePhaseGlow * 1.5);
                 #endif
                 `
             );
@@ -1035,14 +1155,25 @@ export class TreeSystem {
         const activeBiome = globalConfigManager.getBiomeConfig(bId);
         const veg = activeBiome.vegetation;
         const bioVal = veg.bioluminescence !== undefined ? veg.bioluminescence : 0.8;
-
         this.bioluminescenceUniform.value = bioVal;
 
-        // Automated time-phase calculation: Day = 0.0 (no glow), Dusk = 0.40 (slight glow), Twilight = 1.00 (full glow)
-        const timePhaseTargets = [0.0, 0.40, 1.00];
+        this.candyGlossUniform.value = veg.candyGloss !== undefined ? veg.candyGloss : 1.35;
+        this.sugarSparkleUniform.value = veg.sugarSparkle !== undefined ? veg.sugarSparkle : 0.85;
+        this.candyTranslucencyUniform.value = veg.candyTranslucency !== undefined ? veg.candyTranslucency : 0.70;
+
+        // Automated time-phase calculation: Day = 0.0 (nothing), Dusk = 0.50 (half), Twilight = 1.00 (brightest)
+        const timePhaseTargets = [0.0, 0.50, 1.00];
         const target = timePhaseTargets[timePhase] ?? 0.0;
-        this.currentTimePhaseGlow += (target - this.currentTimePhaseGlow) * Math.min(1, dt * 3.0);
+        this.currentTimePhaseGlow += (target - this.currentTimePhaseGlow) * Math.min(1, dt * 4.0);
         this.timePhaseGlowUniform.value = this.currentTimePhaseGlow;
+    }
+
+    // Graphics Profile
+    public graphicsProfile: 'high_performance' | 'regular' = 'high_performance';
+
+    public setGraphicsProfile(profile: 'high_performance' | 'regular'): void {
+        this.graphicsProfile = profile;
+        this.forceRebuild();
     }
 
     // ── Rebuild Instanced Meshes ───────────────────────────────────────────────
@@ -1053,16 +1184,58 @@ export class TreeSystem {
         const treeGridSpacing = 16.0;
         const px = playerX;
         const pz = playerZ;
+        const activeSpawnRadius = (this.graphicsProfile === 'regular') ? 220 : SPAWN_RADIUS;
 
-        const minCX = Math.floor((px - SPAWN_RADIUS) / treeGridSpacing);
-        const maxCX = Math.ceil((px + SPAWN_RADIUS) / treeGridSpacing);
-        const minCZ = Math.floor((pz - SPAWN_RADIUS) / treeGridSpacing);
-        const maxCZ = Math.ceil((pz + SPAWN_RADIUS) / treeGridSpacing);
+        const minCX = Math.floor((px - activeSpawnRadius) / treeGridSpacing);
+        const maxCX = Math.ceil((px + activeSpawnRadius) / treeGridSpacing);
+        const minCZ = Math.floor((pz - activeSpawnRadius) / treeGridSpacing);
+        const maxCZ = Math.ceil((pz + activeSpawnRadius) / treeGridSpacing);
 
         const modelCounts: Map<string, number> = new Map();
         for (const key of this.catalogKeys) {
             modelCounts.set(key, 0);
         }
+
+        // Spatial Collision Occupancy Grid to guarantee no trees/flowers/bushes clip
+        const placedOccupancy: { x: number; z: number; radius: number }[] = [];
+        const occGrid = new Map<string, number[]>();
+        const occGridSize = 16.0;
+
+        const canPlace = (pxPos: number, pzPos: number, rad: number): boolean => {
+            const gx = Math.floor(pxPos / occGridSize);
+            const gz = Math.floor(pzPos / occGridSize);
+            for (let nx = gx - 1; nx <= gx + 1; nx++) {
+                for (let nz = gz - 1; nz <= gz + 1; nz++) {
+                    const indices = occGrid.get(`${nx}_${nz}`);
+                    if (indices) {
+                        for (let i = 0; i < indices.length; i++) {
+                            const other = placedOccupancy[indices[i]];
+                            const dx = pxPos - other.x;
+                            const dz = pzPos - other.z;
+                            const reqDist = rad + other.radius;
+                            if (dx * dx + dz * dz < reqDist * reqDist) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        };
+
+        const registerPlace = (pxPos: number, pzPos: number, rad: number) => {
+            const idx = placedOccupancy.length;
+            placedOccupancy.push({ x: pxPos, z: pzPos, radius: rad });
+            const gx = Math.floor(pxPos / occGridSize);
+            const gz = Math.floor(pzPos / occGridSize);
+            const key = `${gx}_${gz}`;
+            let arr = occGrid.get(key);
+            if (!arr) {
+                arr = [];
+                occGrid.set(key, arr);
+            }
+            arr.push(idx);
+        };
 
         const allBiomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'estuary', 'redwood', 'sky_citadel'];
         const biomeActiveModels: Record<BiomeId, LoadedCatalogEntry[]> = {
@@ -1096,7 +1269,7 @@ export class TreeSystem {
 
                 const dx = x - px;
                 const dz = z - pz;
-                if (dx * dx + dz * dz > (SPAWN_RADIUS + treeGridSpacing) ** 2) continue;
+                if (dx * dx + dz * dz > (activeSpawnRadius + treeGridSpacing) ** 2) continue;
 
                 const biome = getDominantBiome(x, z);
                 const biomeCfg = globalConfigManager.getBiomeConfig(biome);
@@ -1113,28 +1286,51 @@ export class TreeSystem {
                     const mDensity = mCfg.density !== undefined ? mCfg.density : (veg.treeDensity || 200);
                     if (mDensity <= 0) continue;
                     
-                    const densityChance = mDensity / 800.0;
+                    const densityMult = (this.graphicsProfile === 'regular') ? 0.65 : 1.0;
+                    const densityChance = (mDensity / 800.0) * densityMult;
                     const modelRng = mulberry32(cellSeed(cx, cz, strHash(modelKey)));
                     if (modelRng() > densityChance) continue;
 
                     const currentCount = modelCounts.get(modelKey) || 0;
                     if (currentCount >= MAX_CAPACITY) continue;
 
-                    const instX = (cx + 0.1 + modelRng() * 0.8) * treeGridSpacing;
-                    const instZ = (cz + 0.1 + modelRng() * 0.8) * treeGridSpacing;
+                    // Independent Scale per model
+                    const mScale = (mCfg.scale !== undefined) ? mCfg.scale : (veg.treeScale || 6.0);
+                    let baseScale = mScale * 0.16;
+                    if (biome === 'redwood') baseScale *= 1.35;
+                    if (biome === 'estuary') baseScale *= 0.85;
 
-                    const instDx = instX - px;
-                    const instDz = instZ - pz;
-                    if (instDx * instDx + instDz * instDz > SPAWN_RADIUS * SPAWN_RADIUS) continue;
+                    // Clearance radius: flowers need ~2m, regular trees ~3.8m, giant trees ~5.5m
+                    const isFlora = selectedModel.item.category === 'Flowers & Flora';
+                    const clearanceRadius = Math.max(isFlora ? 1.8 : 3.6, baseScale * (isFlora ? 0.65 : 1.2));
+
+                    // Deterministic multi-attempt candidate placement to find non-colliding spot
+                    let placed = false;
+                    let instX = 0, instZ = 0;
+                    for (let attempt = 0; attempt < 4; attempt++) {
+                        const u = 0.12 + ((attempt % 2) * 0.45) + (modelRng() * 0.28);
+                        const v = 0.12 + (Math.floor(attempt / 2) * 0.45) + (modelRng() * 0.28);
+                        const candX = (cx + u) * treeGridSpacing;
+                        const candZ = (cz + v) * treeGridSpacing;
+
+                        const cDx = candX - px;
+                        const cDz = candZ - pz;
+                        if (cDx * cDx + cDz * cDz > activeSpawnRadius * activeSpawnRadius) continue;
+
+                        if (canPlace(candX, candZ, clearanceRadius)) {
+                            instX = candX;
+                            instZ = candZ;
+                            placed = true;
+                            break;
+                        }
+                    }
+                    if (!placed) continue;
 
                     const instY = terrainHeightJS(instX, instZ);
                     if (!isVegetationAllowed(instX, instZ, instY, biome)) continue;
 
-                    // Independent Scale per model
-                    const mScale = (mCfg.enabled && mCfg.scale !== undefined) ? mCfg.scale : (veg.treeScale || 6.0);
-                    let baseScale = mScale * 0.16;
-                    if (biome === 'redwood') baseScale *= 1.35;
-                    if (biome === 'estuary') baseScale *= 0.85;
+                    // Register this location in spatial grid to block overlaps
+                    registerPlace(instX, instZ, clearanceRadius);
 
                     const sizeVariation = 0.85 + modelRng() * 0.35;
                     const scaleX = baseScale * sizeVariation;
@@ -1187,9 +1383,13 @@ export class TreeSystem {
                         colorModeAttr.setX(currentCount, isOriginal);
                     }
 
-                    // Low night glow for 10% of trees
-                    const isGlowTree = modelRng() < 0.10;
-                    const glowVal = isGlowTree ? 0.45 : 0.0;
+                    // Glow-in-the-dark glow stick activator for subset of trees during dusk/twilight
+                    const isGlowEnabled = veg.glowStickEnabled !== false;
+                    const glowRatio = veg.glowStickRatio !== undefined ? veg.glowStickRatio : 0.18;
+                    const glowIntensity = veg.glowStickIntensity !== undefined ? veg.glowStickIntensity : 2.8;
+
+                    const isGlowTree = isGlowEnabled && (modelRng() < glowRatio);
+                    const glowVal = isGlowTree ? glowIntensity : 0.0;
                     const glowAttr = selectedModel.treeInst.geometry.getAttribute('aGlowFactor') as THREE.InstancedBufferAttribute;
                     if (glowAttr) {
                         glowAttr.setX(currentCount, glowVal);
@@ -1220,13 +1420,13 @@ export class TreeSystem {
             }
         }
 
-        // ── 2. Rebuild Bushes ──────────────────────────────────────────────────
+        // ── 2. Rebuild Bushes (with spatial clearance against trees & bushes) ──
         let bushCount0 = 0, bushCount1 = 0;
         const bushSpacing = 22.0;
-        const bMinCX = Math.floor((px - SPAWN_RADIUS * 0.7) / bushSpacing);
-        const bMaxCX = Math.ceil((px + SPAWN_RADIUS * 0.7) / bushSpacing);
-        const bMinCZ = Math.floor((pz - SPAWN_RADIUS * 0.7) / bushSpacing);
-        const bMaxCZ = Math.ceil((pz + SPAWN_RADIUS * 0.7) / bushSpacing);
+        const bMinCX = Math.floor((px - activeSpawnRadius * 0.7) / bushSpacing);
+        const bMaxCX = Math.ceil((px + activeSpawnRadius * 0.7) / bushSpacing);
+        const bMinCZ = Math.floor((pz - activeSpawnRadius * 0.7) / bushSpacing);
+        const bMaxCZ = Math.ceil((pz + activeSpawnRadius * 0.7) / bushSpacing);
 
         for (let cx = bMinCX; cx <= bMaxCX; cx++) {
             for (let cz = bMinCZ; cz <= bMaxCZ; cz++) {
@@ -1236,7 +1436,7 @@ export class TreeSystem {
 
                 const dx = x - px;
                 const dz = z - pz;
-                if (dx * dx + dz * dz > (SPAWN_RADIUS * 0.7) ** 2) continue;
+                if (dx * dx + dz * dz > (activeSpawnRadius * 0.7) ** 2) continue;
 
                 const y = terrainHeightJS(x, z);
                 const biome = getDominantBiome(x, z);
@@ -1245,15 +1445,19 @@ export class TreeSystem {
                 const veg = biomeCfg.vegetation;
 
                 if (!veg.bushDensity || veg.bushDensity <= 0) continue;
-                const bushChance = veg.bushDensity / 400.0;
+                const bushChance = (veg.bushDensity / 400.0) * ((this.graphicsProfile === 'regular') ? 0.6 : 1.0);
                 if (rng() > bushChance) continue;
+
+                const bScale = veg.bushScale * (0.8 + rng() * 0.4);
+                const bushClearance = Math.max(1.8, bScale * 0.9);
+                if (!canPlace(x, z, bushClearance)) continue;
+                registerPlace(x, z, bushClearance);
 
                 const variant = rng() > 0.5 ? 1 : 0;
                 const inst = this.bushInsts[variant];
                 const idx = variant === 0 ? bushCount0 : bushCount1;
                 if (idx >= MAX_CAPACITY) continue;
 
-                const bScale = veg.bushScale * (0.8 + rng() * 0.4);
                 this.dummy.position.set(x, y - 0.05, z);
                 this.dummy.rotation.set(0, rng() * Math.PI * 2, 0);
                 this.dummy.scale.set(bScale, bScale * (0.8 + rng() * 0.4), bScale);
@@ -1300,12 +1504,14 @@ export class TreeSystem {
     public setModelScale(biomeId: BiomeId, modelId: string, scale: number): void {
         const cfg = this.getModelConfig(biomeId, modelId);
         cfg.scale = Math.max(0.1, Math.min(50.0, scale));
+        cfg.enabled = true;
         this.forceRebuild();
     }
 
     public setModelDensity(biomeId: BiomeId, modelId: string, density: number): void {
         const cfg = this.getModelConfig(biomeId, modelId);
         cfg.density = Math.max(0, Math.min(800, Math.round(density)));
+        cfg.enabled = true;
         this.forceRebuild();
     }
 
@@ -1465,26 +1671,6 @@ export class TreeSystem {
         this.applyBiomeVegPreset(globalConfigManager.config.activeBiomeId, key);
     }
 
-    public setTreeBloomIntensity(intensity: number): void {
-        this.setBioluminescence(intensity / 3.0);
-    }
-
-    public setCanopyGlowMultiplier(m: number): void {
-        this.setBioluminescence(m / 2.0);
-    }
-
-    public setTrunkGlowMultiplier(m: number): void {
-        this.setBioluminescence(m / 2.0);
-    }
-
-    public setBushBloomIntensity(intensity: number): void {
-        this.setBioluminescence(intensity / 3.0);
-    }
-
-    public setBushGlowMultiplier(m: number): void {
-        this.setBioluminescence(m / 2.0);
-    }
-
     public setScale(s: number): void {
         this.setBiomeTreeScale(globalConfigManager.config.activeBiomeId, s);
     }
@@ -1499,6 +1685,42 @@ export class TreeSystem {
 
     public setBushDensity(n: number): void {
         this.setBiomeBushDensity(globalConfigManager.config.activeBiomeId, n);
+    }
+
+    public setBiomeGlowStickEnabled(biomeId: BiomeId, enabled: boolean): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        veg.glowStickEnabled = enabled;
+        this.forceRebuild();
+    }
+
+    public setBiomeGlowStickRatio(biomeId: BiomeId, ratio: number): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        veg.glowStickRatio = Math.max(0.01, Math.min(1.0, ratio));
+        this.forceRebuild();
+    }
+
+    public setBiomeGlowStickIntensity(biomeId: BiomeId, intensity: number): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        veg.glowStickIntensity = Math.max(0.0, Math.min(6.0, intensity));
+        this.forceRebuild();
+    }
+
+    public setBiomeCandyGloss(biomeId: BiomeId, val: number): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        veg.candyGloss = Math.max(0.0, Math.min(3.0, val));
+        this.candyGlossUniform.value = veg.candyGloss;
+    }
+
+    public setBiomeSugarSparkle(biomeId: BiomeId, val: number): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        veg.sugarSparkle = Math.max(0.0, Math.min(3.0, val));
+        this.sugarSparkleUniform.value = veg.sugarSparkle;
+    }
+
+    public setBiomeCandyTranslucency(biomeId: BiomeId, val: number): void {
+        const veg = globalConfigManager.getBiomeConfig(biomeId).vegetation;
+        veg.candyTranslucency = Math.max(0.0, Math.min(2.0, val));
+        this.candyTranslucencyUniform.value = veg.candyTranslucency;
     }
 
     public forceRebuild(): void {

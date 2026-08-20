@@ -29,7 +29,12 @@ export class ControlsManager {
     }
 
     private detectTouchDevice() {
-        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        const isMobileOrTablet = ('ontouchstart' in window) || 
+            (navigator.maxTouchPoints > 0) || 
+            /Android|iPhone|iPad|iPod|Windows Phone|Mobile|Tablet/i.test(navigator.userAgent) ||
+            (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+
+        if (isMobileOrTablet) {
             this.nativeTouchDetected = true;
             this.setTouchMode(true);
         }

@@ -1,0 +1,23 @@
+{
+  "name": "Paper Rockets Legacy",
+  "short_name": "Legacy",
+  "description": "Infinite procedural flight exploration and world builder.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0f172a",
+  "theme_color": "#161a24",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/Assets/Previews/other_castle_high.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

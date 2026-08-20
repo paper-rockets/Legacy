@@ -13,26 +13,23 @@ import { AmbientAudioEngine } from './audio/audio';
 import { createHud } from './ui/hud';
 import { createSettingsWindow } from './ui/settingsWindow';
 import { createPhotoMode } from './ui/photoMode';
+import { createEditorShell } from './ui/panel/shell';
+import { buildEditorFooter } from './ui/editorFooter';
+import { buildVegetationTab } from './ui/tabs/vegetationTab';
+import { buildObjectsTab } from './ui/tabs/objectsTab';
+import { buildCastleControls } from './ui/tabs/castlesTab';
+import { buildWorldTab } from './ui/tabs/worldTab';
+import { createBlueprintView, BlueprintViewController } from './ui/blueprintView';
+import { castleEditorState } from './ui/castleEditorState';
+import { requireEl } from './ui/panel/render';
+import { TabDef } from './ui/panel/types';
 import { terrainHeightJS, BIOME_LOCATIONS } from './world/noise';
 import { globalConfigManager } from './core/config';
 
-/**
- * Nullable reference to the top-down blueprint camera controller. There is no
- * blueprint view yet (that lands in T5.1) so this starts out null and every call
- * site below is null-safe. Preserves the exact semantics of the old dev-editor
- * driven top-view chain without depending on either deleted class. A later task
- * installs the real controller through setBlueprintView.
- */
-let blueprintView: { isActive: boolean; currentCenter: THREE.Vector3; update(dt: number): void } | null = null;
+let blueprintView: BlueprintViewController | null = null;
 
-export function setBlueprintView(view: typeof blueprintView) {
+export function setBlueprintView(view: BlueprintViewController | null) {
     blueprintView = view;
-}
-
-/** The developer editor does not exist yet (T3.1). F2 and the Settings window's
- * Developer Options button both point here until then. */
-function openDeveloperEditorPlaceholder() {
-    console.info('[editor] not implemented until T3.1');
 }
 
 async function bootstrap() {
@@ -73,7 +70,170 @@ async function bootstrap() {
     });
     audio.onFlightModelChanged(player.getCurrentModelDef());
 
-    const settingsWindow = createSettingsWindow(openDeveloperEditorPlaceholder);
+    let onBlueprintExit: (() => void) | undefined;
+    const blueprint = createBlueprintView({
+        pipeline,
+        skyCastles,
+        player,
+        lighting,
+        onPlaceCastle: (modelPath, x, z) => {
+            const isl = skyCastles.addIsland({ modelPath, x, z, y: 490 });
+            castleEditorState.select(isl.id);
+        },
+        onExit: () => {
+            onBlueprintExit?.();
+        }
+    });
+    setBlueprintView(blueprint);
+
+    const editorTabs: TabDef[] = [
+        {
+            id: 'vegetation',
+            label: 'Vegetation',
+            build: () => buildVegetationTab({
+                trees,
+                props,
+                terrain,
+                pipeline,
+                worldProps,
+                biomeId: () => player.currentBiome,
+                status: (msg, isErr) => editorShell.status(msg, isErr),
+                rebuild: () => editorShell.rebuild()
+            })
+        },
+        /* Objects tab hidden per request
+        {
+            id: 'objects',
+            label: 'Objects',
+            build: () => buildObjectsTab({
+                worldProps,
+                player,
+                pipeline,
+                status: (msg, isErr) => editorShell.status(msg, isErr),
+                rebuild: () => editorShell.rebuild()
+            })
+        },
+        */
+        {
+            id: 'castles',
+            label: 'Castles',
+            build: () => buildCastleControls({
+                skyCastles,
+                variant: 'panel',
+                onEnterBlueprint: () => {
+                    editorShell.close();
+                    blueprint.enter();
+                },
+                status: (msg, isErr) => editorShell.status(msg, isErr)
+            })
+        },
+        {
+            id: 'world',
+            label: 'World',
+            build: () => buildWorldTab({
+                terrain,
+                water,
+                lighting,
+                pipeline,
+                audio,
+                photoMode,
+                biomeId: () => player.currentBiome,
+                onTimePhaseChanged: (phase) => {
+                    // Update lighting phase
+                },
+                status: (msg, isErr) => editorShell.status(msg, isErr),
+                rebuild: () => editorShell.rebuild()
+            })
+        }
+    ];
+
+    const editorRoot = requireEl('editor-root');
+    const editorShell = createEditorShell({
+        mount: editorRoot,
+        title: 'DEVELOPER OPTIONS',
+        subtitle: () => player.currentBiomeName.toUpperCase(),
+        biomeStrip: {
+            options: () => BIOME_LOCATIONS.map(b => ({ value: b.id, text: b.name })),
+            get: () => player.currentBiome,
+            set: (bId: string) => {
+                const loc = BIOME_LOCATIONS.find(b => b.id === bId);
+                if (loc) {
+                    player.teleportTo(loc.x, loc.z, 50, loc.y);
+                    const pos = player.playerGrp.position;
+                    terrain.update(pos.x, pos.z);
+                    trees.update(pos.x, pos.z);
+                    props.update(pos.x, pos.z, 0.016);
+                    water.update(pos.x, pos.z, 0.016);
+                    skyCastles.update(pos, 0.016);
+
+                    globalConfigManager.config.activeBiomeId = bId as any;
+                    const bCfg = globalConfigManager.getBiomeConfig(bId as any);
+                    if (bCfg) {
+                        pipeline.applyBiomeBloom(bCfg.bloom);
+                        props.applyBiomeCloud(bCfg.bloom);
+                        skyCastles.applyBiomeCloud(bCfg.bloom);
+                        lighting.switchBiome(bId as any, pipeline.scene);
+                    }
+                }
+            }
+        },
+        tabs: editorTabs,
+        footer: () => buildEditorFooter({
+            biomeId: () => player.currentBiome,
+            status: (msg, isErr) => editorShell.status(msg, isErr),
+            rebuild: () => editorShell.rebuild()
+        }),
+        headerActions: [
+            {
+                kind: 'button',
+                text: 'Teleport',
+                tone: 'default',
+                onClick: () => {
+                    const loc = BIOME_LOCATIONS.find(b => b.id === player.currentBiome);
+                    if (loc) {
+                        player.teleportTo(loc.x, loc.z, 50, loc.y);
+                        editorShell.status(`Teleported to ${loc.name}`);
+                    }
+                }
+            },
+            {
+                kind: 'button',
+                text: 'Close',
+                tone: 'default',
+                onClick: () => {
+                    editorShell.close();
+                }
+            }
+        ]
+    });
+    onBlueprintExit = () => {
+        editorShell.open();
+    };
+
+    const savedSound = localStorage.getItem('settings_sound_enabled') !== 'false';
+    audio.setMuted(!savedSound);
+
+    const savedGraphics = (localStorage.getItem('settings_graphics_profile') as 'high_performance' | 'regular') || 'high_performance';
+    pipeline.setGraphicsProfile(savedGraphics);
+    trees.setGraphicsProfile(savedGraphics);
+    terrain.setGraphicsProfile(savedGraphics);
+
+    const settingsWindow = createSettingsWindow({
+        onOpenDeveloper: () => {
+            settingsWindow.close();
+            editorShell.open();
+        },
+        onToggleSound: (enabled: boolean) => {
+            audio.setMuted(!enabled);
+        },
+        onChangeGraphics: (profile: 'high_performance' | 'regular') => {
+            pipeline.setGraphicsProfile(profile);
+            trees.setGraphicsProfile(profile);
+            terrain.setGraphicsProfile(profile);
+        },
+        getSoundEnabled: () => !audio.getMuted(),
+        getGraphicsProfile: () => trees.graphicsProfile
+    });
     const hud = createHud({
         pipeline, player, controls, lighting, terrain, water, props, trees, skyCastles, audio,
         onOpenSettings: () => settingsWindow.toggle()
@@ -82,13 +242,14 @@ async function bootstrap() {
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'F2') {
-            openDeveloperEditorPlaceholder();
+            e.preventDefault();
+            editorShell.toggle();
         }
     });
 
     (window as any).__game = {
         pipeline, player, terrain, lighting, water, props, skyCastles, trees, worldProps, audio,
-        hud, settingsWindow, photoMode, setBlueprintView
+        hud, settingsWindow, photoMode, editorShell, setBlueprintView
     };
 
     const clock = new THREE.Clock();
@@ -113,11 +274,14 @@ async function bootstrap() {
         const groundY = terrainHeightJS(playerPos.x, playerPos.z);
 
         // Biome flight traversal detection & bloom interpolation
+        const bCfg = globalConfigManager.getBiomeConfig(player.currentBiome);
+        if (bCfg) {
+            pipeline.applyBiomeBloom(bCfg.bloom, 0.08, lighting.timePhase);
+        }
+
         if (player.currentBiome !== lastBiomeId) {
             lastBiomeId = player.currentBiome;
-            const bCfg = globalConfigManager.getBiomeConfig(player.currentBiome);
             if (bCfg) {
-                pipeline.applyBiomeBloom(bCfg.bloom, 0.12);
                 props.applyBiomeCloud(bCfg.bloom);
                 skyCastles.applyBiomeCloud(bCfg.bloom);
                 lighting.switchBiome(player.currentBiome, pipeline.scene);

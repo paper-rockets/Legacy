@@ -389,6 +389,26 @@ export class TerrainSystem {
         this.update(0, 0);
     }
 
+    public setGraphicsProfile(profile: 'high_performance' | 'regular'): void {
+        const width = profile === 'regular' ? 1200 : 1600;
+        const depth = profile === 'regular' ? 1000 : 1600;
+        const resX = profile === 'regular' ? 96 : 128;
+        const resZ = profile === 'regular' ? 80 : 128;
+        this.rebuildDimensions(width, depth, resX, resZ);
+    }
+
+    public rebuildDimensions(width: number, depth: number, resX: number, resZ: number): void {
+        if (!this.mesh) return;
+        this.geometry.dispose();
+        const baseGeo = new THREE.PlaneGeometry(width, depth, resX, resZ);
+        baseGeo.rotateX(-Math.PI / 2);
+        this.geometry = setupFacetedBarycentricGeometry(baseGeo) as THREE.PlaneGeometry;
+        this.mesh.geometry = this.geometry;
+        this.currentRes = resX;
+        this.gridStride = width / resX;
+        this.invalidateAndRedraw();
+    }
+
     private updateActiveMaterial(): void {
         if (this.terrainStyle === 'crystal') {
             this.terrainMat = this.crystalMat;

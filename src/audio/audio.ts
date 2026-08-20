@@ -565,6 +565,92 @@ export const funTracks: FunTrackConfig[] = [
                 { hat: true, openHat: true, lead: 'D5' }
             ]
         ]
+    },
+    {
+        name: "Candy Carnival",
+        bpm: 130,
+        stepsPerBeat: 4,
+        padOsc: 'triangle',
+        leadOsc: 'sine',
+        bassOsc: 'triangle',
+        bars: [
+            // Bar 1: F Major Bouncy Chimes (F4 - A4 - C5 - F5)
+            [
+                { kick: true, hat: true, bass: 'F2', chord: ['F4', 'A4', 'C5', 'F5'], lead: 'F5' },
+                { hat: true, lead: 'A5' },
+                { hat: true, bass: 'C3', lead: 'C6' },
+                { hat: true, lead: 'A5' },
+                { snare: true, hat: true, bass: 'F2', lead: 'F6' },
+                { hat: true, lead: 'E6' },
+                { hat: true, bass: 'A2', lead: 'C6' },
+                { hat: true, openHat: true, lead: 'A5' },
+                { kick: true, hat: true, bass: 'F2', lead: 'F5' },
+                { hat: true, lead: 'G5' },
+                { hat: true, bass: 'C3', lead: 'A5' },
+                { hat: true, lead: 'C6' },
+                { snare: true, hat: true, bass: 'F2', lead: 'D6' },
+                { hat: true, lead: 'C6' },
+                { kick: true, hat: true, bass: 'C3', lead: 'A5' },
+                { hat: true, openHat: true, lead: 'G5' }
+            ],
+            // Bar 2: Bb Major Sugar Bells (Bb3 - D4 - F4 - Bb4)
+            [
+                { kick: true, hat: true, bass: 'Bb2', chord: ['Bb3', 'D4', 'F4', 'Bb4'], lead: 'D6' },
+                { hat: true, lead: 'F6' },
+                { hat: true, bass: 'F2', lead: 'D6' },
+                { hat: true, lead: 'Bb5' },
+                { snare: true, hat: true, bass: 'Bb2', lead: 'F6' },
+                { hat: true, lead: 'G6' },
+                { hat: true, bass: 'D3', lead: 'F6' },
+                { hat: true, openHat: true, lead: 'D6' },
+                { kick: true, hat: true, bass: 'Bb2', lead: 'Bb5' },
+                { hat: true, lead: 'C6' },
+                { hat: true, bass: 'F2', lead: 'D6' },
+                { hat: true, lead: 'F6' },
+                { snare: true, hat: true, bass: 'Bb2', lead: 'G6' },
+                { hat: true, lead: 'F6' },
+                { kick: true, hat: true, bass: 'F2', lead: 'D6' },
+                { hat: true, openHat: true, lead: 'C6' }
+            ],
+            // Bar 3: C Major Marshmallow Bounce (C4 - E4 - G4 - C5)
+            [
+                { kick: true, hat: true, bass: 'C2', chord: ['C4', 'E4', 'G4', 'C5'], lead: 'E6' },
+                { hat: true, lead: 'G6' },
+                { hat: true, bass: 'G2', lead: 'E6' },
+                { hat: true, lead: 'C6' },
+                { snare: true, hat: true, bass: 'C2', lead: 'G6' },
+                { hat: true, lead: 'A6' },
+                { hat: true, bass: 'E3', lead: 'G6' },
+                { hat: true, openHat: true, lead: 'E6' },
+                { kick: true, hat: true, bass: 'C2', lead: 'C6' },
+                { hat: true, lead: 'D6' },
+                { hat: true, bass: 'G2', lead: 'E6' },
+                { hat: true, lead: 'G6' },
+                { snare: true, hat: true, bass: 'C2', lead: 'A6' },
+                { hat: true, lead: 'G6' },
+                { kick: true, hat: true, bass: 'G2', lead: 'E6' },
+                { hat: true, openHat: true, lead: 'D6' }
+            ],
+            // Bar 4: D Minor Sweet Swirl (D4 - F4 - A4 - D5)
+            [
+                { kick: true, hat: true, bass: 'D2', chord: ['D4', 'F4', 'A4', 'D5'], lead: 'D6' },
+                { hat: true, lead: 'F6' },
+                { hat: true, bass: 'A2', lead: 'A6' },
+                { hat: true, lead: 'F6' },
+                { snare: true, hat: true, bass: 'D2', lead: 'D6' },
+                { hat: true, lead: 'C6' },
+                { hat: true, bass: 'F2', lead: 'Bb5' },
+                { hat: true, openHat: true, lead: 'A5' },
+                { kick: true, hat: true, bass: 'C2', lead: 'G5' },
+                { hat: true, lead: 'A5' },
+                { hat: true, bass: 'G2', lead: 'Bb5' },
+                { hat: true, lead: 'C6' },
+                { snare: true, hat: true, bass: 'C2', lead: 'E6' },
+                { hat: true, lead: 'D6' },
+                { kick: true, hat: true, bass: 'C2', lead: 'C6' },
+                { hat: true, openHat: true, lead: 'E6' }
+            ]
+        ]
     }
 ];
 
@@ -902,6 +988,19 @@ export class AmbientAudioEngine {
     public setPlaneEngineActive(active: boolean) {
         this.initAudio();
         this.biplaneAudio?.setActive(active);
+    }
+
+    private isSoundMuted: boolean = false;
+
+    public setMuted(muted: boolean) {
+        this.isSoundMuted = muted;
+        if (this.masterGain && this.audioCtx) {
+            this.masterGain.gain.setTargetAtTime(muted ? 0.0 : 0.6, this.audioCtx.currentTime, 0.05);
+        }
+    }
+
+    public getMuted(): boolean {
+        return this.isSoundMuted;
     }
 
     public getBiplaneEngineAudio(): BiplaneEngineAudio | null {

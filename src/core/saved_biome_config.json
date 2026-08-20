@@ -1,9 +1,86 @@
 {
   "version": 18,
-  "activeBiomeId": "candyland",
-  "placedProps": [],
+  "activeBiomeId": "geothermal",
+  "placedProps": [
+    {
+      "id": "candyland_heart_center",
+      "modelId": "prop_candy_heart",
+      "name": "Heart of Candyland",
+      "position": [
+        0,
+        15.499850001499984,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": 3.2,
+      "groundOffset": 4.5,
+      "biomeId": "candyland",
+      "locked": true
+    },
+    {
+      "id": "candyland_planet_1",
+      "modelId": "prop_candy_planet_1",
+      "name": "Strawberry Swirl Planet",
+      "position": [
+        0,
+        28.999850001499986,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": 2.8,
+      "groundOffset": 14,
+      "biomeId": "candyland",
+      "locked": true
+    },
+    {
+      "id": "candyland_planet_2",
+      "modelId": "prop_candy_planet_2",
+      "name": "Bubblegum Cyan Planet",
+      "position": [
+        75,
+        35.69367713803692,
+        -60
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": 2.8,
+      "groundOffset": 19,
+      "biomeId": "candyland",
+      "locked": true
+    },
+    {
+      "id": "candyland_planet_3",
+      "modelId": "prop_candy_planet_3",
+      "name": "Mint Lime Sugar Planet",
+      "position": [
+        -80,
+        38.86096176973146,
+        65
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": 2.8,
+      "groundOffset": 17.5,
+      "biomeId": "candyland",
+      "locked": true
+    }
+  ],
   "globalBloom": {
-    "strength": 0,
+    "strength": 0.2,
     "radius": 0,
     "threshold": 0.7
   },
@@ -52,11 +129,20 @@
         "shoreWidth": 1.1
       },
       "vegetation": {
-        "treeScale": 8.25,
-        "treeDensity": 280,
-        "bushScale": 1.1,
+        "treeScale": 10.2,
+        "treeDensity": 220,
+        "bushScale": 2,
         "bushDensity": 180,
         "bioluminescence": 0.8,
+        "glowStickEnabled": true,
+        "glowStickRatio": 0.2,
+        "glowStickIntensity": 3,
+        "candyGloss": 1.35,
+        "sugarSparkle": 0.85,
+        "candyTranslucency": 0.7,
+        "floatingPlanetsEnabled": true,
+        "floatingPlanetAltitude": 14,
+        "floatingPlanetCount": 3,
         "canopyColors": [
           "#f472b6",
           "#93c5fd",
@@ -75,16 +161,14 @@
         "activePreset": "candyland_pastel",
         "selectedTreeModelIds": [
           "candy_lollipop_spiral",
-          "candy_lollipop_sphere",
-          "candy_cane_single",
-          "candy_cane_cluster"
+          "candy_lollipop_sphere"
         ],
         "models": {
           "candy_lollipop_spiral": {
             "modelId": "candy_lollipop_spiral",
-            "enabled": false,
-            "scale": 6,
-            "density": 250,
+            "enabled": true,
+            "scale": 11.6,
+            "density": 195,
             "useOriginalColors": false,
             "canopyColors": [
               "#ff1493",
@@ -109,6 +193,99 @@
               "#3f3f46"
             ],
             "activePreset": "candy"
+          },
+          "candy_cotton_cloud": {
+            "modelId": "candy_cotton_cloud",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "candy_gummy_flower": {
+            "modelId": "candy_gummy_flower",
+            "enabled": true,
+            "scale": 30,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
+          },
+          "candy_lollipop_sphere": {
+            "modelId": "candy_lollipop_sphere",
+            "enabled": true,
+            "scale": 13.7,
+            "density": 105,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#02e37a",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "custom"
           }
         }
       },
@@ -192,7 +369,7 @@
     },
     "meadow": {
       "id": "meadow",
-      "name": "Lush Meadow",
+      "name": "Meadow",
       "terrain": {
         "colorLow": "#76d149",
         "colorHigh": "#89e05e",
@@ -213,7 +390,7 @@
         "isToonMode": false
       },
       "bloom": {
-        "globalStrength": 0,
+        "globalStrength": 0.2,
         "globalRadius": 0,
         "globalThreshold": 0.7,
         "cloudBloom": 0,
@@ -233,6 +410,7 @@
         "treeDensity": 200,
         "bushScale": 1,
         "bushDensity": 0,
+        "bioluminescence": 0.55,
         "canopyColors": [
           "#ff1493",
           "#ff69b4",
@@ -254,7 +432,6 @@
         "selectedTreeModelIds": [
           "veg_cartoon_1",
           "veg_cartoon_2",
-          "veg_bigtree_1",
           "veg_tree_broadleaf_1"
         ],
         "models": {
@@ -287,9 +464,41 @@
               "#3f3f46"
             ],
             "activePreset": "candy"
+          },
+          "veg_cartoon_1": {
+            "modelId": "veg_cartoon_1",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00d672",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#0fdb5a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "custom"
           }
         },
-        "bioluminescence": 0.35
+        "glowStickIntensity": 4,
+        "glowStickRatio": 0.35
       },
       "phases": [
         {
@@ -371,7 +580,7 @@
     },
     "archipelago": {
       "id": "archipelago",
-      "name": "Floating Archipelago",
+      "name": "Archipelago",
       "terrain": {
         "colorLow": "#6ee7b7",
         "colorHigh": "#93c5fd",
@@ -412,6 +621,7 @@
         "treeDensity": 200,
         "bushScale": 1.1,
         "bushDensity": 0,
+        "bioluminescence": 0.35,
         "canopyColors": [
           "#00bfff",
           "#60a5fa",
@@ -463,9 +673,39 @@
               "#3f3f46"
             ],
             "activePreset": "candy"
+          },
+          "veg_cherry_blossom": {
+            "modelId": "veg_cherry_blossom",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
           }
-        },
-        "bioluminescence": 0.35
+        }
       },
       "phases": [
         {
@@ -547,7 +787,7 @@
     },
     "geothermal": {
       "id": "geothermal",
-      "name": "Geothermal Ridge",
+      "name": "Geothermal",
       "terrain": {
         "colorLow": "#d97706",
         "colorHigh": "#f59e0b",
@@ -588,6 +828,7 @@
         "treeDensity": 200,
         "bushScale": 0.95,
         "bushDensity": 0,
+        "bioluminescence": 0.35,
         "canopyColors": [
           "#ff3300",
           "#ff7700",
@@ -636,9 +877,39 @@
               "#3f3f46"
             ],
             "activePreset": "candy"
+          },
+          "veg_cartoon_8": {
+            "modelId": "veg_cartoon_8",
+            "enabled": false,
+            "scale": 6,
+            "density": 250,
+            "bioluminescence": 0.8,
+            "useOriginalColors": false,
+            "canopyColors": [
+              "#ff1493",
+              "#ff69b4",
+              "#b026ff",
+              "#8a2be2",
+              "#00d2ff",
+              "#00ff88",
+              "#ffe600"
+            ],
+            "leafColors": [
+              "#22c55e",
+              "#16a34a",
+              "#15803d",
+              "#4ade80",
+              "#10b981"
+            ],
+            "trunkColors": [
+              "#5c3a21",
+              "#451a03",
+              "#78350f",
+              "#3f3f46"
+            ],
+            "activePreset": "candy"
           }
-        },
-        "bioluminescence": 0.35
+        }
       },
       "phases": [
         {
@@ -720,7 +991,7 @@
     },
     "estuary": {
       "id": "estuary",
-      "name": "Bioluminescent Estuary",
+      "name": "Estuary",
       "terrain": {
         "colorLow": "#10b981",
         "colorHigh": "#06b6d4",
@@ -761,6 +1032,7 @@
         "treeDensity": 200,
         "bushScale": 1.25,
         "bushDensity": 0,
+        "bioluminescence": 0.35,
         "canopyColors": [
           "#00f5d4",
           "#00bbf9",
@@ -812,8 +1084,7 @@
             ],
             "activePreset": "candy"
           }
-        },
-        "bioluminescence": 0.35
+        }
       },
       "phases": [
         {
@@ -895,7 +1166,7 @@
     },
     "redwood": {
       "id": "redwood",
-      "name": "Colossal Redwood",
+      "name": "Redwood",
       "terrain": {
         "colorLow": "#15803d",
         "colorHigh": "#166534",
@@ -936,6 +1207,7 @@
         "treeDensity": 200,
         "bushScale": 1.15,
         "bushDensity": 0,
+        "bioluminescence": 0.35,
         "canopyColors": [
           "#15803d",
           "#166534",
@@ -986,8 +1258,7 @@
             ],
             "activePreset": "candy"
           }
-        },
-        "bioluminescence": 0.35
+        }
       },
       "phases": [
         {
@@ -1069,7 +1340,7 @@
     },
     "sky_citadel": {
       "id": "sky_citadel",
-      "name": "Floating Cloud Citadel",
+      "name": "Citadel",
       "terrain": {
         "colorLow": "#e0e7ff",
         "colorHigh": "#f3e8ff",
@@ -1242,10 +1513,10 @@
       "id": "sky_castle_high_0",
       "name": "Grand Celestial Palace",
       "modelPath": "/Assets/Sky/fairytale_castle_high_compressed.glb",
-      "x": 0,
+      "x": 327,
       "y": 490,
-      "z": -550,
-      "rotationY": 0.2,
+      "z": -471,
+      "rotationY": 1.5707963267948966,
       "scale": 2.4,
       "cloudRadius": 36,
       "cloudPuffCount": 16,
@@ -1262,30 +1533,30 @@
       "id": "sky_castle_high_1",
       "name": "Royal Citadel",
       "modelPath": "/Assets/Sky/fairytale_castle_high_compressed (1).glb",
-      "x": -750,
-      "y": 520,
-      "z": -400,
-      "rotationY": 1.1,
+      "x": 950,
+      "y": 490,
+      "z": 0,
+      "rotationY": 1.5707963267948966,
       "scale": 2.2,
       "cloudRadius": 32,
       "cloudPuffCount": 14,
       "colors": {
-        "preset": "ruby",
-        "roofColor": "#e11d48",
-        "wallColor": "#fdf2f8",
-        "trimColor": "#f59e0b",
-        "crystalColor": "#ec4899",
-        "crystalBloom": 0.6
+        "preset": "pastel",
+        "roofColor": "#f472b6",
+        "wallColor": "#ffffff",
+        "trimColor": "#fed7aa",
+        "crystalColor": "#fb7185",
+        "crystalBloom": 0.5
       }
     },
     {
       "id": "sky_castle_med_2_top",
       "name": "Eastern Spire Gate",
       "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (2).glb",
-      "x": 720,
-      "y": 510,
-      "z": -380,
-      "rotationY": 0.8,
+      "x": 773,
+      "y": 505,
+      "z": 773,
+      "rotationY": 2.356194490192345,
       "scale": 2.1,
       "cloudRadius": 30,
       "cloudPuffCount": 12,
@@ -1302,10 +1573,10 @@
       "id": "sky_castle_med_0",
       "name": "Northern Watch Spire",
       "modelPath": "/Assets/Sky/fairytale_castle_med_compressed.glb",
-      "x": -300,
-      "y": 505,
-      "z": -1150,
-      "rotationY": 2.3,
+      "x": -489,
+      "y": 520,
+      "z": 1153,
+      "rotationY": 3.141592653589793,
       "scale": 2,
       "cloudRadius": 28,
       "cloudPuffCount": 12,
@@ -1320,12 +1591,12 @@
     },
     {
       "id": "sky_castle_med_2",
-      "name": "Eastern Spire Gate",
-      "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (2).glb",
-      "x": 1050,
-      "y": 480,
-      "z": 320,
-      "rotationY": 3,
+      "name": "Royal Citadel",
+      "modelPath": "/Assets/Sky/fairytale_castle_high_compressed (1).glb",
+      "x": -1154,
+      "y": 475,
+      "z": 847,
+      "rotationY": 3.9269908169872414,
       "scale": 2.1,
       "cloudRadius": 30,
       "cloudPuffCount": 12,
@@ -1342,10 +1613,10 @@
       "id": "sky_castle_med_3",
       "name": "South-East Bastion",
       "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (3).glb",
-      "x": 650,
-      "y": 470,
-      "z": 980,
-      "rotationY": 1.8,
+      "x": -1092,
+      "y": 490,
+      "z": 0,
+      "rotationY": 4.71238898038469,
       "scale": 2.1,
       "cloudRadius": 30,
       "cloudPuffCount": 12,
@@ -1362,10 +1633,10 @@
       "id": "sky_castle_med_4",
       "name": "Southern High Crown",
       "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (4).glb",
-      "x": -120,
-      "y": 485,
-      "z": 1120,
-      "rotationY": 0.5,
+      "x": -571,
+      "y": 505,
+      "z": -571,
+      "rotationY": 5.497787143782138,
       "scale": 2.1,
       "cloudRadius": 30,
       "cloudPuffCount": 12,
@@ -1382,10 +1653,10 @@
       "id": "sky_castle_med_5",
       "name": "South-West Sanctuary",
       "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (5).glb",
-      "x": -820,
-      "y": 510,
-      "z": 750,
-      "rotationY": 2.7,
+      "x": 0,
+      "y": 520,
+      "z": -950,
+      "rotationY": 6.283185307179586,
       "scale": 2.2,
       "cloudRadius": 32,
       "cloudPuffCount": 14,
@@ -1402,10 +1673,10 @@
       "id": "sky_castle_med_6",
       "name": "Western Citadel Gate",
       "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (6).glb",
-      "x": -1100,
+      "x": 773,
       "y": 475,
-      "z": 120,
-      "rotationY": 1.4,
+      "z": -773,
+      "rotationY": 7.0685834705770345,
       "scale": 2.1,
       "cloudRadius": 30,
       "cloudPuffCount": 12,
@@ -1416,6 +1687,66 @@
         "trimColor": "#facc15",
         "crystalColor": "#d946ef",
         "crystalBloom": 0.8
+      }
+    },
+    {
+      "id": "sky_castle_custom_1787211647541",
+      "name": "South-East Bastion",
+      "modelPath": "/Assets/Sky/fairytale_castle_med_compressed (3).glb",
+      "x": 0,
+      "y": 500,
+      "z": 188,
+      "rotationY": 0,
+      "scale": 2.4,
+      "cloudRadius": 30,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "ruby",
+        "roofColor": "#e11d48",
+        "wallColor": "#fdf2f8",
+        "trimColor": "#f59e0b",
+        "crystalColor": "#ec4899",
+        "crystalBloom": 0.6
+      }
+    },
+    {
+      "id": "sky_castle_custom_1787211670921",
+      "name": "Castle Island 11",
+      "modelPath": "/Assets/Sky/fairytale_castle_high_compressed.glb",
+      "x": 410,
+      "y": 490,
+      "z": 2089,
+      "rotationY": 0,
+      "scale": 2.2,
+      "cloudRadius": 30,
+      "cloudPuffCount": 13,
+      "colors": {
+        "preset": "ruby",
+        "roofColor": "#e11d48",
+        "wallColor": "#fdf2f8",
+        "trimColor": "#f59e0b",
+        "crystalColor": "#ec4899",
+        "crystalBloom": 0.6
+      }
+    },
+    {
+      "id": "sky_castle_custom_1787211714504",
+      "name": "Castle Island 12",
+      "modelPath": "/Assets/Sky/fairytale_castle_high_compressed.glb",
+      "x": -828,
+      "y": 490,
+      "z": 2307,
+      "rotationY": 0,
+      "scale": 2,
+      "cloudRadius": 30,
+      "cloudPuffCount": 12,
+      "colors": {
+        "preset": "ruby",
+        "roofColor": "#8dbe23",
+        "wallColor": "#fdf2f8",
+        "trimColor": "#f59e0b",
+        "crystalColor": "#ec4899",
+        "crystalBloom": 0.25
       }
     }
   ],

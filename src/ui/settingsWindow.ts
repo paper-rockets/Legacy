@@ -1,32 +1,12 @@
-/**
- * The player-facing Settings window. It is deliberately inert: nothing in it
- * changes the world. Every real control lives in the developer editor.
- *
- * Implements CONTRACTS.md section 5 exactly. Mounted into #settings-root.
- * Besides Close, the ONLY interactive control is the Developer Options button,
- * and only when SETTINGS_DECOY.showDeveloperEntry is true. The five rows are
- * label plus a fixed value - no input, no slider, no select, no toggle.
- */
-export interface SettingsDecoyConfig {
-    /**
-     * When true, the window shows a 'Developer Options' entry that opens the
-     * developer editor. Set false for a build handed to a player. F2 still works.
-     */
-    showDeveloperEntry: boolean;
-    /** Inert rows, rendered as label plus a fixed value. Purely cosmetic. */
-    rows: Array<{ label: string; value: string }>;
-}
+export type GraphicsProfile = 'high_performance' | 'regular';
 
-export const SETTINGS_DECOY: SettingsDecoyConfig = {
-    showDeveloperEntry: true,
-    rows: [
-        { label: 'Graphics', value: 'Automatic' },
-        { label: 'Sound', value: 'On' },
-        { label: 'Controls', value: 'Standard' },
-        { label: 'Language', value: 'English' },
-        { label: 'Version', value: '1.0' }
-    ]
-};
+export interface SettingsWindowContext {
+    onOpenDeveloper: () => void;
+    onToggleSound?: (enabled: boolean) => void;
+    onChangeGraphics?: (profile: GraphicsProfile) => void;
+    getSoundEnabled?: () => boolean;
+    getGraphicsProfile?: () => GraphicsProfile;
+}
 
 function requireSettingsRoot(): HTMLElement {
     const el = document.getElementById('settings-root');
@@ -34,13 +14,23 @@ function requireSettingsRoot(): HTMLElement {
     return el;
 }
 
-export function createSettingsWindow(onOpenDeveloper: () => void): {
+export function createSettingsWindow(contextOrHandler: (() => void) | SettingsWindowContext): {
     open(): void;
     close(): void;
     toggle(): void;
 } {
+    const ctx: SettingsWindowContext = typeof contextOrHandler === 'function'
+        ? { onOpenDeveloper: contextOrHandler }
+        : contextOrHandler;
+
     const root = requireSettingsRoot();
     root.innerHTML = '';
+
+    // Load initial settings from localStorage
+    let soundEnabled = ctx.getSoundEnabled ? ctx.getSoundEnabled() : (localStorage.getItem('settings_sound_enabled') !== 'false');
+    let graphicsProfile: GraphicsProfile = ctx.getGraphicsProfile
+        ? ctx.getGraphicsProfile()
+        : ((localStorage.getItem('settings_graphics_profile') as GraphicsProfile) || 'high_performance');
 
     const overlay = document.createElement('div');
     overlay.className = 'settings-overlay';
@@ -66,33 +56,116 @@ export function createSettingsWindow(onOpenDeveloper: () => void): {
 
     const rowsWrap = document.createElement('div');
     rowsWrap.className = 'settings-rows';
-    for (const row of SETTINGS_DECOY.rows) {
-        const rowEl = document.createElement('div');
-        rowEl.className = 'settings-row';
 
-        const labelEl = document.createElement('span');
-        labelEl.className = 'settings-row-label';
-        labelEl.textContent = row.label;
+    // ── 1. Sound Row (Interactive) ──────────────────────────────────────────
+    const soundRow = document.createElement('div');
+    soundRow.className = 'settings-row';
+    const soundLabel = document.createElement('span');
+    soundLabel.className = 'settings-row-label';
+    soundLabel.textContent = 'Sound';
+    const soundBtn = document.createElement('button');
+    soundBtn.className = 'settings-toggle-btn' + (soundEnabled ? ' is-active' : '');
+    soundBtn.textContent = soundEnabled ? 'On' : 'Off';
+    soundBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        soundBtn.className = 'settings-toggle-btn' + (soundEnabled ? ' is-active' : '');
+        soundBtn.textContent = soundEnabled ? 'On' : 'Off';
+        localStorage.setItem('settings_sound_enabled', String(soundEnabled));
+        if (ctx.onToggleSound) ctx.onToggleSound(soundEnabled);
+    });
+    soundRow.appendChild(soundLabel);
+    soundRow.appendChild(soundBtn);
+    rowsWrap.appendChild(soundRow);
 
-        const valueEl = document.createElement('span');
-        valueEl.className = 'settings-row-value';
-        valueEl.textContent = row.value;
+    // ── 2. Graphics Row (Interactive: High Performance vs Regular) ───────────
+    const graphicsRow = document.createElement('div');
+    graphicsRow.className = 'settings-row';
+    const graphicsLabel = document.createElement('span');
+    graphicsLabel.className = 'settings-row-label';
+    graphicsLabel.textContent = 'Graphics';
 
-        rowEl.appendChild(labelEl);
-        rowEl.appendChild(valueEl);
-        rowsWrap.appendChild(rowEl);
-    }
+    const graphicsGroup = document.createElement('div');
+    graphicsGroup.className = 'settings-segmented-group';
+
+    const highBtn = document.createElement('button');
+    highBtn.className = 'settings-segmented-btn' + (graphicsProfile === 'high_performance' ? ' is-selected' : '');
+    highBtn.textContent = 'High Performance';
+
+    const regBtn = document.createElement('button');
+    regBtn.className = 'settings-segmented-btn' + (graphicsProfile === 'regular' ? ' is-selected' : '');
+    regBtn.textContent = 'Regular';
+
+    highBtn.addEventListener('click', () => {
+        graphicsProfile = 'high_performance';
+        highBtn.className = 'settings-segmented-btn is-selected';
+        regBtn.className = 'settings-segmented-btn';
+        localStorage.setItem('settings_graphics_profile', 'high_performance');
+        if (ctx.onChangeGraphics) ctx.onChangeGraphics('high_performance');
+    });
+
+    regBtn.addEventListener('click', () => {
+        graphicsProfile = 'regular';
+        regBtn.className = 'settings-segmented-btn is-selected';
+        highBtn.className = 'settings-segmented-btn';
+        localStorage.setItem('settings_graphics_profile', 'regular');
+        if (ctx.onChangeGraphics) ctx.onChangeGraphics('regular');
+    });
+
+    graphicsGroup.appendChild(highBtn);
+    graphicsGroup.appendChild(regBtn);
+    graphicsRow.appendChild(graphicsLabel);
+    graphicsRow.appendChild(graphicsGroup);
+    rowsWrap.appendChild(graphicsRow);
+
+    // ── 3. Controls Row ──────────────────────────────────────────────────────
+    const controlsRow = document.createElement('div');
+    controlsRow.className = 'settings-row';
+    const controlsLabel = document.createElement('span');
+    controlsLabel.className = 'settings-row-label';
+    controlsLabel.textContent = 'Controls';
+    const controlsVal = document.createElement('span');
+    controlsVal.className = 'settings-row-value';
+    controlsVal.textContent = 'Standard';
+    controlsRow.appendChild(controlsLabel);
+    controlsRow.appendChild(controlsVal);
+    rowsWrap.appendChild(controlsRow);
+
+    // ── 4. Language Row ──────────────────────────────────────────────────────
+    const langRow = document.createElement('div');
+    langRow.className = 'settings-row';
+    const langLabel = document.createElement('span');
+    langLabel.className = 'settings-row-label';
+    langLabel.textContent = 'Language';
+    const langVal = document.createElement('span');
+    langVal.className = 'settings-row-value';
+    langVal.textContent = 'English';
+    langRow.appendChild(langLabel);
+    langRow.appendChild(langVal);
+    rowsWrap.appendChild(langRow);
+
+    // ── 5. Version Row ───────────────────────────────────────────────────────
+    const verRow = document.createElement('div');
+    verRow.className = 'settings-row';
+    const verLabel = document.createElement('span');
+    verLabel.className = 'settings-row-label';
+    verLabel.textContent = 'Version';
+    const verVal = document.createElement('span');
+    verVal.className = 'settings-row-value';
+    verVal.textContent = '1.0';
+    verRow.appendChild(verLabel);
+    verRow.appendChild(verVal);
+    rowsWrap.appendChild(verRow);
+
     win.appendChild(rowsWrap);
 
-    if (SETTINGS_DECOY.showDeveloperEntry) {
-        const devBtn = document.createElement('button');
-        devBtn.className = 'settings-dev-btn';
-        devBtn.textContent = 'Developer Options';
-        devBtn.addEventListener('click', () => {
-            onOpenDeveloper();
-        });
-        win.appendChild(devBtn);
-    }
+    // ── Developer Options Button ─────────────────────────────────────────────
+    const devBtn = document.createElement('button');
+    devBtn.className = 'settings-dev-btn';
+    devBtn.textContent = 'Developer Options';
+    devBtn.addEventListener('click', () => {
+        ctx.onOpenDeveloper();
+    });
+    win.appendChild(devBtn);
 
     overlay.appendChild(win);
     root.appendChild(overlay);

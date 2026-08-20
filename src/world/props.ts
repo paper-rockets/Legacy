@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { gradientMap } from './terrain';
 import { globalConfigManager } from '../core/config';
 import { getDominantBiome } from './noise';
@@ -8,6 +9,33 @@ const COTTON_CANDY_COLORS = [
     '#fef08a', '#fde047', '#d8b4fe', '#c084fc',
     '#ffffff', '#fff0f5'
 ];
+
+function buildCottonCandyCloudGeometry(): THREE.BufferGeometry {
+    const puffCenter = new THREE.IcosahedronGeometry(24, 2).scale(1.8, 0.95, 1.3);
+    const puffL = new THREE.IcosahedronGeometry(18, 2).scale(1.3, 0.85, 1.1).translate(-22, 3, 5);
+    const puffR = new THREE.IcosahedronGeometry(19, 2).scale(1.4, 0.85, 1.2).translate(23, 2, -4);
+    const puffTop = new THREE.IcosahedronGeometry(16, 2).scale(1.2, 0.9, 1.1).translate(4, 12, 2);
+    const puffFront = new THREE.IcosahedronGeometry(15, 2).scale(1.1, 0.8, 1.2).translate(-6, -2, 16);
+    const puffBack = new THREE.IcosahedronGeometry(16, 2).scale(1.2, 0.8, 1.1).translate(8, 2, -14);
+
+    const merged = mergeGeometries([puffCenter, puffL, puffR, puffTop, puffFront, puffBack], false) || puffCenter;
+
+    const cpos = merged.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < cpos.count; i++) {
+        const x = cpos.getX(i);
+        let y = cpos.getY(i);
+        const z = cpos.getZ(i);
+        if (y < 0) {
+            y *= 0.35;
+        } else {
+            const billow = Math.sin(x * 0.12) * Math.cos(z * 0.12) * 4.5;
+            y += Math.max(0, billow);
+        }
+        cpos.setXYZ(i, x, y, z);
+    }
+    merged.computeVertexNormals();
+    return merged;
+}
 
 export class PropsSystem {
     public instClouds: THREE.InstancedMesh;
@@ -56,22 +84,7 @@ export class PropsSystem {
             );
         };
 
-        const geoCloud = new THREE.IcosahedronGeometry(25, 2);
-        geoCloud.scale(2.0, 1.0, 1.5);
-        const cpos = geoCloud.attributes.position as THREE.BufferAttribute;
-        for (let i = 0; i < cpos.count; i++) {
-            const x = cpos.getX(i);
-            let y = cpos.getY(i);
-            const z = cpos.getZ(i);
-            if (y < 0) {
-                y *= 0.3;
-            } else {
-                const billow = Math.sin(x * 0.2) * Math.cos(z * 0.2) * 4.0;
-                y += Math.max(0, billow);
-            }
-            cpos.setXYZ(i, x, y, z);
-        }
-        geoCloud.computeVertexNormals();
+        const geoCloud = buildCottonCandyCloudGeometry();
 
         this.instClouds = new THREE.InstancedMesh(geoCloud, this.matCloud, this.cloudCount);
         this.instClouds.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(this.cloudCount * 3), 3);
@@ -181,12 +194,14 @@ export class PropsSystem {
 
                         this.dummy.position.set(worldX, worldY, worldZ);
                         this.dummy.rotation.set(0, rng * Math.PI * 2, 0);
-                        this.dummy.scale.set(scale, scale * 0.7, scale * 1.2);
+                        const isCandyland = (cloudBiome === 'candyland');
+                        const scaleMult = isCandyland ? 1.45 : 1.0;
+                        this.dummy.scale.set(scale * scaleMult, scale * (isCandyland ? 0.95 : 0.7), scale * scaleMult * 1.15);
                         this.dummy.updateMatrix();
 
                         this.instClouds.setMatrixAt(cloudIdx, this.dummy.matrix);
 
-                        if (cloudBiome === 'candyland') {
+                        if (isCandyland) {
                             const cHex = COTTON_CANDY_COLORS[Math.floor(rng * COTTON_CANDY_COLORS.length) % COTTON_CANDY_COLORS.length];
                             this.tempColor.set(cHex);
                         } else {

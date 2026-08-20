@@ -138,6 +138,8 @@ export class PlayerSystem {
         const filename = modelDef.file.split('/').pop() || modelDef.file;
         const cleanFile = modelDef.file.replace(/^\.?\//, '');
         const candidatePaths = [
+            `/${cleanFile}`,
+            `/Assets/Flight/${filename}`,
             `./${cleanFile}`,
             cleanFile,
             `./Assets/Flight/${filename}`,

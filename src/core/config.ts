@@ -120,6 +120,15 @@ export interface VegetationBiomeSettings {
     bushScale: number;
     bushDensity: number;
     bioluminescence?: number;
+    glowStickEnabled?: boolean;
+    glowStickRatio?: number;
+    glowStickIntensity?: number;
+    candyGloss?: number;
+    sugarSparkle?: number;
+    candyTranslucency?: number;
+    floatingPlanetsEnabled?: boolean;
+    floatingPlanetAltitude?: number;
+    floatingPlanetCount?: number;
     canopyColors: string[];
     trunkColors: string[];
     activePreset: string;
@@ -305,10 +314,19 @@ export const FACTORY_CONFIG: AppConfig = {
                 bushScale: 1.1,
                 bushDensity: 180,
                 bioluminescence: 0.8,
+                glowStickEnabled: true,
+                glowStickRatio: 0.20,
+                glowStickIntensity: 3.0,
+                candyGloss: 1.35,
+                sugarSparkle: 0.85,
+                candyTranslucency: 0.7,
+                floatingPlanetsEnabled: true,
+                floatingPlanetAltitude: 14.0,
+                floatingPlanetCount: 3,
                 canopyColors: ['#f472b6', '#93c5fd', '#fde047', '#c084fc', '#ffffff', '#ffb6c1', '#a7f3d0'],
                 trunkColors: ['#ffffff', '#fffbf0', '#ffe4e6', '#f0f9ff'],
                 activePreset: 'candyland_pastel',
-                selectedTreeModelIds: ['candy_lollipop_spiral', 'candy_lollipop_sphere', 'candy_cane_single', 'candy_cane_cluster']
+                selectedTreeModelIds: ['candy_cotton_cloud', 'candy_lollipop_spiral', 'candy_lollipop_sphere', 'candy_cane_cluster', 'candy_gummy_flower']
             },
             phases: createDefaultPhases(
                 '#c7d2fe', '#fbcfe8', '#fdf4ff', '#fffbeb',
@@ -318,7 +336,7 @@ export const FACTORY_CONFIG: AppConfig = {
         },
         meadow: {
             id: 'meadow',
-            name: 'Lush Meadow',
+            name: 'Meadow',
             terrain: {
                 colorLow: '#76d149',
                 colorHigh: '#89e05e',
@@ -373,7 +391,7 @@ export const FACTORY_CONFIG: AppConfig = {
         },
         archipelago: {
             id: 'archipelago',
-            name: 'Floating Archipelago',
+            name: 'Archipelago',
             terrain: {
                 colorLow: '#6ee7b7',
                 colorHigh: '#93c5fd',
@@ -428,7 +446,7 @@ export const FACTORY_CONFIG: AppConfig = {
         },
         geothermal: {
             id: 'geothermal',
-            name: 'Geothermal Ridge',
+            name: 'Geothermal',
             terrain: {
                 colorLow: '#d97706',
                 colorHigh: '#f59e0b',
@@ -483,7 +501,7 @@ export const FACTORY_CONFIG: AppConfig = {
         },
         estuary: {
             id: 'estuary',
-            name: 'Bioluminescent Estuary',
+            name: 'Estuary',
             terrain: {
                 colorLow: '#10b981',
                 colorHigh: '#06b6d4',
@@ -538,7 +556,7 @@ export const FACTORY_CONFIG: AppConfig = {
         },
         redwood: {
             id: 'redwood',
-            name: 'Colossal Redwood',
+            name: 'Redwood',
             terrain: {
                 colorLow: '#15803d',
                 colorHigh: '#166534',
@@ -593,7 +611,7 @@ export const FACTORY_CONFIG: AppConfig = {
         },
         sky_citadel: {
             id: 'sky_citadel',
-            name: 'Floating Cloud Citadel',
+            name: 'Citadel',
             terrain: {
                 colorLow: '#e0e7ff',
                 colorHigh: '#f3e8ff',
@@ -692,7 +710,7 @@ export class ConfigManager {
             const raw = localStorage.getItem(STORAGE_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                if (parsed && parsed.version === FACTORY_CONFIG.version && parsed.biomes) {
+                if (parsed && parsed.biomes) {
                     return this.mergeWithFactory(parsed);
                 }
             }
@@ -719,16 +737,25 @@ export class ConfigManager {
                     if (cb.water) base.biomes[key].water = { ...base.biomes[key].water, ...cb.water };
                     if (cb.bloom) base.biomes[key].bloom = { ...base.biomes[key].bloom, ...cb.bloom };
                     if (cb.vegetation) {
+                        const mergedModels: Record<string, ModelVegetationConfig> = {
+                            ...(base.biomes[key].vegetation.models || {})
+                        };
+                        if (cb.vegetation.models) {
+                            for (const [mId, mCfg] of Object.entries(cb.vegetation.models)) {
+                                mergedModels[mId] = {
+                                    ...(mergedModels[mId] || {}),
+                                    ...mCfg
+                                };
+                            }
+                        }
+
                         base.biomes[key].vegetation = { 
                             ...base.biomes[key].vegetation, 
                             ...cb.vegetation,
                             selectedTreeModelIds: Array.isArray(cb.vegetation.selectedTreeModelIds)
                                 ? cb.vegetation.selectedTreeModelIds
                                 : base.biomes[key].vegetation.selectedTreeModelIds,
-                            models: {
-                                ...(base.biomes[key].vegetation.models || {}),
-                                ...(cb.vegetation.models || {})
-                            }
+                            models: mergedModels
                         };
                     }
                     if (cb.phases && Array.isArray(cb.phases)) {
@@ -755,6 +782,11 @@ export class ConfigManager {
     public saveGlobalDefaults(): void {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.config));
+            fetch('/api/save-config-to-disk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(this.config)
+            }).catch(() => {});
         } catch (err) {
             console.error('Failed to save defaults to localStorage', err);
         }
@@ -763,9 +795,23 @@ export class ConfigManager {
     public saveBiomeDefault(id: BiomeId): void {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.config));
+            fetch('/api/save-config-to-disk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(this.config)
+            }).catch(() => {});
         } catch (err) {
             console.error(`Failed to save defaults for biome ${id}`, err);
         }
+    }
+
+    private autoSaveTimer: any = null;
+
+    public triggerAutoSave(): void {
+        if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+        this.autoSaveTimer = setTimeout(() => {
+            this.saveGlobalDefaults();
+        }, 350);
     }
 
     public resetBiomeDefaults(id: BiomeId): BiomeConfig {

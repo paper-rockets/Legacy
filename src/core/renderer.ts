@@ -76,8 +76,15 @@ export class RenderPipeline {
         this.bloomPass.setSize(Math.floor(width * 0.5), Math.floor(height * 0.5));
     }
 
-    public applyBiomeBloom(bloom: { globalStrength?: number; globalRadius?: number; globalThreshold?: number }, lerpFactor?: number) {
-        const targetStrength = bloom.globalStrength !== undefined ? Math.max(0, Math.min(3.0, bloom.globalStrength)) : this.bloomPass.strength;
+    public applyBiomeBloom(bloom: { globalStrength?: number; globalRadius?: number; globalThreshold?: number }, lerpFactor?: number, timePhase?: number) {
+        let phaseMultiplier = 1.0;
+        if (timePhase !== undefined) {
+            // Day = 0.0 (off), Dusk = 0.35 (subtle low glow), Twilight/Night = 1.0 (brightest neon glow)
+            phaseMultiplier = timePhase === 0 ? 0.0 : (timePhase === 1 ? 0.35 : 1.0);
+        }
+
+        const baseStrength = bloom.globalStrength !== undefined ? Math.max(0, Math.min(3.0, bloom.globalStrength)) : this.bloomPass.strength;
+        const targetStrength = baseStrength * phaseMultiplier;
         const targetRadius = bloom.globalRadius !== undefined ? Math.max(0, Math.min(2.0, bloom.globalRadius)) : this.bloomPass.radius;
         const targetThreshold = bloom.globalThreshold !== undefined ? Math.max(0, Math.min(1.0, bloom.globalThreshold)) : this.bloomPass.threshold;
 
@@ -124,6 +131,18 @@ export class RenderPipeline {
 
     public setPixelRatioCap(maxDpi: number) {
         this.basePixelRatio = maxDpi;
+        this.handleResize();
+    }
+
+    public setGraphicsProfile(profile: 'high_performance' | 'regular') {
+        if (profile === 'regular') {
+            this.basePixelRatio = 1.0;
+            this.renderer.shadowMap.type = THREE.BasicShadowMap;
+        } else {
+            this.basePixelRatio = 2.0;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        }
+        this.renderer.shadowMap.needsUpdate = true;
         this.handleResize();
     }
 

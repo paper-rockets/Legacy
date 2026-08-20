@@ -17,6 +17,9 @@ export interface WorldPropCatalogItem {
 export const WORLD_PROP_CATALOG: WorldPropCatalogItem[] = [
     // Candyland & Landmarks
     { id: 'prop_candy_heart', name: 'Heart of Candyland', category: 'Candyland & Landmarks', path: 'procedural:candy_heart', previewImage: '/Assets/Previews/veg_flower3_single.png', defaultScale: 3.2, description: 'Grand glowing sweet candy heart landmark in the center of Candyland' },
+    { id: 'prop_candy_planet_1', name: 'Strawberry Swirl Planet', category: 'Candyland & Landmarks', path: 'procedural:candy_planet_1', previewImage: '/Assets/Previews/candy_lollipop_spiral.png', defaultScale: 2.8, description: 'Floating hard candy planet with spinning crystalline sugar ring' },
+    { id: 'prop_candy_planet_2', name: 'Bubblegum Cyan Planet', category: 'Candyland & Landmarks', path: 'procedural:candy_planet_2', previewImage: '/Assets/Previews/candy_lollipop_sphere.png', defaultScale: 2.5, description: 'Floating hard candy planet with golden planetary ring' },
+    { id: 'prop_candy_planet_3', name: 'Mint Lime Sugar Planet', category: 'Candyland & Landmarks', path: 'procedural:candy_planet_3', previewImage: '/Assets/Previews/candy_cotton_cloud.png', defaultScale: 2.6, description: 'Floating hard candy planet with lavender planetary ring' },
 
     // Castles & Towers (9 models)
     { id: 'other_castle_high', name: 'Fairytale Castle High', category: 'Castles & Towers', path: '/Assets/Sky/fairytale_castle_high_compressed.glb', previewImage: '/Assets/Sky/multiviewer-export (7).png', defaultScale: 2.5, description: 'Grand fairytale castle with towers and spires' },
@@ -144,6 +147,77 @@ function buildCandyHeartModel(): THREE.Group {
     return group;
 }
 
+function buildHardCandyPlanetModel(planetIndex: number = 0): THREE.Group {
+    const group = new THREE.Group();
+    group.name = `HardCandyPlanet_${planetIndex}`;
+
+    // High quality saturated candy themes
+    const colorThemes = [
+        { body: 0xf472b6, emissive: 0xfda4af, ring: 0x38bdf8, dots: 0xfef08a, name: 'Strawberry Swirl Planet' },
+        { body: 0x60a5fa, emissive: 0x93c5fd, ring: 0xfacc15, dots: 0xf472b6, name: 'Bubblegum Cyan Planet' },
+        { body: 0x34d399, emissive: 0x6ee7b7, ring: 0xc084fc, dots: 0xffedd5, name: 'Mint Lime Sugar Planet' }
+    ];
+    const theme = colorThemes[planetIndex % colorThemes.length];
+
+    // Main hard candy sphere with glossy finish
+    const planetGeo = new THREE.SphereGeometry(3.5, 36, 30);
+    const planetMat = new THREE.MeshToonMaterial({
+        color: theme.body,
+        emissive: theme.emissive,
+        emissiveIntensity: 0.45,
+        dithering: true
+    });
+    const planetMesh = new THREE.Mesh(planetGeo, planetMat);
+    planetMesh.castShadow = true;
+    planetMesh.receiveShadow = true;
+    group.add(planetMesh);
+
+    // Glowing equator swirl stripe
+    const swirlGeo = new THREE.TorusGeometry(3.6, 0.35, 16, 48);
+    swirlGeo.rotateX(Math.PI / 2);
+    const swirlMat = new THREE.MeshToonMaterial({
+        color: 0xffffff,
+        emissive: theme.emissive,
+        emissiveIntensity: 0.6
+    });
+    const swirlMesh = new THREE.Mesh(swirlGeo, swirlMat);
+    group.add(swirlMesh);
+
+    // Tilted Crystalline Sugar Planet Ring (Saturn style)
+    const ringGeo = new THREE.RingGeometry(4.8, 7.2, 48);
+    ringGeo.rotateX(Math.PI / 2.5);
+    ringGeo.rotateZ(0.2);
+    const ringMat = new THREE.MeshToonMaterial({
+        color: theme.ring,
+        emissive: theme.ring,
+        emissiveIntensity: 0.45,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.88
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.name = 'PlanetRing';
+    group.add(ringMesh);
+
+    // Orbiting mini sugar star / candy sprinkles around ring
+    const sprinkleCount = 6;
+    const sprinkleGeo = new THREE.OctahedronGeometry(0.5, 0);
+    const sMat = new THREE.MeshToonMaterial({
+        color: theme.dots,
+        emissive: theme.dots,
+        emissiveIntensity: 0.55
+    });
+    for (let i = 0; i < sprinkleCount; i++) {
+        const angle = (i / sprinkleCount) * Math.PI * 2;
+        const rad = 6.2;
+        const sprinkle = new THREE.Mesh(sprinkleGeo, sMat);
+        sprinkle.position.set(Math.cos(angle) * rad, Math.sin(angle) * 1.5, Math.sin(angle) * rad);
+        group.add(sprinkle);
+    }
+
+    return group;
+}
+
 export interface PlacedPropInstance {
     data: PlacedWorldProp;
     group: THREE.Group;
@@ -196,6 +270,15 @@ export class WorldPropsSystem {
                 if (item.path.startsWith('procedural:')) {
                     if (item.path === 'procedural:candy_heart') {
                         const root = buildCandyHeartModel();
+                        this.modelTemplateCache.set(item.id, root);
+                    } else if (item.path === 'procedural:candy_planet_1') {
+                        const root = buildHardCandyPlanetModel(0);
+                        this.modelTemplateCache.set(item.id, root);
+                    } else if (item.path === 'procedural:candy_planet_2') {
+                        const root = buildHardCandyPlanetModel(1);
+                        this.modelTemplateCache.set(item.id, root);
+                    } else if (item.path === 'procedural:candy_planet_3') {
+                        const root = buildHardCandyPlanetModel(2);
                         this.modelTemplateCache.set(item.id, root);
                     }
                     return;
@@ -276,22 +359,46 @@ export class WorldPropsSystem {
         }
         this.placedInstances.clear();
 
-        const hasCenterHeart = saved.some(p => p.id === 'candyland_heart_center' || p.modelId === 'prop_candy_heart');
-        if (!hasCenterHeart) {
-            const groundY = terrainHeightJS(0, 0);
-            const centerHeartProp: PlacedWorldProp = {
-                id: 'candyland_heart_center',
-                modelId: 'prop_candy_heart',
-                name: 'Heart of Candyland',
-                position: [0, groundY + 0.5, 0],
-                rotation: [0, 0, 0],
-                scale: 3.2,
-                groundOffset: 0.5,
-                biomeId: 'candyland',
-                locked: true
-            };
-            saved.push(centerHeartProp);
+        const bCfg = globalConfigManager.getBiomeConfig('candyland');
+        const planetsEnabled = bCfg?.vegetation?.floatingPlanetsEnabled !== false;
+        const altitude = bCfg?.vegetation?.floatingPlanetAltitude ?? 24.0;
+        const count = Math.min(3, Math.max(1, bCfg?.vegetation?.floatingPlanetCount ?? 3));
+
+        if (planetsEnabled) {
+            const planetDefs = [
+                { id: 'candyland_planet_1', modelId: 'prop_candy_planet_1', name: 'Strawberry Swirl Planet', x: 0, z: 0, alt: altitude },
+                { id: 'candyland_planet_2', modelId: 'prop_candy_planet_2', name: 'Bubblegum Cyan Planet', x: 75, z: -60, alt: altitude + 5.0 },
+                { id: 'candyland_planet_3', modelId: 'prop_candy_planet_3', name: 'Mint Lime Sugar Planet', x: -80, z: 65, alt: altitude + 3.5 }
+            ];
+
+            for (let i = 0; i < count; i++) {
+                const pDef = planetDefs[i];
+                const existing = saved.find(p => p.id === pDef.id);
+                if (!existing) {
+                    const groundY = terrainHeightJS(pDef.x, pDef.z);
+                    const prop: PlacedWorldProp = {
+                        id: pDef.id,
+                        modelId: pDef.modelId,
+                        name: pDef.name,
+                        position: [pDef.x, groundY + pDef.alt, pDef.z],
+                        rotation: [0, 0, 0],
+                        scale: 2.8,
+                        groundOffset: pDef.alt,
+                        biomeId: 'candyland',
+                        locked: true
+                    };
+                    saved.push(prop);
+                } else if (existing.groundOffset < 18.0) {
+                    existing.groundOffset = pDef.alt;
+                }
+            }
             globalConfigManager.config.placedProps = saved;
+        }
+
+        // Heart of Candyland offset check
+        const heartProp = saved.find(p => p.id === 'candyland_heart_center' || p.modelId === 'prop_candy_heart');
+        if (heartProp && heartProp.groundOffset < 4.2) {
+            heartProp.groundOffset = 4.5;
         }
 
         for (const prop of saved) {
@@ -303,12 +410,53 @@ export class WorldPropsSystem {
 
     public update(dt: number) {
         this.heartAnimTime += dt;
-        const heart = this.placedInstances.get('candyland_heart_center');
-        if (heart && heart.group) {
-            const groundY = terrainHeightJS(heart.data.position[0], heart.data.position[2]);
-            const floatOffset = Math.sin(this.heartAnimTime * 1.5) * 0.4;
-            heart.group.position.y = groundY + heart.data.groundOffset + floatOffset;
-            heart.group.rotation.y = this.heartAnimTime * 0.35;
+        for (const [id, inst] of this.placedInstances.entries()) {
+            if (id === 'candyland_heart_center') {
+                const groundY = terrainHeightJS(inst.data.position[0], inst.data.position[2]);
+                const baseAlt = Math.max(inst.data.groundOffset || 4.5, 4.2);
+                const floatOffset = Math.sin(this.heartAnimTime * 1.5) * 0.45;
+                inst.group.position.y = groundY + baseAlt + floatOffset;
+                inst.group.rotation.y = this.heartAnimTime * 0.35;
+            } else if (id.startsWith('candyland_planet_')) {
+                const groundY = terrainHeightJS(inst.data.position[0], inst.data.position[2]);
+                const baseAlt = Math.max(inst.data.groundOffset || 24.0, 18.0);
+                const floatOffset = Math.sin(this.heartAnimTime * 1.2 + inst.data.position[0] * 0.1) * 1.5;
+                inst.group.position.y = groundY + baseAlt + floatOffset;
+                inst.group.rotation.y = this.heartAnimTime * 0.45;
+
+                const ring = inst.group.getObjectByName('PlanetRing');
+                if (ring) {
+                    ring.rotation.z = this.heartAnimTime * 0.65;
+                }
+            }
+        }
+    }
+
+    public setFloatingPlanetsEnabled(enabled: boolean): void {
+        const bCfg = globalConfigManager.getBiomeConfig('candyland');
+        if (bCfg && bCfg.vegetation) {
+            bCfg.vegetation.floatingPlanetsEnabled = enabled;
+            this.loadSavedProps();
+        }
+    }
+
+    public setFloatingPlanetAltitude(altitude: number): void {
+        const bCfg = globalConfigManager.getBiomeConfig('candyland');
+        if (bCfg && bCfg.vegetation) {
+            bCfg.vegetation.floatingPlanetAltitude = altitude;
+            for (const [id, inst] of this.placedInstances.entries()) {
+                if (id.startsWith('candyland_planet_')) {
+                    inst.data.groundOffset = altitude;
+                }
+            }
+        }
+    }
+
+    public setFloatingPlanetCount(count: number): void {
+        const bCfg = globalConfigManager.getBiomeConfig('candyland');
+        if (bCfg && bCfg.vegetation) {
+            bCfg.vegetation.floatingPlanetCount = count;
+            this.loadSavedProps();
         }
     }
 

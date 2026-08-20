@@ -1,0 +1,281 @@
+/* Blueprint Mode Stylesheet */
+
+#blueprint-root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 90;
+    display: none;
+}
+
+#blueprint-root.active {
+    display: block;
+}
+
+/* ── Top Bar ─────────────────────────────────────────────────────────── */
+
+.blueprint-top-bar {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 10px;
+    padding: 6px 14px;
+    color: #f8fafc;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    pointer-events: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+    max-width: calc(100vw - 24px);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.blueprint-title-badge {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.blueprint-coords {
+    color: #38bdf8;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    font-size: 10.5px;
+    padding: 0 4px;
+}
+
+.blueprint-selected-pill {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #f1f5f9;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.15s ease;
+}
+
+.blueprint-selected-pill:hover {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+}
+
+.blueprint-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.blueprint-btn {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    color: #cbd5e1;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+}
+
+.blueprint-btn:hover {
+    background: rgba(51, 65, 85, 0.95);
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+.blueprint-btn.active {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: #38bdf8;
+    color: #38bdf8;
+}
+
+.blueprint-btn.primary {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+.blueprint-btn.primary:hover {
+    background: #0369a1;
+}
+
+.blueprint-btn.danger {
+    background: rgba(225, 29, 72, 0.25);
+    border-color: #f43f5e;
+    color: #fca5a5;
+}
+
+.blueprint-btn.danger:hover {
+    background: rgba(225, 29, 72, 0.5);
+    border-color: #fb7185;
+    color: #ffffff;
+}
+
+/* ── Toast & Status ──────────────────────────────────────────────────── */
+
+.blueprint-toast {
+    position: absolute;
+    top: 68px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid #38bdf8;
+    border-radius: 6px;
+    padding: 6px 14px;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    pointer-events: none;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    z-index: 100;
+    text-align: center;
+    max-width: 90vw;
+}
+
+/* ── Expandable Modal Drawer ─────────────────────────────────────────── */
+
+.blueprint-drawer-wrap {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(940px, calc(100vw - 28px));
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 12px;
+    pointer-events: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15);
+    backdrop-filter: blur(16px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 95;
+    transition: max-height 0.25s ease, height 0.25s ease;
+}
+
+/* Collapsed state: compact toolbar */
+.blueprint-drawer-wrap.is-collapsed {
+    max-height: 52px;
+}
+
+.blueprint-drawer-wrap.is-collapsed .blueprint-drawer-body {
+    display: none;
+}
+
+/* Expanded state: spacious modal */
+.blueprint-drawer-wrap.is-expanded {
+    max-height: min(580px, calc(100vh - 110px));
+}
+
+.blueprint-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: rgba(15, 23, 42, 0.98);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.blueprint-drawer-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.blueprint-drawer-title {
+    font-size: 11px;
+    font-weight: 900;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.blueprint-drawer-badge {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.blueprint-drawer-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.blueprint-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    max-height: calc(580px - 50px);
+}
+
+.blueprint-drawer-body .dev-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0;
+}
+
+/* Compact toolbar when collapsed */
+.blueprint-compact-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    gap: 8px;
+    width: 100%;
+}
+
+.blueprint-compact-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.blueprint-compact-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
