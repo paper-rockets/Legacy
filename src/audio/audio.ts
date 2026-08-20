@@ -1075,7 +1075,7 @@ export class AmbientAudioEngine {
         const boostSpeed = isBoosting ? 4.5 : 2.5;
         this.boostFactor += (targetBoost - this.boostFactor) * Math.min(dt * boostSpeed, 1.0);
 
-        if (this.isMusicPlaying && this.audioCtx) {
+        if (this.isMusicPlaying && this.audioCtx && this.nextStepTime < this.audioCtx.currentTime + 0.12) {
             this.schedule();
         }
 

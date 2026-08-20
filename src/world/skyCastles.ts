@@ -688,7 +688,15 @@ export class SkyCastleSystem {
 
         mat.onBeforeCompile = (shader) => {
             shader.uniforms.uCastleNightGlow = this.castleNightGlowUniform;
-            shader.fragmentShader = `uniform float uCastleNightGlow;\n` + shader.fragmentShader;
+            shader.vertexShader = `varying vec3 vCastleWorldPos;\n` + shader.vertexShader;
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <worldpos_vertex>',
+                `
+                #include <worldpos_vertex>
+                vCastleWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+                `
+            );
+            shader.fragmentShader = `uniform float uCastleNightGlow;\nvarying vec3 vCastleWorldPos;\n` + shader.fragmentShader;
 
             // Reduce fog factor by 65% so high-altitude castles and spires remain clear and colorful
             shader.fragmentShader = shader.fragmentShader.replace(
@@ -712,7 +720,7 @@ export class SkyCastleSystem {
                 `
                 #include <emissivemap_fragment>
                 if (uCastleNightGlow > 0.001) {
-                    vec3 wp = vWorldPosition;
+                    vec3 wp = vCastleWorldPos;
                     float winX = fract(wp.x * 0.16 + wp.z * 0.16);
                     float winY = fract(wp.y * 0.22);
                     if (winX > 0.42 && winX < 0.82 && winY > 0.42 && winY < 0.82) {

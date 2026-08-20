@@ -9,8 +9,8 @@ import { globalConfigManager, ModelVegetationConfig, getDefaultModelConfig, Vege
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const SPAWN_RADIUS = 420;
-const REBUILD_THRESHOLD = 20;
+const SPAWN_RADIUS = 380;
+const REBUILD_THRESHOLD = 45;
 const MAX_CAPACITY = 800;
 const MIN_TREE_HEIGHT = 4.5;
 const MAX_TREE_HEIGHT = 24.0;
@@ -1231,15 +1231,17 @@ export class TreeSystem {
 
         // Spatial Collision Occupancy Grid to guarantee no trees/flowers/bushes clip
         const placedOccupancy: { x: number; z: number; radius: number }[] = [];
-        const occGrid = new Map<string, number[]>();
-        const occGridSize = 16.0;
+        const occGrid = new Map<number, number[]>();
+        const occGridSize = 20.0;
+
+        const getGridKey = (gx: number, gz: number) => ((gx + 2000) * 4000) + (gz + 2000);
 
         const canPlace = (pxPos: number, pzPos: number, rad: number): boolean => {
             const gx = Math.floor(pxPos / occGridSize);
             const gz = Math.floor(pzPos / occGridSize);
             for (let nx = gx - 1; nx <= gx + 1; nx++) {
                 for (let nz = gz - 1; nz <= gz + 1; nz++) {
-                    const indices = occGrid.get(`${nx}_${nz}`);
+                    const indices = occGrid.get(getGridKey(nx, nz));
                     if (indices) {
                         for (let i = 0; i < indices.length; i++) {
                             const other = placedOccupancy[indices[i]];
@@ -1261,7 +1263,7 @@ export class TreeSystem {
             placedOccupancy.push({ x: pxPos, z: pzPos, radius: rad });
             const gx = Math.floor(pxPos / occGridSize);
             const gz = Math.floor(pzPos / occGridSize);
-            const key = `${gx}_${gz}`;
+            const key = getGridKey(gx, gz);
             let arr = occGrid.get(key);
             if (!arr) {
                 arr = [];
@@ -1333,16 +1335,16 @@ export class TreeSystem {
                     if (biome === 'redwood') baseScale *= 1.35;
                     if (biome === 'estuary') baseScale *= 0.85;
 
-                    // Clearance radius: flowers need ~2m, regular trees ~3.8m, giant trees ~5.5m
+                    // Clearance radius: flowers need ~1.8m, regular trees ~3.6m
                     const isFlora = selectedModel.item.category === 'Flowers & Flora';
                     const clearanceRadius = Math.max(isFlora ? 1.8 : 3.6, baseScale * (isFlora ? 0.65 : 1.2));
 
-                    // Deterministic multi-attempt candidate placement to find non-colliding spot
+                    // Deterministic 2-attempt candidate placement to find non-colliding spot
                     let placed = false;
                     let instX = 0, instZ = 0;
-                    for (let attempt = 0; attempt < 4; attempt++) {
-                        const u = 0.12 + ((attempt % 2) * 0.45) + (modelRng() * 0.28);
-                        const v = 0.12 + (Math.floor(attempt / 2) * 0.45) + (modelRng() * 0.28);
+                    for (let attempt = 0; attempt < 2; attempt++) {
+                        const u = 0.15 + (attempt * 0.40) + (modelRng() * 0.30);
+                        const v = 0.15 + (attempt * 0.40) + (modelRng() * 0.30);
                         const candX = (cx + u) * treeGridSpacing;
                         const candZ = (cz + v) * treeGridSpacing;
 
