@@ -690,8 +690,7 @@ export const DEFAULT_BIOME_TREE_IDS: Record<BiomeId, string[]> = {
     geothermal: ['veg_cartoon_8', 'veg_cartoon_10', 'veg_tree_var4'],
     estuary: ['veg_palm_a', 'veg_palm_c', 'veg_fantasy_jungle', 'veg_clover_2'],
     redwood: ['veg_cartoon_11', 'veg_cartoon_12', 'veg_bigtree_1', 'veg_tree_var4'],
-    sky_citadel: [],
-    prism_sanctum: []
+    sky_citadel: []
 };
 
 function isVegetationAllowed(x: number, z: number, y: number, biome: BiomeId): boolean {
@@ -1065,11 +1064,10 @@ export class TreeSystem {
             modelCounts.set(key, 0);
         }
 
-        const allBiomes: BiomeId[] = ['candyland', 'meadow', 'prism_sanctum', 'archipelago', 'geothermal', 'estuary', 'redwood', 'sky_citadel'];
+        const allBiomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'estuary', 'redwood', 'sky_citadel'];
         const biomeActiveModels: Record<BiomeId, LoadedCatalogEntry[]> = {
             candyland: [],
             meadow: [],
-            prism_sanctum: [],
             archipelago: [],
             geothermal: [],
             estuary: [],

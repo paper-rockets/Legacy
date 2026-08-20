@@ -54,12 +54,11 @@ export function snoise(x: number, z: number): number {
     return 70.0 * (n0 + n1 + n2);
 }
 
-export type BiomeId = 'candyland' | 'meadow' | 'archipelago' | 'geothermal' | 'estuary' | 'redwood' | 'sky_citadel' | 'prism_sanctum';
+export type BiomeId = 'candyland' | 'meadow' | 'archipelago' | 'geothermal' | 'estuary' | 'redwood' | 'sky_citadel';
 
 export interface BiomeWeights {
     candyland: number;
     meadow: number;
-    prism_sanctum: number;
     archipelago: number;
     geothermal: number;
     estuary: number;
@@ -90,13 +89,6 @@ export const BIOME_LOCATIONS: BiomeLocation[] = [
         description: 'Classic Ghibli rolling green hills and flower paths',
         x: 0,
         z: 2560
-    },
-    {
-        id: 'prism_sanctum',
-        name: 'Prism Sanctum',
-        description: 'Luminous crystal terraces with glowing gemstone veins and crystal glass terrain',
-        x: 0,
-        z: -2560
     },
     {
         id: 'archipelago',
@@ -149,10 +141,6 @@ export function getBiomeWeights(x: number, z: number): BiomeWeights {
     const distMeadow = Math.hypot(x, z - 2560);
     const meadowWeight = smoothstep(1440, 880, distMeadow) * (1.0 - originCandy);
 
-    // Prism Sanctum channel in the -Z direction
-    const distPrism = Math.hypot(x, z + 2560);
-    const prismWeight = smoothstep(1440, 880, distPrism) * (1.0 - originCandy);
-
     // Region weights based on coordinates with smooth 400m blend border around axes
     const blendRange = 400;
     const wxPositive = smoothstep(-blendRange, blendRange, x);
@@ -160,21 +148,19 @@ export function getBiomeWeights(x: number, z: number): BiomeWeights {
     const wzPositive = smoothstep(-blendRange, blendRange, z);
     const wzNegative = 1.0 - wzPositive;
 
-    const remainingOuter = (1.0 - originCandy) * (1.0 - meadowWeight) * (1.0 - prismWeight);
+    const remainingOuter = (1.0 - originCandy) * (1.0 - meadowWeight);
 
     let wArch = wxPositive * wzPositive * remainingOuter;
     let wGeoth = wxPositive * wzNegative * remainingOuter;
     let wEst = wxNegative * wzPositive * remainingOuter;
     let wRed = wxNegative * wzNegative * remainingOuter;
     let wMeadow = meadowWeight;
-    let wPrism = prismWeight;
     let wCandy = originCandy;
 
-    const total = wCandy + wMeadow + wPrism + wArch + wGeoth + wEst + wRed + 0.00001;
+    const total = wCandy + wMeadow + wArch + wGeoth + wEst + wRed + 0.00001;
     return {
         candyland: wCandy / total,
         meadow: wMeadow / total,
-        prism_sanctum: wPrism / total,
         archipelago: wArch / total,
         geothermal: wGeoth / total,
         estuary: wEst / total,
@@ -190,7 +176,6 @@ export function getDominantBiome(x: number, z: number, y?: number): BiomeId {
     let maxW = w.candyland;
     let dominant: BiomeId = 'candyland';
     if (w.meadow > maxW) { maxW = w.meadow; dominant = 'meadow'; }
-    if (w.prism_sanctum > maxW) { maxW = w.prism_sanctum; dominant = 'prism_sanctum'; }
     if (w.archipelago > maxW) { maxW = w.archipelago; dominant = 'archipelago'; }
     if (w.geothermal > maxW) { maxW = w.geothermal; dominant = 'geothermal'; }
     if (w.estuary > maxW) { maxW = w.estuary; dominant = 'estuary'; }
@@ -203,7 +188,6 @@ export function getDominantBiomeName(x: number, z: number, y?: number): string {
     switch (id) {
         case 'candyland': return 'Candyland';
         case 'meadow': return 'Lush Meadow';
-        case 'prism_sanctum': return 'Prism Sanctum';
         case 'archipelago': return 'Floating Archipelago';
         case 'geothermal': return 'Geothermal Ridge';
         case 'estuary': return 'Bioluminescent Estuary';
@@ -282,33 +266,11 @@ function heightRedwood(x: number, z: number): number {
     return Math.max(3.5, y);
 }
 
-// 6. Prism Sanctum: Faceted crystal cloud terrain, stepped quartz terraces, crystalline ridges, and soaring crystal spires
-function heightPrismSanctum(x: number, z: number): number {
-    // Stepped geometric quartz terraces and plateaus
-    const terrace = Math.floor((snoise(x * 0.0025, z * 0.0025) * 34.0 + 28.0) / 4.5) * 4.5;
-
-    // Sharp crystalline ridge facets (octahedral / prism cuts)
-    const ridge1 = (1.0 - Math.abs(snoise(x * 0.0055 + 150, z * 0.0055 - 150))) * 40.0;
-    const ridge2 = (1.0 - Math.abs(snoise(x * 0.011 - 60, z * 0.011 + 180))) * 16.0;
-
-    // Soaring quartz obelisks and sharp crystal spires
-    const spires = Math.pow(Math.max(0, snoise(x * 0.0075 + 20, z * 0.0075 + 20)), 2.6) * 55.0;
-
-    // Geometric diamond / octahedral facet modulation
-    const facetMod = Math.abs(Math.sin(x * 0.014) * Math.cos(z * 0.014)) * 9.0;
-
-    // Crisp high-frequency crystal facet edges
-    const facetCrag = snoise(x * 0.022, z * 0.022) * 3.8;
-
-    return Math.max(3.5, terrace + ridge1 + ridge2 + spires + facetMod + facetCrag);
-}
-
 export function terrainHeightWithWeights(x: number, z: number, w: BiomeWeights): number {
     const sx = x * 0.625;
     const sz = z * 0.625;
     return heightCandyland(sx, sz) * w.candyland +
            heightMeadow(sx, sz) * w.meadow +
-           heightPrismSanctum(sx, sz) * w.prism_sanctum +
            heightArchipelago(sx, sz) * w.archipelago +
            heightGeothermal(sx, sz) * w.geothermal +
            heightEstuary(sx, sz) * w.estuary +

@@ -293,8 +293,9 @@ export class SkyCastleSystem {
     public layerFogAltitude: number = 260;
     public layerFogDensity: number = 1.0;
 
-    public readonly LOD_FAR_DIST = 1200;
-    public readonly LOD_NEAR_DIST = 1000;
+    public readonly LOD_FAR_DIST = 3200;
+    public readonly LOD_NEAR_DIST = 2800;
+    public readonly MAX_VISIBILITY_DIST = 5500;
 
     private raycaster = new THREE.Raycaster();
     private mouseNDC = new THREE.Vector2();
@@ -469,6 +470,7 @@ export class SkyCastleSystem {
 
         // 2. Far Silhouette Proxy
         const farSilhouetteProxy = new THREE.Group();
+        this.buildFarSilhouette(farSilhouetteProxy, def);
         farSilhouetteProxy.visible = false;
         islandGroup.add(farSilhouetteProxy);
 
@@ -543,6 +545,38 @@ export class SkyCastleSystem {
                 angle: (w / 3) * Math.PI * 2,
                 baseHeight: -6 + w * 2.0
             });
+        }
+    }
+
+    private buildFarSilhouette(proxyGroup: THREE.Group, def: SkyCastleIslandDef) {
+        proxyGroup.clear();
+        const sc = def.scale;
+
+        // Central main keep
+        const towerGeo = new THREE.CylinderGeometry(4 * sc, 5.5 * sc, 38 * sc, 6);
+        const towerMesh = new THREE.Mesh(towerGeo, this.matSilhouette);
+        towerMesh.position.y = 19 * sc;
+        proxyGroup.add(towerMesh);
+
+        // Central grand spire cone
+        const spireGeo = new THREE.ConeGeometry(4.5 * sc, 22 * sc, 6);
+        const spireMesh = new THREE.Mesh(spireGeo, this.matSilhouette);
+        spireMesh.position.y = (38 + 11) * sc;
+        proxyGroup.add(spireMesh);
+
+        // Side bastion towers
+        for (let i = 0; i < 3; i++) {
+            const angle = (i / 3) * Math.PI * 2;
+            const rad = 10 * sc;
+            const sideGeo = new THREE.CylinderGeometry(2.5 * sc, 3 * sc, 26 * sc, 5);
+            const sideMesh = new THREE.Mesh(sideGeo, this.matSilhouette);
+            sideMesh.position.set(Math.cos(angle) * rad, 13 * sc, Math.sin(angle) * rad);
+            proxyGroup.add(sideMesh);
+
+            const sideSpire = new THREE.ConeGeometry(2.8 * sc, 14 * sc, 5);
+            const sideSpireMesh = new THREE.Mesh(sideSpire, this.matSilhouette);
+            sideSpireMesh.position.set(Math.cos(angle) * rad, (26 + 7) * sc, Math.sin(angle) * rad);
+            proxyGroup.add(sideSpireMesh);
         }
     }
 
@@ -708,6 +742,7 @@ export class SkyCastleSystem {
         }
         if (updates.cloudRadius !== undefined || updates.cloudPuffCount !== undefined || updates.scale !== undefined) {
             this.buildCloudSkirt(item.cloudSkirtGroup, item.wispPuffs, item.def);
+            this.buildFarSilhouette(item.farSilhouetteProxy, item.def);
         }
         if (updates.colors !== undefined) {
             this.applyCustomColorsToIsland(item);
@@ -1103,7 +1138,7 @@ export class SkyCastleSystem {
 
             const dist = Math.hypot(px - isl.def.x, py - isl.def.y, pz - isl.def.z);
 
-            if (dist > 1600) {
+            if (dist > this.MAX_VISIBILITY_DIST) {
                 isl.group.visible = false;
                 continue;
             }

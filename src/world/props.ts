@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { gradientMap } from './terrain';
 import { globalConfigManager } from '../core/config';
 import { getDominantBiome } from './noise';
-import { GroundCrystalFormations } from './volumetricClouds';
 
 const COTTON_CANDY_COLORS = [
     '#f472b6', '#ffb6c1', '#93c5fd', '#7dd3fc',
@@ -14,9 +13,6 @@ export class PropsSystem {
     public instClouds: THREE.InstancedMesh;
     public cloudCount = 50;
     public propSpawnDist = 420;
-
-    // Prism Sanctum Ground Formations
-    public groundCrystals: GroundCrystalFormations;
 
     private matCloud: THREE.MeshToonMaterial;
     private cloudBloomUniform = { value: 0.0 };
@@ -31,11 +27,6 @@ export class PropsSystem {
         const cld = globalConfigManager.config.cloud;
         this.cloudBloomUniform.value = cld.bloom;
         this.cloudEmissiveUniform.value.set(cld.emissive);
-
-        // ── Prism Sanctum Ground Crystals (No Sky Clouds) ─────────────────────────
-        this.groundCrystals = new GroundCrystalFormations();
-        this.groundCrystals.group.position.set(0, 0, -2560);
-        scene.add(this.groundCrystals.group);
 
         // Cloud material with customizable bloom & emissive radiance
         this.matCloud = new THREE.MeshToonMaterial({
@@ -160,16 +151,6 @@ export class PropsSystem {
     }
 
     public update(playerX: number, playerZ: number, dt: number = 0.016) {
-        // Animate Prism Sanctum Ground Crystals
-        const distToPrism = Math.hypot(playerX, playerZ - (-2560));
-        if (distToPrism < 4480) {
-            const sunPos = new THREE.Vector3(playerX * 0.3, 150, -2820);
-            this.groundCrystals.update(dt, sunPos);
-            this.groundCrystals.group.visible = true;
-        } else {
-            this.groundCrystals.group.visible = false;
-        }
-
         this.currentFrame++;
         if (this.currentFrame % 3 !== 0) return;
 
@@ -190,13 +171,7 @@ export class PropsSystem {
                 if (rng > 0.65 && cloudIdx < this.cloudCount) {
                     const worldX = cx * stride + (rng * 60 - 30);
                     const worldZ = cz * stride + (((rng * 13) % 1) * 60 - 30);
-
-                    // Exclude all clouds from Prism Sanctum
                     const cloudBiome = getDominantBiome(worldX, worldZ, 85);
-                    const distToPrismCenter = Math.hypot(worldX, worldZ - (-2560));
-                    if (cloudBiome === 'prism_sanctum' || distToPrismCenter < 1120) {
-                        continue;
-                    }
 
                     const distSq = (worldX - playerX) ** 2 + (worldZ - playerZ) ** 2;
 

@@ -77,23 +77,6 @@ export const TERRAIN_PALETTES: Record<string, TerrainColorsSettings> = {
         colorSand: '#fae8ff',
         presetName: 'Celestial Haven',
         isToonMode: true
-    },
-    'Crystal Prism': {
-        colorLow: '#0b0f19',
-        colorHigh: '#1e1b4b',
-        colorDirt: '#38bdf8',
-        colorPath: '#f472b6',
-        colorSand: '#a855f7',
-        presetName: 'Crystal Prism',
-        isToonMode: false,
-        terrainStyle: 'crystal',
-        isCrystalMode: true,
-        glassTransmission: 0.65,
-        iridescence: 1.35,
-        specularGlint: 2.2,
-        bevelGleam: 1.1,
-        veinGlow: 1.5,
-        showGroundCrystals: true
     }
 };
 
@@ -143,8 +126,7 @@ export class TerrainSystem {
         geothermal: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         estuary: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         redwood: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
-        sky_citadel: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
-        prism_sanctum: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() }
+        sky_citadel: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() }
     };
 
     private shoreBloomUniform = { value: 0.0 };
@@ -241,15 +223,12 @@ export class TerrainSystem {
         };
 
         const crystalVertShader = /* glsl */ `
-            attribute vec3 aBarycentric;
             varying vec3 vWorldPos;
             varying vec3 vViewDir;
-            varying vec3 vBarycentric;
             varying vec3 vColor;
             varying vec3 vNormal;
 
             void main() {
-                vBarycentric = aBarycentric;
                 vColor = color;
                 vNormal = normal;
                 vec4 worldPos = modelMatrix * vec4(position, 1.0);
@@ -268,7 +247,6 @@ export class TerrainSystem {
             uniform float uGlassTransmission;
             uniform float uIridescence;
             uniform float uSpecularGlint;
-            uniform float uFacetBevelGleam;
             uniform float uCrystalVeinGlow;
             uniform float uGlassRefraction;
             uniform float uGlassTint;
@@ -280,7 +258,6 @@ export class TerrainSystem {
 
             varying vec3 vWorldPos;
             varying vec3 vViewDir;
-            varying vec3 vBarycentric;
             varying vec3 vColor;
             varying vec3 vNormal;
 
@@ -294,10 +271,11 @@ export class TerrainSystem {
             }
 
             void main() {
-                // True geometric flat facet face normal for crystal cloud & terrain facets
+                // True geometric flat facet face normal for crystal terrain facets
                 vec3 fdx = dFdx(vWorldPos);
                 vec3 fdy = dFdy(vWorldPos);
                 vec3 faceNormal = normalize(cross(fdx, fdy));
+                if (!gl_FrontFacing) faceNormal = -faceNormal;
 
                 vec3 V = normalize(vViewDir);
                 vec3 sunDir = normalize(uSunPos - vWorldPos);
@@ -306,40 +284,50 @@ export class TerrainSystem {
                 // 1. Crystal Glass Body Tint from Biome & Vertex Colors
                 vec3 glassBodyTint = vColor * uGlassTint;
 
-                // 2. Optical Glass Refraction & Transmission
-                vec3 refractRay = refract(-V, faceNormal, 1.0 / max(1.0, uGlassRefraction));
-                float refractSkyH = clamp(refractRay.y * 0.5 + 0.5, 0.0, 1.0);
-                vec3 transmittedSky = mix(uSkyHorizonColor, uSkyTopColor, pow(refractSkyH, 0.7));
+                // 2. Optical Glass Refraction & Transmission with IOR
+                float ior = max(1.1, uGlassRefraction);
+                float disp = 0.035;
+                vec3 refractR = refract(-V, faceNormal, 1.0 / (ior - disp));
+                vec3 refractG = refract(-V, faceNormal, 1.0 / ior);
+                vec3 refractB = refract(-V, faceNormal, 1.0 / (ior + disp));
+
+                float rSkyH = clamp(refractR.y * 0.5 + 0.5, 0.0, 1.0);
+                float gSkyH = clamp(refractG.y * 0.5 + 0.5, 0.0, 1.0);
+                float bSkyH = clamp(refractB.y * 0.5 + 0.5, 0.0, 1.0);
+
+                vec3 rCol = mix(uSkyHorizonColor, uSkyTopColor, pow(rSkyH, 0.65));
+                vec3 gCol = mix(uSkyHorizonColor, uSkyTopColor, pow(gSkyH, 0.65));
+                vec3 bCol = mix(uSkyHorizonColor, uSkyTopColor, pow(bSkyH, 0.65));
+                vec3 transmittedSky = vec3(rCol.r, gCol.g, bCol.b);
 
                 float backlight = max(0.0, dot(-faceNormal, sunDir));
                 float forwardWash = max(0.0, dot(-sunDir, -V));
-                vec3 transmittedSun = uSunColor * pow(backlight, 4.0) * 1.5 + uSunColor * pow(forwardWash, 2.0) * 0.85;
+                vec3 transmittedSun = uSunColor * (pow(backlight, 4.0) * 1.6 + pow(forwardWash, 2.0) * 0.85);
 
                 vec3 glassInterior = (transmittedSky * 0.75 + transmittedSun + vec3(0.12, 0.15, 0.22)) * glassBodyTint;
 
-                // 3. Glass Fresnel Reflection
-                float NdotV = max(0.0, dot(faceNormal, V));
-                float R0 = 0.04;
-                float fresnel = R0 + (1.0 - R0) * pow(1.0 - NdotV, 4.2);
+                // 3. Dielectric Fresnel Reflection & Edge Luminescence
+                float NdotV = clamp(dot(faceNormal, V), 0.0, 1.0);
+                float F0 = pow((1.0 - ior) / (1.0 + ior), 2.0);
+                float fresnel = F0 + (1.0 - F0) * pow(1.0 - NdotV, 3.8);
+                vec3 fresnelGlow = vec3(0.88, 0.95, 1.0) * fresnel * 1.25;
 
-                // 4. Sharp Diamond Specular Reflection
+                // 4. Directional Facet Highlight & Shadow Contrast
+                float NdotL = max(0.0, dot(faceNormal, sunDir));
+                float facetShading = mix(0.60, 1.30, NdotL);
+
+                // Sharp Diamond Specular Reflection
                 float NdotH = max(0.0, dot(faceNormal, H));
-                float specular = pow(NdotH, 96.0) * uSpecularGlint * 2.5;
+                float specular = pow(NdotH, 96.0) * uSpecularGlint * 2.6;
 
                 // 5. Chromatic Dispersion Glints
                 float dispersionAngle = dot(faceNormal, V) * 0.65 + dot(faceNormal, sunDir) * 0.35;
                 float prismT = clamp(dispersionAngle * 1.2, 0.0, 1.0);
                 vec3 spectralRainbow = evalSpectralPrism(prismT);
-                float chromaticFacetGlint = pow(NdotH, 24.0) * uIridescence * 1.8;
+                float chromaticFacetGlint = pow(NdotH, 24.0) * uIridescence * 1.9;
                 vec3 chromaticHighlights = spectralRainbow * chromaticFacetGlint;
 
-                // 6. Glowing Crystalline Barycentric Wireframe / Facet Edges
-                vec3 d = fwidth(vBarycentric);
-                vec3 a3 = smoothstep(vec3(0.0), d * 1.35, vBarycentric);
-                float edgeFactor = 1.0 - min(min(a3.x, a3.y), a3.z);
-                vec3 edgeBevel = (vec3(0.85, 0.95, 1.0) + spectralRainbow * 0.5) * edgeFactor * uFacetBevelGleam * 1.25;
-
-                // 7. Glowing Subsurface Crystal Veins & Strata
+                // 6. Glowing Subsurface Crystal Veins & Strata
                 float veinNoise1 = sin((vWorldPos.x * 0.045 + vWorldPos.z * 0.035) * uVeinScale);
                 float veinNoise2 = cos((vWorldPos.x * 0.025 - vWorldPos.z * 0.055) * uVeinScale);
                 float veinPattern = abs(veinNoise1 + veinNoise2);
@@ -347,15 +335,15 @@ export class TerrainSystem {
                 vec3 veinColor = mix(vec3(0.22, 0.74, 0.97), vec3(0.96, 0.45, 0.71), sin(vWorldPos.x * 0.015 * uVeinScale) * 0.5 + 0.5);
                 vec3 crystalVeins = veinColor * veinMask * uCrystalVeinGlow * 2.8;
 
-                // 8. Surface Reflections
+                // 7. Surface Reflections
                 vec3 reflectRay = reflect(-V, faceNormal);
                 float reflectSkyH = clamp(reflectRay.y * 0.5 + 0.5, 0.0, 1.0);
                 vec3 reflectedSky = mix(uSkyHorizonColor, uSkyTopColor, pow(reflectSkyH, 0.6));
 
-                vec3 finalColor = mix(glassInterior, reflectedSky, fresnel * 0.85);
+                vec3 finalColor = mix(glassInterior * facetShading, reflectedSky, fresnel * 0.85);
                 finalColor += uSunColor * specular;
                 finalColor += chromaticHighlights;
-                finalColor += edgeBevel;
+                finalColor += fresnelGlow;
                 finalColor += crystalVeins;
 
                 // Shoreline Glow
@@ -415,7 +403,7 @@ export class TerrainSystem {
     }
 
     public reloadColorsFromConfig(redraw: boolean = true): void {
-        const biomes: BiomeId[] = ['candyland', 'meadow', 'prism_sanctum', 'archipelago', 'geothermal', 'estuary', 'redwood'];
+        const biomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
         for (const b of biomes) {
             const cfg = globalConfigManager.getBiomeConfig(b).terrain;
             const set = this.biomeColors[b];
@@ -600,12 +588,6 @@ export class TerrainSystem {
             this.crystalUniforms.uTime.value += dt;
         }
 
-        const activeBiomeId = globalConfigManager.config.activeBiomeId;
-        if (activeBiomeId === 'prism_sanctum' && this.terrainStyle !== 'crystal') {
-            this.terrainStyle = 'crystal';
-            this.updateActiveMaterial();
-        }
-
         const gridX = Math.floor(playerX / this.gridStride) * this.gridStride;
         const gridZ = Math.floor(playerZ / this.gridStride) * this.gridStride;
 
@@ -619,7 +601,7 @@ export class TerrainSystem {
         }
         const colors = this.geometry.attributes.color as THREE.BufferAttribute;
 
-        const biomes: BiomeId[] = ['candyland', 'meadow', 'prism_sanctum', 'archipelago', 'geothermal', 'estuary', 'redwood'];
+        const biomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
 
         for (let i = 0; i < pos.count; i++) {
             const worldX = pos.getX(i) + gridX;
@@ -680,34 +662,6 @@ export class TerrainSystem {
                     g = g * (1.0 - pathWeight) + pathG * pathWeight;
                     b = b * (1.0 - pathWeight) + pathB * pathWeight;
                 }
-            }
-
-            // 5. Rich Translucent Crystal Body Tint for Prism Sanctum
-            if (w.prism_sanctum > 0.0001) {
-                const pw = w.prism_sanctum;
-                const obsidian = new THREE.Color('#0b0f19');
-                const crystalVeinCyan = new THREE.Color('#38bdf8');
-                const crystalVeinMagenta = new THREE.Color('#f472b6');
-                const crystalAmethyst = new THREE.Color('#a855f7');
-                const diamondGleam = new THREE.Color('#ffffff');
-
-                const veinNoise = snoise(worldX * 0.015625, worldZ * 0.015625);
-                let prismCol = obsidian.clone();
-                if (Math.abs(veinNoise) < 0.16) {
-                    const vBlend = smoothstep(0.16, 0.0, Math.abs(veinNoise));
-                    const vCol = veinNoise > 0 ? crystalVeinCyan : crystalVeinMagenta;
-                    prismCol.lerp(vCol, vBlend * 0.95);
-                } else {
-                    const heightFactor = smoothstep(10.0, 75.0, h);
-                    prismCol.lerp(crystalAmethyst, heightFactor * 0.7);
-                    if (h > 45.0) {
-                        prismCol.lerp(diamondGleam, smoothstep(45.0, 95.0, h) * 0.5);
-                    }
-                }
-
-                r = r * (1.0 - pw) + prismCol.r * pw;
-                g = g * (1.0 - pw) + prismCol.g * pw;
-                b = b * (1.0 - pw) + prismCol.b * pw;
             }
 
             colors.setXYZ(i, r, g, b);

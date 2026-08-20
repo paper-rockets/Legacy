@@ -10,30 +10,10 @@ import { SkyCastleSystem } from './world/skyCastles';
 import { PlayerSystem } from './player/player';
 import { ControlsManager } from './player/controls';
 import { AmbientAudioEngine } from './audio/audio';
-import { createHud } from './ui/hud';
-import { createSettingsWindow } from './ui/settingsWindow';
-import { createPhotoMode } from './ui/photoMode';
+import { UIManager } from './ui/ui';
+import { DeviceSimulator } from './ui/deviceSimulator';
 import { terrainHeightJS, BIOME_LOCATIONS } from './world/noise';
 import { globalConfigManager } from './core/config';
-
-/**
- * Nullable reference to the top-down blueprint camera controller. There is no
- * blueprint view yet (that lands in T5.1) so this starts out null and every call
- * site below is null-safe. Preserves the exact semantics of the old dev-editor
- * driven top-view chain without depending on either deleted class. A later task
- * installs the real controller through setBlueprintView.
- */
-let blueprintView: { isActive: boolean; currentCenter: THREE.Vector3; update(dt: number): void } | null = null;
-
-export function setBlueprintView(view: typeof blueprintView) {
-    blueprintView = view;
-}
-
-/** The developer editor does not exist yet (T3.1). F2 and the Settings window's
- * Developer Options button both point here until then. */
-function openDeveloperEditorPlaceholder() {
-    console.info('[editor] not implemented until T3.1');
-}
 
 async function bootstrap() {
     const container = document.getElementById('app');
@@ -73,23 +53,9 @@ async function bootstrap() {
     });
     audio.onFlightModelChanged(player.getCurrentModelDef());
 
-    const settingsWindow = createSettingsWindow(openDeveloperEditorPlaceholder);
-    const hud = createHud({
-        pipeline, player, controls, lighting, terrain, water, props, trees, skyCastles, audio,
-        onOpenSettings: () => settingsWindow.toggle()
-    });
-    const photoMode = createPhotoMode({ pipeline, player, hud, settingsWindow });
-
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'F2') {
-            openDeveloperEditorPlaceholder();
-        }
-    });
-
-    (window as any).__game = {
-        pipeline, player, terrain, lighting, water, props, skyCastles, trees, worldProps, audio,
-        hud, settingsWindow, photoMode, setBlueprintView
-    };
+    const ui = new UIManager(pipeline, player, terrain, props, lighting, water, audio, controls, trees, worldProps, skyCastles);
+    const deviceSimulator = new DeviceSimulator(pipeline, controls);
+    (window as any).__game = { pipeline, player, terrain, lighting, water, props, skyCastles, trees, worldProps, ui, deviceSimulator, audio };
 
     const clock = new THREE.Clock();
     let lastBiomeId = player.currentBiome;
@@ -128,11 +94,11 @@ async function bootstrap() {
         trees.updateGlow(realDt, lighting.timePhase, player.currentBiome);
 
         const inputState = controls.getInputState();
-        const isPaused = controls.isFlightPaused || photoMode.isActive || (blueprintView?.isActive ?? false);
+        const isPaused = controls.isFlightPaused || ui.isPhotoMode || (ui.devEditor?.topViewController?.isActive ?? false);
         audio.update(realDt, inputState.boost, inputState.brake, isPaused, player.velocity);
 
-        if (!photoMode.isActive) {
-            const isTopView = blueprintView?.isActive ?? false;
+        if (!ui.isPhotoMode) {
+            const isTopView = ui.devEditor?.topViewController?.isActive ?? false;
 
             if (!isTopView) {
                 player.update(flightDt, inputState, skyCastles);
@@ -143,10 +109,10 @@ async function bootstrap() {
                     player.playerGrp.position.y += updraft * flightDt;
                 }
             } else {
-                blueprintView?.update(realDt);
+                ui.devEditor?.topViewController?.update(realDt);
             }
 
-            const focusPos = isTopView && blueprintView ? blueprintView.currentCenter : playerPos;
+            const focusPos = isTopView && ui.devEditor?.topViewController ? ui.devEditor.topViewController.currentCenter : playerPos;
             terrain.update(focusPos.x, focusPos.z);
             water.update(focusPos.x, focusPos.z, realDt);
             props.update(focusPos.x, focusPos.z, realDt);
@@ -155,7 +121,7 @@ async function bootstrap() {
             worldProps.update(realDt);
         }
 
-        hud.update(realDt);
+        ui.updateFPS();
         pipeline.render();
     }
 

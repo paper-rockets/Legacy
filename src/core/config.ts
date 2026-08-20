@@ -639,76 +639,41 @@ export const FACTORY_CONFIG: AppConfig = {
                 activePreset: 'celestial',
                 selectedTreeModelIds: []
             },
-            phases: createDefaultPhases(
-                '#a5b4fc', '#c7d2fe', '#ede9fe', '#fffbeb',
-                '#e879f9', '#f472b6', '#701a75', '#fb923c',
-                '#1e1b4b', '#312e81', '#4338ca', '#818cf8'
-            )
-        },
-        prism_sanctum: {
-            id: 'prism_sanctum',
-            name: 'Prism Sanctum',
-            terrain: {
-                colorLow: '#0b0f19',
-                colorHigh: '#1e1b4b',
-                colorDirt: '#38bdf8',
-                colorPath: '#f472b6',
-                colorSand: '#a855f7',
-                presetName: 'Crystal Prism',
-                isToonMode: false,
-                terrainStyle: 'crystal',
-                isCrystalMode: true,
-                glassTransmission: 0.65,
-                iridescence: 1.35,
-                specularGlint: 2.2,
-                bevelGleam: 1.1,
-                veinGlow: 1.5,
-                glassRefraction: 1.52,
-                glassTint: 1.0,
-                veinScale: 1.0,
-                showGroundCrystals: true
-            },
-            water: {
-                color: '#38bdf8',
-                opacity: 0.85,
-                reflectivity: 0.90,
-                roughness: 0.08,
-                metalness: 0.10,
-                clearcoat: 0.95,
-                clearcoatRoughness: 0.08,
-                isToonMode: false
-            },
-            bloom: {
-                globalStrength: 0.0,
-                globalRadius: 0.0,
-                globalThreshold: 0.70,
-                cloudBloom: 0.0,
-                cloudColor: '#38bdf8',
-                cloudEmissive: '#38bdf8',
-                treeBloom: 0.0,
-                treeCanopyGlow: 0.0,
-                treeTrunkGlow: 0.0,
-                bushBloom: 0.0,
-                bushGlow: 0.0,
-                shoreBloom: 0.0,
-                shoreColor: '#38bdf8',
-                shoreWidth: 1.5
-            },
-            vegetation: {
-                treeScale: 5.0,
-                treeDensity: 0,
-                bushScale: 1.0,
-                bushDensity: 0,
-                canopyColors: ['#38bdf8', '#f472b6', '#a855f7', '#e0f2fe'],
-                trunkColors: ['#0f172a', '#1e1b4b'],
-                activePreset: 'prism',
-                selectedTreeModelIds: []
-            },
-            phases: createDefaultPhases(
-                '#38bdf8', '#bae6fd', '#f0f9ff', '#fffbeb',
-                '#f472b6', '#fed7aa', '#fdf2f8', '#fb923c',
-                '#0f172a', '#1e1b4b', '#38bdf8', '#818cf8'
-            )
+            phases: [
+                {
+                    bg: '#a5b4fc', fog: '#c7d2fe', fogNear: 200, fogFar: 4200,
+                    amb: '#ede9fe', ambI: 0.6,
+                    dir: '#fffbeb', dirI: 0.9,
+                    dirPos: { x: 250, y: 350, z: -200 },
+                    hemi: 0.45,
+                    sunI: 0.9, sunC: '#fffae0',
+                    sunPos: { x: 350, y: 400, z: -850 },
+                    sunScale: 1.0,
+                    starOp: 0.0
+                },
+                {
+                    bg: '#e879f9', fog: '#f472b6', fogNear: 150, fogFar: 3600,
+                    amb: '#701a75', ambI: 0.5,
+                    dir: '#fb923c', dirI: 0.85,
+                    dirPos: { x: 0, y: 45, z: -600 },
+                    hemi: 0.35,
+                    sunI: 1.0, sunC: '#ff5511',
+                    sunPos: { x: 0, y: 15, z: -700 },
+                    sunScale: 1.6,
+                    starOp: 0.1
+                },
+                {
+                    bg: '#1e1b4b', fog: '#312e81', fogNear: 100, fogFar: 3200,
+                    amb: '#4338ca', ambI: 0.7,
+                    dir: '#818cf8', dirI: 0.6,
+                    dirPos: { x: 100, y: 250, z: -100 },
+                    hemi: 0.4,
+                    sunI: 0.0, sunC: '#000000',
+                    sunPos: { x: 0, y: -300, z: -800 },
+                    sunScale: 0.1,
+                    starOp: 0.95
+                }
+            ]
         }
     }
 };

@@ -1,0 +1,27 @@
+{
+ "capturedFrom": "http://localhost:8085 via window.__game, before any rebuild work",
+ "bloom": { "strength": 0, "radius": 0, "threshold": 0.7 },
+ "timePhase": 0,
+ "fog": { "color": "#fbcfe8", "near": 60, "far": 420 },
+ "background": "#c7d2fe",
+ "lights": [
+  { "type": "HemisphereLight",  "color": "#ff7d45", "intensity": 0.45 },
+  { "type": "AmbientLight",     "color": "#fdf4ff", "intensity": 0.6 },
+  { "type": "DirectionalLight", "color": "#fffae0", "intensity": 0.9 },
+  { "type": "DirectionalLight", "color": "#fffbeb", "intensity": 0.9 }
+ ],
+ "terrainToon": true,
+ "biome": "candyland",
+ "islandCount": 9,
+ "islands": [
+  { "id": "sky_castle_high_0",    "x": 0,     "y": 490, "z": -550,  "rot": 0.2, "scale": 2.4, "model": "fairytale_castle_high_compressed.glb" },
+  { "id": "sky_castle_high_1",    "x": -750,  "y": 520, "z": -400,  "rot": 1.1, "scale": 2.2, "model": "fairytale_castle_high_compressed (1).glb" },
+  { "id": "sky_castle_med_2_top", "x": 720,   "y": 510, "z": -380,  "rot": 0.8, "scale": 2.1, "model": "fairytale_castle_med_compressed (2).glb" },
+  { "id": "sky_castle_med_0",     "x": -300,  "y": 505, "z": -1150, "rot": 2.3, "scale": 2.0, "model": "fairytale_castle_med_compressed.glb" },
+  { "id": "sky_castle_med_2",     "x": 1050,  "y": 480, "z": 320,   "rot": 3.0, "scale": 2.1, "model": "fairytale_castle_med_compressed (2).glb" },
+  { "id": "sky_castle_med_3",     "x": 650,   "y": 470, "z": 980,   "rot": 1.8, "scale": 2.1, "model": "fairytale_castle_med_compressed (3).glb" },
+  { "id": "sky_castle_med_4",     "x": -120,  "y": 485, "z": 1120,  "rot": 0.5, "scale": 2.1, "model": "fairytale_castle_med_compressed (4).glb" },
+  { "id": "sky_castle_med_5",     "x": -820,  "y": 510, "z": 750,   "rot": 2.7, "scale": 2.2, "model": "fairytale_castle_med_compressed (5).glb" },
+  { "id": "sky_castle_med_6",     "x": -1100, "y": 475, "z": 120,   "rot": 1.4, "scale": 2.1, "model": "fairytale_castle_med_compressed (6).glb" }
+ ]
+}

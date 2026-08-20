@@ -177,7 +177,7 @@ export class WorldPropsSystem {
         this.scene = scene;
 
         this.dracoLoader = new DRACOLoader();
-        this.dracoLoader.setDecoderPath('/draco/');
+        this.dracoLoader.setDecoderPath('/draco/gltf/');
         this.loader = new GLTFLoader();
         this.loader.setDRACOLoader(this.dracoLoader);
 

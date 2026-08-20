@@ -3,34 +3,15 @@ import { terrainHeightJS } from './noise';
 
 // ── Shared Barycentric Geometry Helper ──────────────────────────────────────
 export function setupFacetedBarycentricGeometry(geo: THREE.BufferGeometry): THREE.BufferGeometry {
-    const nonIndexed = geo.toNonIndexed();
+    const nonIndexed = geo.index ? geo.toNonIndexed() : geo.clone();
     nonIndexed.computeVertexNormals();
-
-    const count = nonIndexed.attributes.position.count;
-    const barycentrics = new Float32Array(count * 3);
-
-    for (let i = 0; i < count; i += 3) {
-        barycentrics[i * 3 + 0] = 1;
-        barycentrics[i * 3 + 1] = 0;
-        barycentrics[i * 3 + 2] = 0;
-
-        barycentrics[i * 3 + 3] = 0;
-        barycentrics[i * 3 + 4] = 1;
-        barycentrics[i * 3 + 5] = 0;
-
-        barycentrics[i * 3 + 6] = 0;
-        barycentrics[i * 3 + 7] = 0;
-        barycentrics[i * 3 + 8] = 1;
-    }
-
-    nonIndexed.setAttribute('aBarycentric', new THREE.BufferAttribute(barycentrics, 3));
     return nonIndexed;
 }
 
 // ── Translucent Prismatic Glass Crystal Cloud Formation ─────────────────────
 // Creates a floating glass crystal cloud cluster with true optical
 // glass properties: high transmission, Fresnel reflections, internal chromatic
-// dispersion, sharp specular glints, and delicate cut-glass chamfer highlights.
+// dispersion, sharp specular glints, and dielectric edge glow.
 export class FacetedCrystalCloud {
     public group: THREE.Group;
     public crystalMaterial: THREE.ShaderMaterial;
@@ -40,11 +21,16 @@ export class FacetedCrystalCloud {
     public billowMeshes: THREE.Mesh[] = [];
 
     public params = {
-        glassTransmission: 0.65, // How see-through the glass is
-        glassRefraction: 1.52,   // IOR of optical glass / quartz
+        glassTransmission: 0.90, // Physical high transmission
+        ior: 1.62,               // Physical Index of Refraction (glass / quartz: 1.5 - 2.0)
+        dispersion: 0.035,       // Spectral chromatic dispersion
+        fresnelPower: 3.8,       // Dielectric Fresnel edge power
+        fresnelIntensity: 1.45,   // Soft rim luminescence without wireframes
+        fresnelColor: new THREE.Color(0xe0f2fe),
         iridescence: 1.35,       // Chromatic rainbow dispersion strength
         specularGlint: 2.2,      // Sharp diamond-like sun reflection
-        facetBevelGleam: 1.1,    // Subtle cut-glass facet edge reflections
+        facetContrast: 0.45,     // Distinct highlighted facets and shadowed faces
+        facetBevelGleam: 0.45,   // Compatibility alias for sliders
         glassTint: 0.45,         // Soft pastel gemstone tint strength
         billowDensity: 1.0,      // Soft cumulus vapour wrapping the crystal cores
         silverLining: 1.15       // Backlit rim brightness on the billow edges
@@ -63,21 +49,23 @@ export class FacetedCrystalCloud {
             uGlassBaseTint: { value: new THREE.Color(0xdbeafe) },  // Pale crystal ice
             uGlassMidTint: { value: new THREE.Color(0xfce7f3) },   // Soft rose quartz glass
             uGlassTopTint: { value: new THREE.Color(0xffffff) },   // Pure optical diamond glass
-            uGlassTransmission: { value: 0.65 },
+            uGlassTransmission: { value: 0.90 },
+            uIOR: { value: 1.62 },
+            uDispersion: { value: 0.035 },
+            uFresnelPower: { value: 3.8 },
+            uFresnelIntensity: { value: 1.45 },
+            uFresnelColor: { value: new THREE.Color(0xe0f2fe) },
             uIridescence: { value: 1.35 },
             uSpecularGlint: { value: 2.2 },
-            uFacetBevelGleam: { value: 1.1 }
+            uFacetContrast: { value: 0.45 }
         };
 
         const vertShader = /* glsl */ `
-            attribute vec3 aBarycentric;
             varying vec3 vWorldPos;
             varying vec3 vViewDir;
-            varying vec3 vBarycentric;
             varying vec3 vWorldNormal;
 
             void main() {
-                vBarycentric = aBarycentric;
                 vec4 worldPos = modelMatrix * vec4(position, 1.0);
                 vWorldPos = worldPos.xyz;
                 vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
@@ -96,13 +84,17 @@ export class FacetedCrystalCloud {
             uniform vec3 uGlassMidTint;
             uniform vec3 uGlassTopTint;
             uniform float uGlassTransmission;
+            uniform float uIOR;
+            uniform float uDispersion;
+            uniform float uFresnelPower;
+            uniform float uFresnelIntensity;
+            uniform vec3 uFresnelColor;
             uniform float uIridescence;
             uniform float uSpecularGlint;
-            uniform float uFacetBevelGleam;
+            uniform float uFacetContrast;
 
             varying vec3 vWorldPos;
             varying vec3 vViewDir;
-            varying vec3 vBarycentric;
             varying vec3 vWorldNormal;
 
             // Pure Optical Spectral Dispersion (Cauchy Glass Dispersion)
@@ -120,6 +112,7 @@ export class FacetedCrystalCloud {
                 vec3 fdx = dFdx(vWorldPos);
                 vec3 fdy = dFdy(vWorldPos);
                 vec3 faceNormal = normalize(cross(fdx, fdy));
+                if (!gl_FrontFacing) faceNormal = -faceNormal;
 
                 vec3 V = normalize(vViewDir);
                 vec3 sunDir = normalize(uSunPos - vWorldPos);
@@ -130,59 +123,61 @@ export class FacetedCrystalCloud {
                 vec3 glassBodyTint = mix(uGlassBaseTint, uGlassMidTint, smoothstep(0.0, 0.5, heightFactor));
                 glassBodyTint = mix(glassBodyTint, uGlassTopTint, smoothstep(0.5, 1.0, heightFactor));
 
-                // 2. Optical Glass Refraction & Transmission
-                // Refracted ray samples the sky background through the glass
-                vec3 refractRay = refract(-V, faceNormal, 1.0 / 1.52);
-                float refractSkyH = clamp(refractRay.y * 0.5 + 0.5, 0.0, 1.0);
-                vec3 transmittedSky = mix(uSkyHorizonColor, uSkyTopColor, pow(refractSkyH, 0.7));
+                // 2. Optical Glass Refraction & Transmission with IOR and Chromatic Dispersion
+                float ior = max(1.1, uIOR);
+                float disp = uDispersion * 0.04;
+                vec3 refractR = refract(-V, faceNormal, 1.0 / (ior - disp));
+                vec3 refractG = refract(-V, faceNormal, 1.0 / ior);
+                vec3 refractB = refract(-V, faceNormal, 1.0 / (ior + disp));
 
-                // Backlit sunlight transmission through glass — a tight core plus a
-                // broad forward-scattered wash so the prisms glow instead of going dark
+                float rSkyH = clamp(refractR.y * 0.5 + 0.5, 0.0, 1.0);
+                float gSkyH = clamp(refractG.y * 0.5 + 0.5, 0.0, 1.0);
+                float bSkyH = clamp(refractB.y * 0.5 + 0.5, 0.0, 1.0);
+
+                vec3 rCol = mix(uSkyHorizonColor, uSkyTopColor, pow(rSkyH, 0.65));
+                vec3 gCol = mix(uSkyHorizonColor, uSkyTopColor, pow(gSkyH, 0.65));
+                vec3 bCol = mix(uSkyHorizonColor, uSkyTopColor, pow(bSkyH, 0.65));
+                vec3 transmittedSky = vec3(rCol.r, gCol.g, bCol.b);
+
+                // Backlit sunlight transmission through glass
                 float backlight = max(0.0, dot(-faceNormal, sunDir));
                 float forwardWash = max(0.0, dot(-sunDir, -V));
-                vec3 transmittedSun = uSunColor * pow(backlight, 4.0) * 1.5
-                                    + uSunColor * pow(forwardWash, 2.0) * 0.85;
+                vec3 transmittedSun = uSunColor * (pow(backlight, 4.0) * 1.85 + pow(forwardWash, 2.0) * 0.95);
 
-                vec3 glassInterior = (transmittedSky * 0.75 + transmittedSun + vec3(0.16, 0.19, 0.24)) * glassBodyTint;
+                vec3 glassInterior = (transmittedSky * 0.85 + transmittedSun + vec3(0.14, 0.18, 0.24)) * glassBodyTint;
 
-                // 3. Glass Fresnel Reflection (Schlick approximation with R0 = 0.04 for glass)
-                float NdotV = max(0.0, dot(faceNormal, V));
-                float R0 = 0.04;
-                float fresnel = R0 + (1.0 - R0) * pow(1.0 - NdotV, 4.2);
+                // 3. Dielectric Fresnel Luminescence (Replaces hard wireframe lines)
+                float NdotV = clamp(dot(faceNormal, V), 0.0, 1.0);
+                float F0 = pow((1.0 - ior) / (1.0 + ior), 2.0);
+                float fresnel = F0 + (1.0 - F0) * pow(1.0 - NdotV, uFresnelPower);
+                vec3 fresnelGlow = uFresnelColor * fresnel * uFresnelIntensity;
 
-                // 4. Sharp Diamond Specular Reflection
+                // 4. Directional Facet Lighting (Highlight and Shadow Contrast)
+                float NdotL = max(0.0, dot(faceNormal, sunDir));
+                float facetShading = mix(1.0 - uFacetContrast, 1.0 + uFacetContrast * 0.5, NdotL);
+
+                // Sharp Diamond Specular Reflection
                 float NdotH = max(0.0, dot(faceNormal, H));
-                float specular = pow(NdotH, 96.0) * uSpecularGlint * 2.5;
+                float specular = pow(NdotH, 96.0) * uSpecularGlint * 2.8;
 
-                // 5. Chromatic Dispersion Glints (Prismatic Rainbow Refraction)
+                // 5. Chromatic Dispersion Glints
                 float dispersionAngle = dot(faceNormal, V) * 0.65 + dot(faceNormal, sunDir) * 0.35;
                 float prismT = clamp(dispersionAngle * 1.2, 0.0, 1.0);
                 vec3 spectralRainbow = evalSpectralPrism(prismT);
-                float chromaticFacetGlint = pow(NdotH, 24.0) * uIridescence * 1.8;
+                float chromaticFacetGlint = pow(NdotH, 24.0) * uIridescence * 2.0;
                 vec3 chromaticHighlights = spectralRainbow * chromaticFacetGlint;
 
-                // 6. Delicate Cut-Glass Bevel Chamfer Gleam (Fine diamond edge reflections)
-                vec3 d = fwidth(vBarycentric);
-                vec3 a3 = smoothstep(vec3(0.0), d * 1.2, vBarycentric);
-                float edgeFactor = 1.0 - min(min(a3.x, a3.y), a3.z);
-                vec3 edgeBevel = (vec3(1.0, 1.0, 1.0) + spectralRainbow * 0.5) * edgeFactor * uFacetBevelGleam * 0.55;
-
-                // 7. Glass Surface Reflections (Sky & Sun)
+                // 6. Surface Reflections
                 vec3 reflectRay = reflect(-V, faceNormal);
                 float reflectSkyH = clamp(reflectRay.y * 0.5 + 0.5, 0.0, 1.0);
                 vec3 reflectedSky = mix(uSkyHorizonColor, uSkyTopColor, pow(reflectSkyH, 0.6));
 
-                // Combine Glass Layers
-                vec3 glassColor = mix(glassInterior, reflectedSky, fresnel * 0.85);
+                // Combine Glass Layers without wireframe lines
+                vec3 glassColor = mix(glassInterior * facetShading, reflectedSky, fresnel * 0.82);
                 glassColor += uSunColor * specular;
                 glassColor += chromaticHighlights;
-                glassColor += edgeBevel;
+                glassColor += fresnelGlow;
 
-                // Optical Glass Transparency: Clear in center, more reflective/opaque on glancing Fresnel edges.
-                // Kept light so the prisms sit inside the vapour rather than punching dark holes in it.
-                float glassAlpha = clamp(fresnel * 0.55 + (1.0 - uGlassTransmission) * 0.30 + edgeFactor * 0.28, 0.10, 0.72);
-
-                gl_FragColor = vec4(glassColor, glassAlpha);
             }
         `;
 
@@ -493,9 +488,13 @@ export class FacetedCrystalCloud {
         this.crystalMaterial.uniforms.uTime.value += dt;
         this.crystalMaterial.uniforms.uSunPos.value.copy(sunPos);
         this.crystalMaterial.uniforms.uGlassTransmission.value = this.params.glassTransmission;
+        this.crystalMaterial.uniforms.uIOR.value = this.params.ior;
+        this.crystalMaterial.uniforms.uDispersion.value = this.params.dispersion;
+        this.crystalMaterial.uniforms.uFresnelPower.value = this.params.fresnelPower;
+        this.crystalMaterial.uniforms.uFresnelIntensity.value = this.params.fresnelIntensity;
         this.crystalMaterial.uniforms.uIridescence.value = this.params.iridescence;
         this.crystalMaterial.uniforms.uSpecularGlint.value = this.params.specularGlint;
-        this.crystalMaterial.uniforms.uFacetBevelGleam.value = this.params.facetBevelGleam;
+        this.crystalMaterial.uniforms.uFacetContrast.value = this.params.facetContrast ?? this.params.facetBevelGleam ?? 0.45;
 
         this.billowMaterial.uniforms.uTime.value += dt;
         this.billowMaterial.uniforms.uSunPos.value.copy(sunPos);
@@ -551,22 +550,24 @@ export function createCrystalShaderMaterial(customUniforms?: Record<string, THRE
         uGlassBaseTint: { value: new THREE.Color(0xdbeafe) },
         uGlassMidTint: { value: new THREE.Color(0xfce7f3) },
         uGlassTopTint: { value: new THREE.Color(0xffffff) },
-        uGlassTransmission: { value: 0.65 },
+        uGlassTransmission: { value: 0.90 },
+        uIOR: { value: 1.62 },
+        uDispersion: { value: 0.035 },
+        uFresnelPower: { value: 3.8 },
+        uFresnelIntensity: { value: 1.45 },
+        uFresnelColor: { value: new THREE.Color(0xe0f2fe) },
         uIridescence: { value: 1.35 },
         uSpecularGlint: { value: 2.2 },
-        uFacetBevelGleam: { value: 1.1 },
+        uFacetContrast: { value: 0.45 },
         ...customUniforms
     };
 
     const vertShader = /* glsl */ `
-        attribute vec3 aBarycentric;
         varying vec3 vWorldPos;
         varying vec3 vViewDir;
-        varying vec3 vBarycentric;
         varying vec3 vWorldNormal;
 
         void main() {
-            vBarycentric = aBarycentric;
             vec4 worldPos = modelMatrix * vec4(position, 1.0);
             vWorldPos = worldPos.xyz;
             vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
@@ -585,13 +586,17 @@ export function createCrystalShaderMaterial(customUniforms?: Record<string, THRE
         uniform vec3 uGlassMidTint;
         uniform vec3 uGlassTopTint;
         uniform float uGlassTransmission;
+        uniform float uIOR;
+        uniform float uDispersion;
+        uniform float uFresnelPower;
+        uniform float uFresnelIntensity;
+        uniform vec3 uFresnelColor;
         uniform float uIridescence;
         uniform float uSpecularGlint;
-        uniform float uFacetBevelGleam;
+        uniform float uFacetContrast;
 
         varying vec3 vWorldPos;
         varying vec3 vViewDir;
-        varying vec3 vBarycentric;
         varying vec3 vWorldNormal;
 
         vec3 evalSpectralPrism(float t) {
@@ -607,6 +612,7 @@ export function createCrystalShaderMaterial(customUniforms?: Record<string, THRE
             vec3 fdx = dFdx(vWorldPos);
             vec3 fdy = dFdy(vWorldPos);
             vec3 faceNormal = normalize(cross(fdx, fdy));
+            if (!gl_FrontFacing) faceNormal = -faceNormal;
 
             vec3 V = normalize(vViewDir);
             vec3 sunDir = normalize(uSunPos - vWorldPos);
@@ -616,45 +622,57 @@ export function createCrystalShaderMaterial(customUniforms?: Record<string, THRE
             vec3 glassBodyTint = mix(uGlassBaseTint, uGlassMidTint, smoothstep(0.0, 0.5, heightFactor));
             glassBodyTint = mix(glassBodyTint, uGlassTopTint, smoothstep(0.5, 1.0, heightFactor));
 
-            vec3 refractRay = refract(-V, faceNormal, 1.0 / 1.52);
-            float refractSkyH = clamp(refractRay.y * 0.5 + 0.5, 0.0, 1.0);
-            vec3 transmittedSky = mix(uSkyHorizonColor, uSkyTopColor, pow(refractSkyH, 0.7));
+            // Optical Glass Refraction with IOR and Chromatic Dispersion
+            float ior = max(1.1, uIOR);
+            float disp = uDispersion * 0.04;
+            vec3 refractR = refract(-V, faceNormal, 1.0 / (ior - disp));
+            vec3 refractG = refract(-V, faceNormal, 1.0 / ior);
+            vec3 refractB = refract(-V, faceNormal, 1.0 / (ior + disp));
+
+            float rSkyH = clamp(refractR.y * 0.5 + 0.5, 0.0, 1.0);
+            float gSkyH = clamp(refractG.y * 0.5 + 0.5, 0.0, 1.0);
+            float bSkyH = clamp(refractB.y * 0.5 + 0.5, 0.0, 1.0);
+
+            vec3 rCol = mix(uSkyHorizonColor, uSkyTopColor, pow(rSkyH, 0.65));
+            vec3 gCol = mix(uSkyHorizonColor, uSkyTopColor, pow(gSkyH, 0.65));
+            vec3 bCol = mix(uSkyHorizonColor, uSkyTopColor, pow(bSkyH, 0.65));
+            vec3 transmittedSky = vec3(rCol.r, gCol.g, bCol.b);
 
             float backlight = max(0.0, dot(-faceNormal, sunDir));
             float forwardWash = max(0.0, dot(-sunDir, -V));
-            vec3 transmittedSun = uSunColor * pow(backlight, 4.0) * 1.5
-                                + uSunColor * pow(forwardWash, 2.0) * 0.85;
+            vec3 transmittedSun = uSunColor * (pow(backlight, 4.0) * 1.85 + pow(forwardWash, 2.0) * 0.95);
 
-            vec3 glassInterior = (transmittedSky * 0.75 + transmittedSun + vec3(0.16, 0.19, 0.24)) * glassBodyTint;
+            vec3 glassInterior = (transmittedSky * 0.85 + transmittedSun + vec3(0.14, 0.18, 0.24)) * glassBodyTint;
 
-            float NdotV = max(0.0, dot(faceNormal, V));
-            float R0 = 0.04;
-            float fresnel = R0 + (1.0 - R0) * pow(1.0 - NdotV, 4.2);
+            // Dielectric Fresnel edge luminescence
+            float NdotV = clamp(dot(faceNormal, V), 0.0, 1.0);
+            float F0 = pow((1.0 - ior) / (1.0 + ior), 2.0);
+            float fresnel = F0 + (1.0 - F0) * pow(1.0 - NdotV, uFresnelPower);
+            vec3 fresnelGlow = uFresnelColor * fresnel * uFresnelIntensity;
+
+            // Directional Facet Highlight & Shadow
+            float NdotL = max(0.0, dot(faceNormal, sunDir));
+            float facetShading = mix(1.0 - uFacetContrast, 1.0 + uFacetContrast * 0.5, NdotL);
 
             float NdotH = max(0.0, dot(faceNormal, H));
-            float specular = pow(NdotH, 96.0) * uSpecularGlint * 2.5;
+            float specular = pow(NdotH, 96.0) * uSpecularGlint * 2.8;
 
             float dispersionAngle = dot(faceNormal, V) * 0.65 + dot(faceNormal, sunDir) * 0.35;
             float prismT = clamp(dispersionAngle * 1.2, 0.0, 1.0);
             vec3 spectralRainbow = evalSpectralPrism(prismT);
-            float chromaticFacetGlint = pow(NdotH, 24.0) * uIridescence * 1.8;
+            float chromaticFacetGlint = pow(NdotH, 24.0) * uIridescence * 2.0;
             vec3 chromaticHighlights = spectralRainbow * chromaticFacetGlint;
-
-            vec3 d = fwidth(vBarycentric);
-            vec3 a3 = smoothstep(vec3(0.0), d * 1.2, vBarycentric);
-            float edgeFactor = 1.0 - min(min(a3.x, a3.y), a3.z);
-            vec3 edgeBevel = (vec3(1.0, 1.0, 1.0) + spectralRainbow * 0.5) * edgeFactor * uFacetBevelGleam * 0.55;
 
             vec3 reflectRay = reflect(-V, faceNormal);
             float reflectSkyH = clamp(reflectRay.y * 0.5 + 0.5, 0.0, 1.0);
             vec3 reflectedSky = mix(uSkyHorizonColor, uSkyTopColor, pow(reflectSkyH, 0.6));
 
-            vec3 glassColor = mix(glassInterior, reflectedSky, fresnel * 0.85);
+            vec3 glassColor = mix(glassInterior * facetShading, reflectedSky, fresnel * 0.82);
             glassColor += uSunColor * specular;
             glassColor += chromaticHighlights;
-            glassColor += edgeBevel;
+            glassColor += fresnelGlow;
 
-            float glassAlpha = clamp(fresnel * 0.55 + (1.0 - uGlassTransmission) * 0.30 + edgeFactor * 0.28, 0.10, 0.72);
+            float glassAlpha = clamp(fresnel * 0.65 + (1.0 - uGlassTransmission) * 0.32 + 0.12, 0.12, 0.88);
 
             gl_FragColor = vec4(glassColor, glassAlpha);
         }
@@ -671,8 +689,29 @@ export function createCrystalShaderMaterial(customUniforms?: Record<string, THRE
     });
 }
 
+// Helper: Evaluates distance to designated walking pathways in Prism Sanctum
+export function getPrismWalkingPathDistance(lx: number, lz: number): number {
+    const distCenter = Math.hypot(lx, lz);
+    if (distCenter < 36.0) return 0.0; // Central open plaza
+
+    // 1. Winding North-South Grand Promenade
+    const dMainAxis = Math.abs(lx - Math.sin(lz * 0.007) * 42.0);
+    // 2. Cross Terrace Promenade
+    const dCrossAxis = Math.abs(lz - Math.cos(lx * 0.006) * 48.0);
+    // 3. Inner Ring Promenade (radius 130m)
+    const dRing1 = Math.abs(distCenter - 130.0);
+    // 4. Outer Ridge Walkway (radius 270m)
+    const dRing2 = Math.abs(distCenter - 270.0);
+    // 5. Diagonal Arterial Trails
+    const dDiag1 = Math.abs(lx - lz) * 0.7071;
+    const dDiag2 = Math.abs(lx + lz) * 0.7071;
+
+    return Math.min(dMainAxis, dCrossAxis, dRing1, dRing2, dDiag1, dDiag2);
+}
+
 // ── Ground-Level Crystal Formations & Monoliths ──────────────────────────────
-// Populates the terrain with hundreds of cut-glass crystal spires, geode clusters, monoliths, and floating shards
+// Populates the terrain with uneven, dense geode clusters and jagged formations
+// with noise-carved walking paths for player navigation
 export class GroundCrystalFormations {
     public group: THREE.Group;
     public crystalMaterial: THREE.ShaderMaterial;
@@ -693,151 +732,153 @@ export class GroundCrystalFormations {
         const dodecaGeo = setupFacetedBarycentricGeometry(new THREE.DodecahedronGeometry(1.0, 0));
         const cylGeo = setupFacetedBarycentricGeometry(new THREE.CylinderGeometry(0.7, 1.0, 1.0, 6));
 
-        // 1. Handcrafted Landmark Obelisks and Spires
-        const landmarkConfigs: { x: number; z: number; height: number; radius: number; rotY: number; tilt: number; type: 'cone' | 'octa' | 'dodeca' | 'cyl' }[] = [
-            // Center Grand Sanctuary Obelisk Grove
-            { x: 0, z: 0, height: 78, radius: 8.5, rotY: 0.2, tilt: 0.04, type: 'cone' },
-            { x: -16, z: -14, height: 62, radius: 6.8, rotY: 1.1, tilt: 0.10, type: 'cone' },
-            { x: 18, z: -16, height: 66, radius: 7.2, rotY: 2.3, tilt: -0.09, type: 'cone' },
-            { x: -14, z: 18, height: 58, radius: 6.4, rotY: 0.8, tilt: 0.12, type: 'cone' },
-            { x: 16, z: 16, height: 60, radius: 6.5, rotY: 1.7, tilt: -0.11, type: 'cone' },
-            { x: 0, z: -28, height: 52, radius: 5.8, rotY: 0.5, tilt: -0.07, type: 'dodeca' },
-            { x: 0, z: 28, height: 52, radius: 5.8, rotY: 2.1, tilt: 0.07, type: 'dodeca' },
-            { x: -28, z: 0, height: 48, radius: 5.5, rotY: 1.4, tilt: 0.09, type: 'octa' },
-            { x: 28, z: 0, height: 48, radius: 5.5, rotY: 2.8, tilt: -0.09, type: 'octa' },
+        // 1. Geode Cluster Hub Anchors (16 Distinct Formations)
+        const clusterHubs = [
+            // Inner Sanctuary Geode Calderas (radius 60 - 110m)
+            { hx: -75, hz: -65, count: 32, radiusSpread: 38, baseScale: 1.1, name: 'Northwest Caldera' },
+            { hx: 80, hz: -70, count: 34, radiusSpread: 40, baseScale: 1.15, name: 'Northeast Caldera' },
+            { hx: -80, hz: 75, count: 30, radiusSpread: 36, baseScale: 1.05, name: 'Southwest Caldera' },
+            { hx: 75, hz: 80, count: 32, radiusSpread: 38, baseScale: 1.1, name: 'Southeast Caldera' },
 
-            // Inner Ring Quartz Clusters (radius 30 - 70m)
-            { x: -42, z: -34, height: 48, radius: 5.5, rotY: 0.6, tilt: 0.14, type: 'cone' },
-            { x: 44, z: -36, height: 50, radius: 5.6, rotY: 1.8, tilt: -0.13, type: 'cone' },
-            { x: -38, z: 42, height: 46, radius: 5.2, rotY: 2.7, tilt: 0.11, type: 'cone' },
-            { x: 40, z: 44, height: 48, radius: 5.4, rotY: 0.9, tilt: -0.13, type: 'cone' },
-            { x: -60, z: -10, height: 42, radius: 6.0, rotY: 1.2, tilt: 0.08, type: 'octa' },
-            { x: 60, z: -10, height: 42, radius: 6.0, rotY: 2.4, tilt: -0.08, type: 'octa' },
-            { x: -15, z: -60, height: 44, radius: 5.8, rotY: 0.3, tilt: 0.10, type: 'dodeca' },
-            { x: 15, z: 60, height: 44, radius: 5.8, rotY: 1.9, tilt: -0.10, type: 'dodeca' },
+            // Mid-Range Towering Monolith Formations (radius 140 - 240m)
+            { hx: 0, hz: -180, count: 42, radiusSpread: 48, baseScale: 1.35, name: 'Northern Spire Colonnade' },
+            { hx: 0, hz: 185, count: 40, radiusSpread: 46, baseScale: 1.3, name: 'Southern Spire Colonnade' },
+            { hx: -190, hz: 0, count: 38, radiusSpread: 45, baseScale: 1.25, name: 'Western Quartz Monolith' },
+            { hx: 195, hz: 0, count: 42, radiusSpread: 48, baseScale: 1.35, name: 'Eastern Quartz Monolith' },
 
-            // Mid-Range Spire Monoliths (radius 70 - 160m)
-            { x: -85, z: -75, height: 58, radius: 6.8, rotY: 0.4, tilt: 0.15, type: 'cone' },
-            { x: -110, z: -50, height: 64, radius: 7.2, rotY: 1.5, tilt: -0.11, type: 'cone' },
-            { x: -65, z: -105, height: 52, radius: 6.0, rotY: 2.9, tilt: 0.09, type: 'cone' },
-            { x: 88, z: -78, height: 60, radius: 7.0, rotY: 0.8, tilt: -0.14, type: 'cone' },
-            { x: 115, z: -55, height: 68, radius: 7.5, rotY: 2.0, tilt: 0.10, type: 'cone' },
-            { x: 75, z: -110, height: 54, radius: 6.2, rotY: 3.2, tilt: -0.12, type: 'cone' },
-            { x: -80, z: 85, height: 56, radius: 6.5, rotY: 0.5, tilt: 0.13, type: 'cone' },
-            { x: -105, z: 70, height: 62, radius: 7.0, rotY: 1.7, tilt: -0.12, type: 'cone' },
-            { x: 82, z: 88, height: 58, radius: 6.6, rotY: 2.2, tilt: 0.11, type: 'cone' },
-            { x: 110, z: 75, height: 65, radius: 7.2, rotY: 0.6, tilt: -0.13, type: 'cone' },
+            // Diagonal High Mountain Geode Clusters (radius 200 - 320m)
+            { hx: -180, hz: -175, count: 45, radiusSpread: 52, baseScale: 1.4, name: 'NW Mountain Massif' },
+            { hx: 185, hz: -180, count: 48, radiusSpread: 55, baseScale: 1.45, name: 'NE Mountain Massif' },
+            { hx: -175, hz: 190, count: 44, radiusSpread: 50, baseScale: 1.38, name: 'SW Mountain Massif' },
+            { hx: 180, hz: 185, count: 46, radiusSpread: 52, baseScale: 1.42, name: 'SE Mountain Massif' },
 
-            // Outer Mountain Crest Monoliths (radius 180 - 450m)
-            { x: -180, z: -160, height: 85, radius: 9.5, rotY: 1.3, tilt: 0.08, type: 'cone' },
-            { x: 190, z: -170, height: 90, radius: 10.0, rotY: 2.5, tilt: -0.09, type: 'cone' },
-            { x: -175, z: 180, height: 80, radius: 9.0, rotY: 0.4, tilt: 0.10, type: 'cone' },
-            { x: 185, z: 185, height: 82, radius: 9.2, rotY: 1.9, tilt: -0.09, type: 'cone' },
-            { x: 0, z: -220, height: 75, radius: 8.5, rotY: 0.7, tilt: 0.06, type: 'cone' },
-            { x: 0, z: 220, height: 75, radius: 8.5, rotY: 2.3, tilt: -0.06, type: 'cone' },
-            { x: -230, z: 0, height: 72, radius: 8.2, rotY: 1.1, tilt: 0.11, type: 'cone' },
-            { x: 230, z: 0, height: 72, radius: 8.2, rotY: 2.7, tilt: -0.11, type: 'cone' },
-
-            // Distant Perimeter Peak Monoliths (radius 300 - 580m)
-            { x: -320, z: -280, height: 95, radius: 11.0, rotY: 0.9, tilt: 0.07, type: 'cone' },
-            { x: 340, z: -300, height: 100, radius: 11.5, rotY: 2.1, tilt: -0.08, type: 'cone' },
-            { x: -310, z: 320, height: 90, radius: 10.5, rotY: 1.6, tilt: 0.09, type: 'cone' },
-            { x: 330, z: 330, height: 92, radius: 10.8, rotY: 0.3, tilt: -0.08, type: 'cone' },
-            { x: 0, z: -420, height: 88, radius: 10.2, rotY: 1.4, tilt: 0.05, type: 'cone' },
-            { x: 0, z: 420, height: 88, radius: 10.2, rotY: 2.8, tilt: -0.05, type: 'cone' },
-            { x: -440, z: 0, height: 85, radius: 9.8, rotY: 0.8, tilt: 0.08, type: 'cone' },
-            { x: 440, z: 0, height: 85, radius: 9.8, rotY: 2.2, tilt: -0.08, type: 'cone' }
+            // Distant Perimeter Peak Monoliths (radius 340 - 520m)
+            { hx: -330, hz: -290, count: 38, radiusSpread: 60, baseScale: 1.5, name: 'Outer NW Peaks' },
+            { hx: 350, hz: -310, count: 40, radiusSpread: 62, baseScale: 1.55, name: 'Outer NE Peaks' },
+            { hx: -320, hz: 330, count: 36, radiusSpread: 58, baseScale: 1.48, name: 'Outer SW Peaks' },
+            { hx: 340, hz: 340, count: 38, radiusSpread: 60, baseScale: 1.52, name: 'Outer SE Peaks' }
         ];
 
-        landmarkConfigs.forEach((cfg) => {
-            let baseGeo = coneGeo;
-            if (cfg.type === 'octa') baseGeo = octaGeo;
-            else if (cfg.type === 'dodeca') baseGeo = dodecaGeo;
-            else if (cfg.type === 'cyl') baseGeo = cylGeo;
+        // Spawn dense, jagged crystal clusters around each hub anchor
+        clusterHubs.forEach((hub, hubIdx) => {
+            // Central colossal monolith of this cluster
+            const centralHeight = 65 * hub.baseScale;
+            const centralRadius = 8.5 * hub.baseScale;
+            const centerMesh = new THREE.Mesh(coneGeo, material);
+            centerMesh.scale.set(centralRadius, centralHeight, centralRadius);
 
-            const mesh = new THREE.Mesh(baseGeo, material);
-            mesh.scale.set(cfg.radius, cfg.height, cfg.radius);
+            const centerWorldX = hub.hx;
+            const centerWorldZ = -2560 + hub.hz;
+            const centerGroundY = terrainHeightJS(centerWorldX, centerWorldZ);
+            centerMesh.position.set(hub.hx, centerGroundY + centralHeight * 0.42, hub.hz);
+            centerMesh.rotation.set(0.05, hubIdx * 0.85, 0.04);
+            this.spires.push(centerMesh);
+            this.group.add(centerMesh);
 
-            const worldX = cfg.x;
-            const worldZ = -2560 + cfg.z;
-            const groundY = terrainHeightJS(worldX, worldZ);
+            // Satellite jagged crystals tightly packed around the hub
+            for (let i = 0; i < hub.count; i++) {
+                const seed1 = Math.sin(hubIdx * 43.17 + i * 17.83) * 43758.5453;
+                const rng1 = seed1 - Math.floor(seed1);
+                const seed2 = Math.sin(hubIdx * 91.31 + i * 31.19) * 23421.6312;
+                const rng2 = seed2 - Math.floor(seed2);
+                const seed3 = Math.sin(hubIdx * 19.53 + i * 73.47) * 54321.9876;
+                const rng3 = seed3 - Math.floor(seed3);
 
-            mesh.position.set(cfg.x, groundY + cfg.height * 0.42, cfg.z);
-            mesh.rotation.set(cfg.tilt, cfg.rotY, cfg.tilt * 0.5);
+                const angle = rng1 * Math.PI * 2;
+                // Clustered heavily toward center of the hub with power curve
+                const rDist = 5.0 + Math.pow(rng2, 1.8) * hub.radiusSpread;
+                const lx = hub.hx + Math.cos(angle) * rDist;
+                const lz = hub.hz + Math.sin(angle) * rDist;
 
-            this.spires.push(mesh);
-            this.group.add(mesh);
+                // Path Clearance Check: Do not spawn inside walking paths
+                const pathDist = getPrismWalkingPathDistance(lx, lz);
+                if (pathDist < 12.0) {
+                    continue; // Leave walking path clear
+                }
+
+                const worldX = lx;
+                const worldZ = -2560 + lz;
+                const groundY = terrainHeightJS(worldX, worldZ);
+
+                // Jagged scale & geometry selection
+                let baseGeo = coneGeo;
+                let height = (18 + rng1 * 36) * hub.baseScale;
+                let radius = (2.2 + rng2 * 3.4) * hub.baseScale;
+
+                if (rng3 < 0.50) {
+                    baseGeo = coneGeo; // Quartz needle
+                } else if (rng3 < 0.76) {
+                    baseGeo = octaGeo; // Diamond geode
+                    height = (12 + rng1 * 18) * hub.baseScale;
+                    radius = height * 0.55;
+                } else if (rng3 < 0.90) {
+                    baseGeo = dodecaGeo; // Gem octahedron
+                    height = (10 + rng1 * 16) * hub.baseScale;
+                    radius = height * 0.5;
+                } else {
+                    baseGeo = cylGeo; // Hex pillar
+                    height = (24 + rng1 * 40) * hub.baseScale;
+                    radius = (3.0 + rng2 * 3.0) * hub.baseScale;
+                }
+
+                const mesh = new THREE.Mesh(baseGeo, material);
+                mesh.scale.set(radius, height, radius);
+
+                // Point outward / radiate tilt from cluster center
+                const outAngle = Math.atan2(lz - hub.hz, lx - hub.hx);
+                const tiltMag = 0.12 + rng1 * 0.28;
+                const tiltX = Math.cos(outAngle) * tiltMag;
+                const tiltZ = Math.sin(outAngle) * tiltMag;
+
+                mesh.position.set(lx, groundY + height * 0.40, lz);
+                mesh.rotation.set(tiltX, rng2 * Math.PI * 2, tiltZ);
+
+                this.spires.push(mesh);
+                this.group.add(mesh);
+            }
         });
 
-        // 2. Procedural Dense Crystal Fields (720+ Crystals scattered across 900m radius)
-        const totalProcedural = 720;
-        for (let i = 0; i < totalProcedural; i++) {
-            const seed1 = Math.sin(i * 12.9898 + 43.12) * 43758.5453;
-            const rng1 = seed1 - Math.floor(seed1);
-            const seed2 = Math.sin(i * 78.233 + 91.73) * 23421.6312;
-            const rng2 = seed2 - Math.floor(seed2);
-            const seed3 = Math.sin(i * 37.719 + 17.84) * 54321.9876;
-            const rng3 = seed3 - Math.floor(seed3);
-
-            const angle = rng1 * Math.PI * 2;
-            const dist = 15 + Math.pow(rng2, 0.75) * 896; // Concentrated toward center but spreads to 900m
-            const lx = Math.cos(angle) * dist;
-            const lz = Math.sin(angle) * dist;
+        // 2. Path Colonnades & Flanking Formations (Framing walking paths without blocking them)
+        const colonnadePoints = 96;
+        for (let i = 0; i < colonnadePoints; i++) {
+            const zStep = -240 + (i / colonnadePoints) * 480;
+            const mainPathX = Math.sin(zStep * 0.007) * 42.0;
+            const side = (i % 2 === 0) ? 1 : -1;
+            const shoulderDist = 18.0 + ((i * 7) % 8) * 1.5;
+            const lx = mainPathX + side * shoulderDist;
+            const lz = zStep;
 
             const worldX = lx;
             const worldZ = -2560 + lz;
             const groundY = terrainHeightJS(worldX, worldZ);
 
-            const typeChoice = rng3;
-            let baseGeo = coneGeo;
-            let height = 22 + (rng1 * 38);
-            let radius = 2.4 + (rng2 * 3.6);
+            const height = 30 + ((i * 13) % 24);
+            const radius = 3.2 + ((i * 5) % 4) * 0.6;
+            const geo = (i % 3 === 0) ? octaGeo : coneGeo;
 
-            if (typeChoice < 0.55) {
-                // Hexagonal quartz needle spire
-                baseGeo = coneGeo;
-            } else if (typeChoice < 0.80) {
-                // Diamond geode octahedron
-                baseGeo = octaGeo;
-                height = 10 + (rng1 * 18);
-                radius = height * 0.55;
-            } else if (typeChoice < 0.92) {
-                // Dodecahedral crystal gem
-                baseGeo = dodecaGeo;
-                height = 8 + (rng1 * 16);
-                radius = height * 0.5;
-            } else {
-                // Hexagonal quartz pillar
-                baseGeo = cylGeo;
-                height = 25 + (rng1 * 40);
-                radius = 3.2 + (rng2 * 3.0);
-            }
-
-            const mesh = new THREE.Mesh(baseGeo, material);
+            const mesh = new THREE.Mesh(geo, material);
             mesh.scale.set(radius, height, radius);
 
-            const tilt = (rng1 - 0.5) * 0.28;
-            const rotY = rng2 * Math.PI * 2;
-            const tiltZ = (rng3 - 0.5) * 0.24;
-
-            mesh.position.set(lx, groundY + height * 0.40, lz);
-            mesh.rotation.set(tilt, rotY, tiltZ);
+            // Tilt away from the walking path to create canyon framing
+            const tiltX = side * 0.18;
+            mesh.position.set(lx, groundY + height * 0.42, lz);
+            mesh.rotation.set(tiltX, i * 0.4, 0.05);
 
             this.spires.push(mesh);
             this.group.add(mesh);
         }
 
-        // 3. 280 Floating Resonant Shards Orbiting and Hovering over the land
-        for (let i = 0; i < 280; i++) {
+        // 3. Floating Resonant Shards Orbiting over Cluster Nodes and Path Flanks
+        for (let i = 0; i < 220; i++) {
             const seed = i * 7.31 + 13.9;
             const rSeed = Math.sin(seed) * 0.5 + 0.5;
             const shardGeo = (i % 3 === 0) ? dodecaGeo : octaGeo;
             const shard = new THREE.Mesh(shardGeo, material);
 
-            const baseAngle = (i / 280) * Math.PI * 2;
-            const radius = 20 + (i % 16) * 42 + rSeed * 22;
-            const scale = 2.2 + (i % 5) * 1.6;
-            const baseHeight = 12 + (i % 8) * 7.5;
+            const baseAngle = (i / 220) * Math.PI * 2;
+            const radius = 25 + (i % 14) * 32 + rSeed * 20;
+            const scale = 2.0 + (i % 5) * 1.5;
+            const baseHeight = 10 + (i % 8) * 6.5;
             const speed = 0.08 + (i % 4) * 0.06;
 
             const lx = Math.cos(baseAngle) * radius;
@@ -877,7 +918,7 @@ export class GroundCrystalFormations {
 
             item.mesh.position.x = lx;
             item.mesh.position.z = lz;
-            item.mesh.position.y = groundY + item.baseHeight + Math.sin(t * 1.2 + item.seed) * 2.5;
+            item.mesh.position.y = groundY + item.baseHeight + Math.sin(t * 1.2 + item.seed) * 2.2;
 
             item.mesh.rotation.y += dt * (0.15 + item.speed * 0.5);
             item.mesh.rotation.x += dt * 0.08;

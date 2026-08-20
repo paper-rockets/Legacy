@@ -661,6 +661,7 @@ export class UIManager {
             this.pipeline.applyBiomeBloom(bCfg.bloom);
             this.props.applyBiomeCloud(bCfg.bloom);
             if (this.skyCastles) this.skyCastles.applyBiomeCloud(bCfg.bloom);
+            this.lighting.switchBiome(biomeId, this.pipeline.scene);
         }
         if (this.devEditor && this.devEditor.isOpen) {
             this.devEditor.selectBiome(biomeId);
