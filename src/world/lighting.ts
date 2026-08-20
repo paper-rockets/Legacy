@@ -121,8 +121,8 @@ export class LightingSystem {
         this.dirLight.shadow.camera.right = 120;
         this.dirLight.shadow.camera.top = 120;
         this.dirLight.shadow.camera.bottom = -120;
-        this.dirLight.shadow.mapSize.width = 2048;
-        this.dirLight.shadow.mapSize.height = 2048;
+        this.dirLight.shadow.mapSize.width = 1024;
+        this.dirLight.shadow.mapSize.height = 1024;
         this.dirLight.shadow.bias = -0.0001;
         this.dirLight.shadow.normalBias = 0.05;
         scene.add(this.dirLight);

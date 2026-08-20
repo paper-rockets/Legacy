@@ -134,7 +134,7 @@ export class TerrainSystem {
     private shoreWaterYUniform = { value: 2.5 };
     private shoreWidthUniform = { value: 0.8 };
 
-    constructor(scene: THREE.Scene, initialRes: number = 128, initialStride?: number) {
+    constructor(scene: THREE.Scene, initialRes: number = 96, initialStride?: number) {
         this.currentRes = initialRes;
         this.gridStride = initialStride ?? (1600 / initialRes);
 

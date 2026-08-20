@@ -262,20 +262,20 @@ function attachStripedAttributes(geo: THREE.BufferGeometry, partType: number): T
 
 function buildSpiralLollipopGeometry(): THREE.BufferGeometry {
     // White sweet treat stick with candy cane red spiral stripe
-    const stickRaw = new THREE.CylinderGeometry(0.13, 0.15, 5.2, 20).translate(0, 2.6, 0);
+    const stickRaw = new THREE.CylinderGeometry(0.13, 0.15, 5.2, 8).translate(0, 2.6, 0);
     const stick = attachStripedAttributes(stickRaw, 0.0);
 
     // Thick glossy candy disc with smooth round bevel
-    const disc = attachAttributes(new THREE.CylinderGeometry(2.3, 2.3, 0.55, 48).rotateX(Math.PI / 2).translate(0, 5.2, 0), 2.0, [0.96, 0.48, 0.74]);
+    const disc = attachAttributes(new THREE.CylinderGeometry(2.3, 2.3, 0.55, 18).rotateX(Math.PI / 2).translate(0, 5.2, 0), 2.0, [0.96, 0.48, 0.74]);
 
-    // Concentric high-poly swirl rings
-    const ringOuter = attachAttributes(new THREE.TorusGeometry(1.75, 0.32, 20, 48).translate(0, 5.2, 0), 1.0, [0.72, 0.88, 1.0]);
-    const ringMid = attachAttributes(new THREE.TorusGeometry(1.10, 0.26, 20, 48).translate(0, 5.2, 0), 2.0, [1.0, 0.95, 0.60]);
-    const ringInner = attachAttributes(new THREE.TorusGeometry(0.52, 0.20, 16, 36).translate(0, 5.2, 0), 1.0, [0.98, 0.60, 0.82]);
-    const center = attachAttributes(new THREE.SphereGeometry(0.48, 20, 20).scale(1, 1, 0.7).translate(0, 5.2, 0), 2.0, [1.0, 1.0, 1.0]);
+    // Concentric swirl rings (lightweight, smooth normals)
+    const ringOuter = attachAttributes(new THREE.TorusGeometry(1.75, 0.30, 8, 18).translate(0, 5.2, 0), 1.0, [0.72, 0.88, 1.0]);
+    const ringMid = attachAttributes(new THREE.TorusGeometry(1.10, 0.24, 8, 16).translate(0, 5.2, 0), 2.0, [1.0, 0.95, 0.60]);
+    const ringInner = attachAttributes(new THREE.TorusGeometry(0.52, 0.18, 6, 12).translate(0, 5.2, 0), 1.0, [0.98, 0.60, 0.82]);
+    const center = attachAttributes(new THREE.SphereGeometry(0.48, 8, 8).scale(1, 1, 0.7).translate(0, 5.2, 0), 2.0, [1.0, 1.0, 1.0]);
 
     // Decorative candy ribbon wrapper collar
-    const collar = attachAttributes(new THREE.TorusGeometry(0.48, 0.16, 16, 24).rotateX(Math.PI / 2).translate(0, 2.7, 0), 1.0, [1.0, 0.95, 0.98]);
+    const collar = attachAttributes(new THREE.TorusGeometry(0.48, 0.14, 6, 12).rotateX(Math.PI / 2).translate(0, 2.7, 0), 1.0, [1.0, 0.95, 0.98]);
 
     const merged = mergeGeometries([stick, disc, ringOuter, ringMid, ringInner, center, collar], false) || disc;
     return merged;
@@ -283,28 +283,28 @@ function buildSpiralLollipopGeometry(): THREE.BufferGeometry {
 
 function buildSphericalLollipopGeometry(): THREE.BufferGeometry {
     // Treat stick
-    const stickRaw = new THREE.CylinderGeometry(0.13, 0.15, 4.8, 20).translate(0, 2.4, 0);
+    const stickRaw = new THREE.CylinderGeometry(0.13, 0.15, 4.8, 8).translate(0, 2.4, 0);
     const stick = attachStripedAttributes(stickRaw, 0.0);
 
     // Big round glossy pop
-    const sphere = attachAttributes(new THREE.SphereGeometry(1.85, 36, 30).translate(0, 4.8, 0), 2.0, [0.85, 0.65, 0.98]);
+    const sphere = attachAttributes(new THREE.SphereGeometry(1.85, 16, 12).translate(0, 4.8, 0), 2.0, [0.85, 0.65, 0.98]);
 
     // Tilted sugar crystal halo ring
-    const ring = attachAttributes(new THREE.TorusGeometry(1.55, 0.22, 18, 48).rotateX(Math.PI / 3.8).rotateZ(0.2).translate(0, 4.8, 0), 1.0, [1.0, 0.92, 0.55]);
+    const ring = attachAttributes(new THREE.TorusGeometry(1.55, 0.20, 8, 18).rotateX(Math.PI / 3.8).rotateZ(0.2).translate(0, 4.8, 0), 1.0, [1.0, 0.92, 0.55]);
 
     // Fluted wrapper twist collar
-    const collar = attachAttributes(new THREE.ConeGeometry(0.65, 0.75, 18).rotateX(Math.PI).translate(0, 3.2, 0), 1.0, [1.0, 1.0, 1.0]);
-    const gemTop = attachAttributes(new THREE.SphereGeometry(0.38, 16, 16).translate(0, 6.7, 0), 2.0, [0.98, 0.40, 0.65]);
+    const collar = attachAttributes(new THREE.ConeGeometry(0.65, 0.75, 8).rotateX(Math.PI).translate(0, 3.2, 0), 1.0, [1.0, 1.0, 1.0]);
+    const gemTop = attachAttributes(new THREE.SphereGeometry(0.38, 8, 8).translate(0, 6.7, 0), 2.0, [0.98, 0.40, 0.65]);
 
     const merged = mergeGeometries([stick, sphere, ring, collar, gemTop], false) || sphere;
     return merged;
 }
 
 function buildCandyCaneGeometry(): THREE.BufferGeometry {
-    const shaft = new THREE.CylinderGeometry(0.14, 0.14, 2.8, 16).translate(0, 1.4, 0);
-    const hook = new THREE.TorusGeometry(0.6, 0.14, 16, 24, Math.PI).rotateZ(-Math.PI).translate(0.6, 2.8, 0);
-    const tip = new THREE.SphereGeometry(0.14, 12, 12).translate(1.2, 2.8, 0);
-    const base = new THREE.SphereGeometry(0.14, 12, 12).translate(0, 0.05, 0);
+    const shaft = new THREE.CylinderGeometry(0.14, 0.14, 2.8, 8).translate(0, 1.4, 0);
+    const hook = new THREE.TorusGeometry(0.6, 0.14, 8, 12, Math.PI).rotateZ(-Math.PI).translate(0.6, 2.8, 0);
+    const tip = new THREE.SphereGeometry(0.14, 6, 6).translate(1.2, 2.8, 0);
+    const base = new THREE.SphereGeometry(0.14, 6, 6).translate(0, 0.05, 0);
     const nonAttrMerged = mergeGeometries([shaft, hook, tip, base], false) || shaft;
     const finalGeo = attachStripedAttributes(nonAttrMerged, 2.0);
     return finalGeo;
@@ -330,25 +330,25 @@ function buildCandyCaneClusterGeometry(): THREE.BufferGeometry {
 }
 
 function buildCottonCandyTreeGeometry(): THREE.BufferGeometry {
-    const stick = attachAttributes(new THREE.CylinderGeometry(0.18, 0.22, 4.5, 16).translate(0, 2.25, 0), 0.0, [1, 0.95, 0.98]);
-    const puffCenter = attachAttributes(new THREE.IcosahedronGeometry(1.7, 2).scale(1.15, 0.95, 1.1).translate(0, 5.2, 0), 2.0, [0.98, 0.60, 0.82]);
-    const puffL = attachAttributes(new THREE.IcosahedronGeometry(1.25, 2).scale(1.0, 0.85, 0.95).translate(-1.1, 4.6, 0.35), 2.0, [0.60, 0.85, 1.0]);
-    const puffR = attachAttributes(new THREE.IcosahedronGeometry(1.3, 2).scale(1.0, 0.9, 1.0).translate(1.05, 4.7, -0.3), 1.0, [1.0, 0.92, 0.55]);
-    const puffF = attachAttributes(new THREE.IcosahedronGeometry(1.15, 2).scale(0.95, 0.85, 1.0).translate(0.2, 4.4, 0.95), 2.0, [0.95, 0.55, 0.78]);
-    const puffB = attachAttributes(new THREE.IcosahedronGeometry(1.2, 2).scale(1.0, 0.85, 0.9).translate(-0.3, 4.5, -0.95), 1.0, [0.75, 0.65, 1.0]);
+    const stick = attachAttributes(new THREE.CylinderGeometry(0.18, 0.22, 4.5, 8).translate(0, 2.25, 0), 0.0, [1, 0.95, 0.98]);
+    const puffCenter = attachAttributes(new THREE.IcosahedronGeometry(1.7, 1).scale(1.15, 0.95, 1.1).translate(0, 5.2, 0), 2.0, [0.98, 0.60, 0.82]);
+    const puffL = attachAttributes(new THREE.IcosahedronGeometry(1.25, 1).scale(1.0, 0.85, 0.95).translate(-1.1, 4.6, 0.35), 2.0, [0.60, 0.85, 1.0]);
+    const puffR = attachAttributes(new THREE.IcosahedronGeometry(1.3, 1).scale(1.0, 0.9, 1.0).translate(1.05, 4.7, -0.3), 1.0, [1.0, 0.92, 0.55]);
+    const puffF = attachAttributes(new THREE.IcosahedronGeometry(1.15, 1).scale(0.95, 0.85, 1.0).translate(0.2, 4.4, 0.95), 2.0, [0.95, 0.55, 0.78]);
+    const puffB = attachAttributes(new THREE.IcosahedronGeometry(1.2, 1).scale(1.0, 0.85, 0.9).translate(-0.3, 4.5, -0.95), 1.0, [0.75, 0.65, 1.0]);
 
     const merged = mergeGeometries([stick, puffCenter, puffL, puffR, puffF, puffB], false) || puffCenter;
     return merged;
 }
 
 function buildGummyFlowerGeometry(): THREE.BufferGeometry {
-    const stem = attachAttributes(new THREE.CylinderGeometry(0.09, 0.11, 2.2, 12).translate(0, 1.1, 0), 0.0, [0.15, 0.85, 0.45]);
-    const p1 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(0, 2.2, 0.6), 2.0, [1.0, 0.85, 0.2]);
-    const p2 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(0.57, 2.2, 0.18), 2.0, [1.0, 0.85, 0.2]);
-    const p3 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(0.35, 2.2, -0.48), 2.0, [1.0, 0.85, 0.2]);
-    const p4 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(-0.35, 2.2, -0.48), 2.0, [1.0, 0.85, 0.2]);
-    const p5 = attachAttributes(new THREE.SphereGeometry(0.45, 12, 12).scale(1, 0.5, 1).translate(-0.57, 2.2, 0.18), 2.0, [1.0, 0.85, 0.2]);
-    const center = attachAttributes(new THREE.SphereGeometry(0.42, 14, 14).translate(0, 2.35, 0), 1.0, [0.98, 0.25, 0.45]);
+    const stem = attachAttributes(new THREE.CylinderGeometry(0.09, 0.11, 2.2, 8).translate(0, 1.1, 0), 0.0, [0.15, 0.85, 0.45]);
+    const p1 = attachAttributes(new THREE.SphereGeometry(0.45, 8, 6).scale(1, 0.5, 1).translate(0, 2.2, 0.6), 2.0, [1.0, 0.85, 0.2]);
+    const p2 = attachAttributes(new THREE.SphereGeometry(0.45, 8, 6).scale(1, 0.5, 1).translate(0.57, 2.2, 0.18), 2.0, [1.0, 0.85, 0.2]);
+    const p3 = attachAttributes(new THREE.SphereGeometry(0.45, 8, 6).scale(1, 0.5, 1).translate(0.35, 2.2, -0.48), 2.0, [1.0, 0.85, 0.2]);
+    const p4 = attachAttributes(new THREE.SphereGeometry(0.45, 8, 6).scale(1, 0.5, 1).translate(-0.35, 2.2, -0.48), 2.0, [1.0, 0.85, 0.2]);
+    const p5 = attachAttributes(new THREE.SphereGeometry(0.45, 8, 6).scale(1, 0.5, 1).translate(-0.57, 2.2, 0.18), 2.0, [1.0, 0.85, 0.2]);
+    const center = attachAttributes(new THREE.SphereGeometry(0.42, 8, 8).translate(0, 2.35, 0), 1.0, [0.98, 0.25, 0.45]);
     const merged = mergeGeometries([stem, p1, p2, p3, p4, p5, center], false) || center;
     return merged;
 }
@@ -821,13 +821,15 @@ export class TreeSystem {
 
     constructor(private scene: THREE.Scene) {}
 
-    public setupInstMesh(geo: THREE.BufferGeometry, mat: THREE.Material, capacity: number, castShadow: boolean = true): THREE.InstancedMesh {
+    public setupInstMesh(geo: THREE.BufferGeometry, mat: THREE.Material, capacity: number, castShadow: boolean = false): THREE.InstancedMesh {
+        if (!geo.boundingSphere) geo.computeBoundingSphere();
+        if (!geo.boundingBox) geo.computeBoundingBox();
         const inst = new THREE.InstancedMesh(geo, mat, capacity);
         inst.count = 0;
         inst.visible = false;
-        inst.castShadow = castShadow;
+        inst.castShadow = false;
         inst.receiveShadow = true;
-        inst.frustumCulled = false;
+        inst.frustumCulled = true;
         inst.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
         const trunkColorAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
         inst.geometry.setAttribute('aTrunkColor', trunkColorAttr);
@@ -1056,35 +1058,23 @@ export class TreeSystem {
             );
         };
 
-        // ── 2. Pre-Load Entire Tree Catalog (1 InstancedMesh per Archetype) ────
-        const loadPromises = TREE_CATALOG.map(async (item) => {
-            try {
-                const geo = await loadTreeGeometries(item.path, this.loader, item.scaleMultiplier ?? 1.0);
-                let mat = this.treeMat;
-                if (geo.map) {
-                    mat = this.treeMat.clone();
-                    mat.map = geo.map;
-                    mat.needsUpdate = true;
-                }
-                const treeInst = this.setupInstMesh(geo.treeGeo, mat, MAX_CAPACITY, true);
-                const entry: LoadedCatalogEntry = {
-                    item,
-                    treeGeo: geo.treeGeo,
-                    treeInst
-                };
-                this.catalogModelMap.set(item.id, entry);
-                this.catalogKeys.push(item.id);
-            } catch (err) {
-                console.warn(`[TreeSystem] Failed to load catalog item ${item.name} (${item.path}):`, err);
-            }
-        });
+        // ── 2. Instantly load priority models (procedural & starting biome models) ────
+        const initialBiomeId = globalConfigManager.config.activeBiomeId || 'candyland';
+        const initialBiomeCfg = globalConfigManager.getBiomeConfig(initialBiomeId);
+        const initialModelIds = new Set(
+            initialBiomeCfg?.vegetation?.selectedTreeModelIds || DEFAULT_BIOME_TREE_IDS[initialBiomeId] || []
+        );
 
-        await Promise.all(loadPromises);
+        // Priority items load synchronously during init; background items stream in later
+        const priorityItems = TREE_CATALOG.filter(it => it.path.startsWith('procedural:') || initialModelIds.has(it.id));
+        const backgroundItems = TREE_CATALOG.filter(it => !it.path.startsWith('procedural:') && !initialModelIds.has(it.id));
+
+        await Promise.all(priorityItems.map(it => this.ensureModelLoaded(it)));
 
         // ── 3. Bush Geometries ─────────────────────────────────────────────────
-        const bushRoundGeo = new THREE.IcosahedronGeometry(1.4, 2);
+        const bushRoundGeo = new THREE.IcosahedronGeometry(1.4, 1);
         bushRoundGeo.translate(0, 0.4, 0);
-        const bushFlatGeo = new THREE.IcosahedronGeometry(1.8, 2);
+        const bushFlatGeo = new THREE.IcosahedronGeometry(1.8, 1);
         bushFlatGeo.translate(0, 0.3, 0);
 
         for (const geo of [bushRoundGeo, bushFlatGeo]) {
@@ -1094,6 +1084,44 @@ export class TreeSystem {
 
         this.ready = true;
         this.dirty = true;
+
+        // Progressively stream remaining catalog models in background with delays to keep 60fps solid
+        (async () => {
+            for (const item of backgroundItems) {
+                await this.ensureModelLoaded(item);
+                await new Promise(r => setTimeout(r, 80));
+            }
+        })();
+    }
+
+    public async ensureModelLoaded(item: TreeCatalogItem): Promise<LoadedCatalogEntry | null> {
+        if (this.catalogModelMap.has(item.id)) {
+            return this.catalogModelMap.get(item.id)!;
+        }
+        try {
+            const geo = await loadTreeGeometries(item.path, this.loader, item.scaleMultiplier ?? 1.0);
+            let mat = this.treeMat;
+            if (geo.map) {
+                mat = this.treeMat.clone();
+                mat.map = geo.map;
+                mat.needsUpdate = true;
+            }
+            const treeInst = this.setupInstMesh(geo.treeGeo, mat, MAX_CAPACITY, false);
+            const entry: LoadedCatalogEntry = {
+                item,
+                treeGeo: geo.treeGeo,
+                treeInst
+            };
+            this.catalogModelMap.set(item.id, entry);
+            if (!this.catalogKeys.includes(item.id)) {
+                this.catalogKeys.push(item.id);
+            }
+            this.dirty = true;
+            return entry;
+        } catch (err) {
+            console.warn(`[TreeSystem] Failed to load catalog item ${item.name} (${item.path}):`, err);
+            return null;
+        }
     }
 
     public async loadCustomTreeModel(
@@ -1263,7 +1291,12 @@ export class TreeSystem {
             const entries: LoadedCatalogEntry[] = [];
             for (const mId of userModelIds) {
                 const entry = this.catalogModelMap.get(mId);
-                if (entry) entries.push(entry);
+                if (entry) {
+                    entries.push(entry);
+                } else {
+                    const catItem = TREE_CATALOG.find(it => it.id === mId);
+                    if (catItem) this.ensureModelLoaded(catItem);
+                }
             }
             biomeActiveModels[b] = entries;
         }
