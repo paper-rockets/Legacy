@@ -228,18 +228,34 @@ These are not theoretical. Each one burned turns during this session.
 
 ## 9. Safety - read before deleting anything
 
-**`src/` has never been committed to git.** It is not ignored; it was simply never added:
+**There are two nested git repositories. Know which one you are in.**
 
 ```
-git ls-files LEGACY/src/     ->  returns nothing
+E:\GAME FINAL RUN\           outer repo - does NOT track LEGACY/src/
+E:\GAME FINAL RUN\LEGACY\    LEGACY's own repo - DOES track src/, this is the one that matters
 ```
 
-A deleted file cannot be recovered with git. Byte-identical copies of everything the rebuild
-removed are in `GAME_PLAN/UI_OVERHAUL/_ARCHIVE/` (9 files, md5-verified). That is the only recovery
-path.
+Running `git ls-files LEGACY/src/` from the outer repo returns nothing, which makes it look like
+the source was never committed. That is misleading. **Always run git commands from inside
+`LEGACY/`.** All four deleted UI files are in LEGACY's history and can be recovered:
 
-Recommend to the owner that they run `git add -A && git commit` before further destructive work.
-Do not run it on their behalf.
+```bash
+git -C "E:/GAME FINAL RUN/LEGACY" log --oneline -- src/ui/devEditor.ts
+git -C "E:/GAME FINAL RUN/LEGACY" checkout <commit> -- src/ui/devEditor.ts
+```
+
+There are therefore two recovery paths, and they are not equivalent:
+
+1. **git history** - the last committed state of a file.
+2. **`GAME_PLAN/UI_OVERHAUL/_ARCHIVE/`** - 9 files, md5-verified byte-identical to the WORKING TREE
+   at the moment of archiving. Several were dirty relative to HEAD, so the archive holds
+   uncommitted edits that git history does not. Prefer the archive when restoring, precisely
+   because it captures that later state.
+
+Current work is committed on branch `menu-rebuild-snapshot` (commit `7a37c3a`), covering phases
+T0.1, T1.1 and T2.1. Note that the outer repo also has roughly 1300 untracked files including
+several hundred MB of `.glb` assets; do NOT run `git add -A` there, as git retains large blobs
+permanently.
 
 ---
 

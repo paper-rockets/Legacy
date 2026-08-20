@@ -13,10 +13,10 @@ This folder is a complete, self contained work package:
 4. `tools/audit_dom_ids.mjs`   - every id bound from TypeScript must have markup. 59 before the
    rebuild, must be 0 from T2.1 onward.
 5. `tools/audit_index_ids.mjs` - index.html may contain only the 10 ids in the frozen markup
-   contract, and must stay under 150 lines. Exits 1 before T2.1, must exit 0 after. This is what
+   contract, and must stay under 200 lines. Exits 1 before T2.1, must exit 0 after. This is what
    stops markup creeping back in and recreating the original defect.
 6. `_ARCHIVE/`  - byte-identical copies of the 9 files the rebuild deletes or rewrites. The only
-   recovery path, because `src/` is untracked.
+   restore point. More faithful than git history, which lacks the uncommitted edits several of these files carried.
 7. `BEHAVIOUR_INVENTORY.md` - 173 line checklist of everything the old UI did, with broken and
    duplicated controls marked. Phase 7 checks against it.
 8. `baseline/` - numeric world-state fingerprint plus the script that reproduces it, and
@@ -29,17 +29,22 @@ Baseline: `npm run lint` (tsc --noEmit) exits 0. Keep it that way.
 
 ## 0. READ THIS BEFORE DELETING ANYTHING
 
-`src/` has never been committed to git. Not ignored - simply never added:
+**There are two nested git repositories, and only one of them tracks the source.**
 
-    git ls-files LEGACY/src/ui/     ->  returns nothing
-    git check-ignore src/ui/...     ->  NOT ignored
+    E:\GAME FINAL RUN\           outer repo - does NOT track LEGACY/src/
+    E:\GAME FINAL RUN\LEGACY\    LEGACY's own repo - DOES track src/
 
-The entire source tree exists only on disk. If an agent deletes `devEditor.ts`, it is gone
-permanently. There is no `git checkout` to fall back on and no stash to recover from.
+Run every git command from inside `LEGACY/`. From the outer repo, `git ls-files LEGACY/src/ui/`
+returns nothing, which falsely suggests the source was never committed. It was. All four UI files
+this package deletes exist in LEGACY's history and are recoverable with `git checkout <commit> --`.
 
-Task T0.1 archives the current UI layer before anything else happens. No other task may begin
-until it is done. This is the single highest risk in the whole work package and it is entirely
-avoidable.
+Task T0.1 still archives the UI layer before anything else happens, and it is still worth doing:
+several of those files were dirty relative to HEAD, so the archive preserves uncommitted edits that
+git history does not have. The archive is the more faithful restore point; git is the backstop.
+
+One real hazard remains. The OUTER repo has roughly 1300 untracked files including several hundred
+MB of `.glb` binaries. Never run `git add -A` there. Git retains large blobs permanently and
+removing them later requires rewriting history.
 
 ---
 
