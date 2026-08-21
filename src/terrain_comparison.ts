@@ -105,11 +105,11 @@ function heightGeothermalOption3(x: number, z: number): number {
 }
 
 // ── Colors for Geothermal Ridge ─────────────────────────────────────────────
-const colLow = new THREE.Color('#d97706');
-const colHigh = new THREE.Color('#f59e0b');
-const colDirt = new THREE.Color('#27272a');
-const colPath = new THREE.Color('#9a3412');
-const colSand = new THREE.Color('#fde68a');
+const colLow = new THREE.Color('#f97316');
+const colHigh = new THREE.Color('#fbbf24');
+const colDirt = new THREE.Color('#78350f');
+const colPath = new THREE.Color('#ea580c');
+const colSand = new THREE.Color('#fef08a');
 
 // ── Gradient Texture for Toon Material ──────────────────────────────────────
 const gradientColors = new Uint8Array([
@@ -127,8 +127,8 @@ gradientMap.generateMipmaps = false;
 function createStillWaterMaterial(): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
         uniforms: {
-            uWaterColor: { value: new THREE.Color('#0284c7') },
-            uDeepColor: { value: new THREE.Color('#0369a1') },
+            uWaterColor: { value: new THREE.Color('#06b6d4') },
+            uDeepColor: { value: new THREE.Color('#0891b2') },
             uSunDir: { value: new THREE.Vector3(0.5, 0.8, 0.3).normalize() },
             uReflectivity: { value: 0.35 }
         },

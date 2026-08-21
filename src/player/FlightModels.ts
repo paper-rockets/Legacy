@@ -89,5 +89,22 @@ export const FLIGHT_MODELS: FlightModelDef[] = [
         scale: 1.0,
         rotY: Math.PI,
         offsetY: -0.2
+    },
+    {
+        id: 'charizard',
+        name: 'Charizard (Dragon)',
+        file: '/dRAGON/charizard_flying_animation.glb',
+        preferredAnim: 'Flying',
+        scale: 1.0,
+        rotY: Math.PI,
+        offsetY: -0.5
+    },
+    {
+        id: 'minecraft_ender_dragon',
+        name: 'Minecraft Ender Dragon',
+        file: '/Assets/Flight/minecraft_ender_dragon.glb',
+        scale: 0.35,
+        rotY: Math.PI,
+        offsetY: -0.2
     }
 ];

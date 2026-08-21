@@ -43,11 +43,11 @@ export const TERRAIN_PALETTES: Record<string, TerrainColorsSettings> = {
         isToonMode: true
     },
     'Autumn Warmth': {
-        colorLow: '#d97706',
-        colorHigh: '#f59e0b',
-        colorDirt: '#27272a',
-        colorPath: '#9a3412',
-        colorSand: '#fde68a',
+        colorLow: '#f97316',
+        colorHigh: '#fbbf24',
+        colorDirt: '#78350f',
+        colorPath: '#ea580c',
+        colorSand: '#fef08a',
         presetName: 'Autumn Warmth',
         isToonMode: true
     },
@@ -76,6 +76,15 @@ export const TERRAIN_PALETTES: Record<string, TerrainColorsSettings> = {
         colorPath: '#c084fc',
         colorSand: '#fae8ff',
         presetName: 'Celestial Haven',
+        isToonMode: true
+    },
+    'Coastal Breeze': {
+        colorLow: '#10b981',
+        colorHigh: '#4ade80',
+        colorDirt: '#a16207',
+        colorPath: '#fb923c',
+        colorSand: '#fde047',
+        presetName: 'Coastal Breeze',
         isToonMode: true
     }
 };
@@ -118,13 +127,22 @@ export class TerrainSystem {
     public lastPlayerZ: number = 0;
     public gridStride: number = 12.5;
     public currentRes: number = 128;
+    public currentWidth: number = 1600;
+    public currentDepth: number = 1600;
+    public currentResX: number = 128;
+    public currentResZ: number = 128;
+    private latticeMap!: Int32Array;
+    private latticeHeights!: Float32Array;
+    private latticeColorsR!: Float32Array;
+    private latticeColorsG!: Float32Array;
+    private latticeColorsB!: Float32Array;
 
     private biomeColors: Record<BiomeId, BiomeColorSet> = {
         candyland: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         meadow: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         archipelago: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         geothermal: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
-        estuary: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
+        fishing_village: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         redwood: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() },
         sky_citadel: { low: new THREE.Color(), high: new THREE.Color(), dirt: new THREE.Color(), path: new THREE.Color(), sand: new THREE.Color() }
     };
@@ -133,6 +151,32 @@ export class TerrainSystem {
     private shoreColorUniform = { value: new THREE.Color(0xffffff) };
     private shoreWaterYUniform = { value: 2.5 };
     private shoreWidthUniform = { value: 0.8 };
+
+    private createFacetedGeometry(width: number, depth: number, resX: number, resZ: number): THREE.BufferGeometry {
+        const baseGeo = new THREE.PlaneGeometry(width, depth, resX, resZ);
+        if (baseGeo.index) {
+            this.latticeMap = new Int32Array(baseGeo.index.array);
+        }
+        baseGeo.rotateX(-Math.PI / 2);
+        const nonIndexed = setupFacetedBarycentricGeometry(baseGeo);
+        const vertCount = nonIndexed.attributes.position.count;
+        nonIndexed.setAttribute('color', new THREE.BufferAttribute(new Float32Array(vertCount * 3), 3));
+
+        const latticeCount = (resX + 1) * (resZ + 1);
+        this.latticeHeights = new Float32Array(latticeCount);
+        this.latticeColorsR = new Float32Array(latticeCount);
+        this.latticeColorsG = new Float32Array(latticeCount);
+        this.latticeColorsB = new Float32Array(latticeCount);
+
+        this.currentWidth = width;
+        this.currentDepth = depth;
+        this.currentResX = resX;
+        this.currentResZ = resZ;
+        this.currentRes = resX;
+        this.gridStride = width / resX;
+
+        return nonIndexed;
+    }
 
     constructor(scene: THREE.Scene, initialRes: number = 96, initialStride?: number) {
         this.currentRes = initialRes;
@@ -379,9 +423,7 @@ export class TerrainSystem {
 
         this.updateActiveMaterial();
 
-        const baseGeo = new THREE.PlaneGeometry(1600, 1600, initialRes, initialRes);
-        baseGeo.rotateX(-Math.PI / 2);
-        this.geometry = setupFacetedBarycentricGeometry(baseGeo) as THREE.PlaneGeometry;
+        this.geometry = this.createFacetedGeometry(1200, 1200, initialRes, initialRes) as THREE.PlaneGeometry;
         this.mesh = new THREE.Mesh(this.geometry, this.terrainMat);
         this.mesh.receiveShadow = true;
         scene.add(this.mesh);
@@ -390,22 +432,18 @@ export class TerrainSystem {
     }
 
     public setGraphicsProfile(profile: 'high_performance' | 'regular'): void {
-        const width = profile === 'regular' ? 1200 : 1600;
-        const depth = profile === 'regular' ? 1000 : 1600;
-        const resX = profile === 'regular' ? 96 : 128;
-        const resZ = profile === 'regular' ? 80 : 128;
+        const width = profile === 'regular' ? 1000 : 1200;
+        const depth = profile === 'regular' ? 1000 : 1200;
+        const resX = profile === 'regular' ? 80 : 96;
+        const resZ = profile === 'regular' ? 80 : 96;
         this.rebuildDimensions(width, depth, resX, resZ);
     }
 
     public rebuildDimensions(width: number, depth: number, resX: number, resZ: number): void {
         if (!this.mesh) return;
         this.geometry.dispose();
-        const baseGeo = new THREE.PlaneGeometry(width, depth, resX, resZ);
-        baseGeo.rotateX(-Math.PI / 2);
-        this.geometry = setupFacetedBarycentricGeometry(baseGeo) as THREE.PlaneGeometry;
+        this.geometry = this.createFacetedGeometry(width, depth, resX, resZ) as THREE.PlaneGeometry;
         this.mesh.geometry = this.geometry;
-        this.currentRes = resX;
-        this.gridStride = width / resX;
         this.invalidateAndRedraw();
     }
 
@@ -423,7 +461,7 @@ export class TerrainSystem {
     }
 
     public reloadColorsFromConfig(redraw: boolean = true): void {
-        const biomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
+        const biomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'fishing_village', 'redwood'];
         for (const b of biomes) {
             const cfg = globalConfigManager.getBiomeConfig(b).terrain;
             const set = this.biomeColors[b];
@@ -586,14 +624,10 @@ export class TerrainSystem {
         const px = playerX !== undefined ? playerX : this.lastPlayerX;
         const pz = playerZ !== undefined ? playerZ : this.lastPlayerZ;
 
-        const computedStride = stride || (1600 / res);
-        if (this.currentRes === res && this.gridStride === computedStride) return;
-        this.currentRes = res;
-        this.gridStride = computedStride;
+        const computedStride = stride || (this.currentWidth / res);
+        if (this.currentResX === res && this.currentResZ === res && this.gridStride === computedStride) return;
         this.geometry.dispose();
-        const baseGeo = new THREE.PlaneGeometry(1600, 1600, res, res);
-        baseGeo.rotateX(-Math.PI / 2);
-        this.geometry = setupFacetedBarycentricGeometry(baseGeo) as THREE.PlaneGeometry;
+        this.geometry = this.createFacetedGeometry(this.currentWidth, this.currentDepth, res, res) as THREE.PlaneGeometry;
         this.mesh.geometry = this.geometry;
         this.lastGridX = -99999;
         this.lastGridZ = -99999;
@@ -621,70 +655,105 @@ export class TerrainSystem {
         }
         const colors = this.geometry.attributes.color as THREE.BufferAttribute;
 
-        const biomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'estuary', 'redwood'];
+        const biomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'fishing_village', 'redwood'];
+        const resX = this.currentResX;
+        const resZ = this.currentResZ;
+        const width = this.currentWidth;
+        const depth = this.currentDepth;
+        const latticeHeights = this.latticeHeights;
+        const latticeR = this.latticeColorsR;
+        const latticeG = this.latticeColorsG;
+        const latticeB = this.latticeColorsB;
 
-        for (let i = 0; i < pos.count; i++) {
-            const worldX = pos.getX(i) + gridX;
-            const worldZ = pos.getZ(i) + gridZ;
-            const w = getBiomeWeights(worldX, worldZ);
-            const h = terrainHeightWithWeights(worldX, worldZ, w);
-            pos.setY(i, h);
+        const invResX = 1.0 / resX;
+        const invResZ = 1.0 / resZ;
 
-            let lowR = 0, lowG = 0, lowB = 0;
-            let highR = 0, highG = 0, highB = 0;
-            let dirtR = 0, dirtG = 0, dirtB = 0;
-            let pathR = 0, pathG = 0, pathB = 0;
-            let sandR = 0, sandG = 0, sandB = 0;
+        let k = 0;
+        for (let iz = 0; iz <= resZ; iz++) {
+            const localZ = (iz * invResZ - 0.5) * depth;
+            const worldZ = localZ + gridZ;
+            for (let ix = 0; ix <= resX; ix++) {
+                const localX = (ix * invResX - 0.5) * width;
+                const worldX = localX + gridX;
 
-            for (const b of biomes) {
-                const weight = w[b];
-                if (weight <= 0.0001) continue;
-                const bc = this.biomeColors[b];
-                lowR += bc.low.r * weight; lowG += bc.low.g * weight; lowB += bc.low.b * weight;
-                highR += bc.high.r * weight; highG += bc.high.g * weight; highB += bc.high.b * weight;
-                dirtR += bc.dirt.r * weight; dirtG += bc.dirt.g * weight; dirtB += bc.dirt.b * weight;
-                pathR += bc.path.r * weight; pathG += bc.path.g * weight; pathB += bc.path.b * weight;
-                sandR += bc.sand.r * weight; sandG += bc.sand.g * weight; sandB += bc.sand.b * weight;
-            }
+                const w = getBiomeWeights(worldX, worldZ);
+                const h = terrainHeightWithWeights(worldX, worldZ, w);
+                latticeHeights[k] = h;
 
-            // Smooth macro-variation
-            const macroNoise = snoise(worldX * 0.005, worldZ * 0.005) * 3.5;
+                let lowR = 0, lowG = 0, lowB = 0;
+                let highR = 0, highG = 0, highB = 0;
+                let dirtR = 0, dirtG = 0, dirtB = 0;
+                let pathR = 0, pathG = 0, pathB = 0;
+                let sandR = 0, sandG = 0, sandB = 0;
 
-            // 1. Smooth Lowland to Highland gradient
-            const grassWeight = smoothstep(2.0, 44.0, h + macroNoise);
-            let r = lowR * (1.0 - grassWeight) + highR * grassWeight;
-            let g = lowG * (1.0 - grassWeight) + highG * grassWeight;
-            let b = lowB * (1.0 - grassWeight) + highB * grassWeight;
-
-            // 2. Continuous mountain dirt/rock transition
-            const dirtWeight = smoothstep(36.0, 74.0, h + macroNoise * 0.5);
-            if (dirtWeight > 0.0) {
-                r = r * (1.0 - dirtWeight) + dirtR * dirtWeight;
-                g = g * (1.0 - dirtWeight) + dirtG * dirtWeight;
-                b = b * (1.0 - dirtWeight) + dirtB * dirtWeight;
-            }
-
-            // 3. Smooth shoreline sand blend below 5.2m
-            const sandWeight = smoothstep(5.2, 1.8, h);
-            if (sandWeight > 0.0) {
-                r = r * (1.0 - sandWeight) + sandR * sandWeight;
-                g = g * (1.0 - sandWeight) + sandG * sandWeight;
-                b = b * (1.0 - sandWeight) + sandB * sandWeight;
-            }
-
-            // 4. Exploration pathways
-            const pStrength = getPathStrength(worldX, worldZ);
-            if (pStrength > 0.0) {
-                const pathMask = smoothstep(3.0, 7.0, h);
-                const pathWeight = pStrength * pathMask * (1.0 - dirtWeight) * (1.0 - sandWeight);
-                if (pathWeight > 0.001) {
-                    r = r * (1.0 - pathWeight) + pathR * pathWeight;
-                    g = g * (1.0 - pathWeight) + pathG * pathWeight;
-                    b = b * (1.0 - pathWeight) + pathB * pathWeight;
+                for (let bi = 0; bi < biomes.length; bi++) {
+                    const b = biomes[bi];
+                    const weight = w[b];
+                    if (weight <= 0.0001) continue;
+                    const bc = this.biomeColors[b];
+                    lowR += bc.low.r * weight; lowG += bc.low.g * weight; lowB += bc.low.b * weight;
+                    highR += bc.high.r * weight; highG += bc.high.g * weight; highB += bc.high.b * weight;
+                    dirtR += bc.dirt.r * weight; dirtG += bc.dirt.g * weight; dirtB += bc.dirt.b * weight;
+                    pathR += bc.path.r * weight; pathG += bc.path.g * weight; pathB += bc.path.b * weight;
+                    sandR += bc.sand.r * weight; sandG += bc.sand.g * weight; sandB += bc.sand.b * weight;
                 }
-            }
 
-            colors.setXYZ(i, r, g, b);
+                // Smooth macro-variation
+                const macroNoise = snoise(worldX * 0.005, worldZ * 0.005) * 3.5;
+
+                // 1. Smooth Lowland to Highland gradient
+                const grassWeight = smoothstep(2.0, 44.0, h + macroNoise);
+                let r = lowR * (1.0 - grassWeight) + highR * grassWeight;
+                let g = lowG * (1.0 - grassWeight) + highG * grassWeight;
+                let b = lowB * (1.0 - grassWeight) + highB * grassWeight;
+
+                // 2. Continuous mountain dirt/rock transition
+                const dirtWeight = smoothstep(36.0, 74.0, h + macroNoise * 0.5);
+                if (dirtWeight > 0.0) {
+                    r = r * (1.0 - dirtWeight) + dirtR * dirtWeight;
+                    g = g * (1.0 - dirtWeight) + dirtG * dirtWeight;
+                    b = b * (1.0 - dirtWeight) + dirtB * dirtWeight;
+                }
+
+                // 3. Smooth shoreline sand blend below 6.2m
+                const sandWeight = smoothstep(6.2, 1.4, h);
+                if (sandWeight > 0.0) {
+                    r = r * (1.0 - sandWeight) + sandR * sandWeight;
+                    g = g * (1.0 - sandWeight) + sandG * sandWeight;
+                    b = b * (1.0 - sandWeight) + sandB * sandWeight;
+                }
+
+                // 4. Exploration pathways
+                const pStrength = getPathStrength(worldX, worldZ);
+                if (pStrength > 0.0) {
+                    const pathMask = smoothstep(3.0, 7.0, h);
+                    const pathWeight = pStrength * pathMask * (1.0 - dirtWeight) * (1.0 - sandWeight);
+                    if (pathWeight > 0.001) {
+                        r = r * (1.0 - pathWeight) + pathR * pathWeight;
+                        g = g * (1.0 - pathWeight) + pathG * pathWeight;
+                        b = b * (1.0 - pathWeight) + pathB * pathWeight;
+                    }
+                }
+
+                latticeR[k] = r;
+                latticeG[k] = g;
+                latticeB[k] = b;
+                k++;
+            }
+        }
+
+        // Scatter lattice height and color to non-indexed vertices directly in typed arrays
+        const posArray = pos.array as Float32Array;
+        const colArray = colors.array as Float32Array;
+        const latticeMap = this.latticeMap;
+        const vertCount = pos.count;
+
+        for (let i = 0; i < vertCount; i++) {
+            const latIdx = latticeMap[i];
+            posArray[i * 3 + 1] = latticeHeights[latIdx];
+            colArray[i * 3]     = latticeR[latIdx];
+            colArray[i * 3 + 1] = latticeG[latIdx];
+            colArray[i * 3 + 2] = latticeB[latIdx];
         }
 
         this.geometry.computeVertexNormals();

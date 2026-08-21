@@ -334,9 +334,9 @@ export const FACTORY_CONFIG: AppConfig = {
                 selectedTreeModelIds: ['candy_cotton_cloud', 'candy_lollipop_spiral', 'candy_lollipop_sphere', 'candy_cane_cluster', 'candy_gummy_flower']
             },
             phases: createDefaultPhases(
-                '#c7d2fe', '#fbcfe8', '#fdf4ff', '#fffbeb',
-                '#f472b6', '#fbcfe8', '#fdf2f8', '#fb923c',
-                '#312e81', '#4338ca', '#6366f1', '#818cf8'
+                '#fbcfe8', '#fbcfe8', '#fdf4ff', '#fffbeb',
+                '#f472b6', '#f472b6', '#fdf2f8', '#fb923c',
+                '#312e81', '#312e81', '#6366f1', '#818cf8'
             )
         },
         meadow: {
@@ -453,111 +453,171 @@ export const FACTORY_CONFIG: AppConfig = {
             id: 'geothermal',
             name: 'Geothermal',
             terrain: {
-                colorLow: '#d97706',
-                colorHigh: '#f59e0b',
-                colorDirt: '#27272a',
-                colorPath: '#9a3412',
-                colorSand: '#fde68a',
+                colorLow: '#f97316',
+                colorHigh: '#fbbf24',
+                colorDirt: '#78350f',
+                colorPath: '#ea580c',
+                colorSand: '#fef08a',
                 presetName: 'Autumn Warmth',
                 isToonMode: true
             },
             water: {
-                color: '#0284c7',
-                opacity: 0.88,
-                reflectivity: 0.55,
-                roughness: 0.25,
-                metalness: 0.10,
-                clearcoat: 0.7,
-                clearcoatRoughness: 0.2,
-                isToonMode: false
-            },
-            bloom: {
-                globalStrength: 0.0,
-                globalRadius: 0.0,
-                globalThreshold: 0.70,
-                cloudBloom: 0.0,
-                cloudColor: '#fed7aa',
-                cloudEmissive: '#ffedd5',
-                treeBloom: 0.0,
-                treeCanopyGlow: 0.0,
-                treeTrunkGlow: 0.0,
-                bushBloom: 0.0,
-                bushGlow: 0.0,
-                shoreBloom: 0.0,
-                shoreColor: '#fed7aa',
-                shoreWidth: 1.1
-            },
-            vegetation: {
-                treeScale: 22.5,
-                treeDensity: 200,
-                bushScale: 0.95,
-                bushDensity: 0,
-                bioluminescence: 0.35,
-                canopyColors: ['#ff3300', '#ff7700', '#ffaa00', '#cc1100', '#f59e0b'],
-                trunkColors: ['#27272a', '#3f3f46', '#1c1917'],
-                activePreset: 'geothermal',
-                selectedTreeModelIds: ['veg_cartoon_8', 'veg_cartoon_10', 'veg_tree_var4']
-            },
-            phases: createDefaultPhases(
-                '#fdba74', '#fdba74', '#ffedd5', '#fff7ed',
-                '#dc2626', '#dc2626', '#450a0a', '#ea580c',
-                '#1c1917', '#1c1917', '#78350f', '#f97316'
-            )
-        },
-        estuary: {
-            id: 'estuary',
-            name: 'Estuary',
-            terrain: {
-                colorLow: '#10b981',
-                colorHigh: '#06b6d4',
-                colorDirt: '#ec4899',
-                colorPath: '#a855f7',
-                colorSand: '#fed7aa',
-                presetName: 'Candy Meadow',
-                isToonMode: true
-            },
-            water: {
                 color: '#06b6d4',
-                opacity: 0.70,
+                opacity: 0.82,
                 reflectivity: 0.85,
-                roughness: 0.10,
+                roughness: 0.12,
                 metalness: 0.05,
                 clearcoat: 0.95,
                 clearcoatRoughness: 0.10,
                 isToonMode: false
             },
             bloom: {
-                globalStrength: 0.0,
-                globalRadius: 0.0,
+                globalStrength: 0.2,
+                globalRadius: 0.05,
                 globalThreshold: 0.70,
                 cloudBloom: 0.0,
-                cloudColor: '#a7f3d0',
-                cloudEmissive: '#ccfbf1',
+                cloudColor: '#fed7aa',
+                cloudEmissive: '#fff7ed',
                 treeBloom: 0.0,
                 treeCanopyGlow: 0.0,
                 treeTrunkGlow: 0.0,
                 bushBloom: 0.0,
                 bushGlow: 0.0,
-                shoreBloom: 0.0,
-                shoreColor: '#00f5d4',
-                shoreWidth: 1.2
+                shoreBloom: 1.2,
+                shoreColor: '#fef08a',
+                shoreWidth: 1.5
             },
             vegetation: {
                 treeScale: 22.5,
                 treeDensity: 200,
+                bushScale: 0.95,
+                bushDensity: 0,
+                bioluminescence: 0.45,
+                canopyColors: ['#f97316', '#fbbf24', '#f43f5e', '#fde047', '#fb7185', '#10b981'],
+                trunkColors: ['#78350f', '#9a3412', '#b45309', '#522e18'],
+                activePreset: 'geothermal',
+                selectedTreeModelIds: ['veg_cartoon_8', 'veg_cartoon_10', 'veg_tree_var4']
+            },
+            phases: [
+                {
+                    bg: '#fed7aa', fog: '#fed7aa', fogNear: 80, fogFar: 600,
+                    amb: '#fffbeb', ambI: 0.65,
+                    dir: '#fff7ed', dirI: 0.95,
+                    dirPos: { x: 250, y: 350, z: -200 },
+                    hemi: 0.48,
+                    sunI: 0.95, sunC: '#fef08a',
+                    sunPos: { x: 350, y: 400, z: -850 },
+                    sunScale: 1.1,
+                    starOp: 0.0
+                },
+                {
+                    bg: '#fb7185', fog: '#fb7185', fogNear: 70, fogFar: 550,
+                    amb: '#831843', ambI: 0.55,
+                    dir: '#fb923c', dirI: 0.90,
+                    dirPos: { x: 0, y: 45, z: -600 },
+                    hemi: 0.38,
+                    sunI: 1.0, sunC: '#ff7700',
+                    sunPos: { x: 0, y: 15, z: -700 },
+                    sunScale: 1.6,
+                    starOp: 0.1
+                },
+                {
+                    bg: '#1e1b4b', fog: '#1e1b4b', fogNear: 60, fogFar: 500,
+                    amb: '#312e81', ambI: 0.75,
+                    dir: '#f59e0b', dirI: 0.65,
+                    dirPos: { x: 100, y: 250, z: -100 },
+                    hemi: 0.42,
+                    sunI: 0.0, sunC: '#000000',
+                    sunPos: { x: 0, y: -300, z: -800 },
+                    sunScale: 0.1,
+                    starOp: 0.95
+                }
+            ]
+        },
+        fishing_village: {
+            id: 'fishing_village',
+            name: 'Fishing Village',
+            terrain: {
+                colorLow: '#10b981',
+                colorHigh: '#4ade80',
+                colorDirt: '#a16207',
+                colorPath: '#fb923c',
+                colorSand: '#fde047',
+                presetName: 'Coastal Breeze',
+                isToonMode: true
+            },
+            water: {
+                color: '#0284c7',
+                opacity: 0.82,
+                reflectivity: 0.95,
+                roughness: 0.04,
+                metalness: 0.05,
+                clearcoat: 0.98,
+                clearcoatRoughness: 0.04,
+                isToonMode: false
+            },
+            bloom: {
+                globalStrength: 0.15,
+                globalRadius: 0.0,
+                globalThreshold: 0.75,
+                cloudBloom: 0.0,
+                cloudColor: '#e0f2fe',
+                cloudEmissive: '#f0fdf4',
+                treeBloom: 0.0,
+                treeCanopyGlow: 0.0,
+                treeTrunkGlow: 0.0,
+                bushBloom: 0.0,
+                bushGlow: 0.0,
+                shoreBloom: 0.45,
+                shoreColor: '#67e8f9',
+                shoreWidth: 1.8
+            },
+            vegetation: {
+                treeScale: 18.0,
+                treeDensity: 220,
                 bushScale: 1.25,
                 bushDensity: 0,
-                bioluminescence: 0.35,
-                canopyColors: ['#00f5d4', '#00bbf9', '#f72585', '#7209b7', '#4cc9f0', '#10b981'],
-                trunkColors: ['#ffffff', '#e0f2fe', '#fce7f3'],
-                activePreset: 'estuary',
-                selectedTreeModelIds: ['veg_palm_a', 'veg_palm_c', 'veg_fantasy_jungle', 'veg_clover_2']
+                bioluminescence: 0.0,
+                canopyColors: ['#10b981', '#22c55e', '#16a34a', '#4ade80', '#059669', '#84cc16'],
+                trunkColors: ['#78350f', '#854d0e', '#92400e', '#5c2c10'],
+                activePreset: 'fishing_village',
+                selectedTreeModelIds: ['veg_palm_a', 'veg_palm_c', 'veg_tree_broadleaf_1', 'veg_cartoon_1', 'veg_clover_2']
             },
-            phases: createDefaultPhases(
-                '#34d399', '#34d399', '#a7f3d0', '#ecfdf5',
-                '#8b5cf6', '#8b5cf6', '#4c1d95', '#c084fc',
-                '#064e3b', '#064e3b', '#047857', '#00f5d4'
-            )
+            phases: [
+                {
+                    bg: '#38bdf8', fog: '#38bdf8', fogNear: 450, fogFar: 3600,
+                    amb: '#bae6fd', ambI: 0.85,
+                    dir: '#ffffff', dirI: 1.25,
+                    dirPos: { x: 250, y: 350, z: -200 },
+                    hemi: 0.52,
+                    sunI: 1.3, sunC: '#fffbeb',
+                    sunPos: { x: 350, y: 400, z: -850 },
+                    sunScale: 1.2,
+                    starOp: 0.0
+                },
+                {
+                    bg: '#ea580c', fog: '#f97316', fogNear: 350, fogFar: 3200,
+                    amb: '#7c2d12', ambI: 0.75,
+                    dir: '#fed7aa', dirI: 1.15,
+                    dirPos: { x: 0, y: 45, z: -600 },
+                    hemi: 0.40,
+                    sunI: 1.3, sunC: '#ff5511',
+                    sunPos: { x: 0, y: 15, z: -700 },
+                    sunScale: 1.6,
+                    starOp: 0.1
+                },
+                {
+                    bg: '#0369a1', fog: '#0c4a6e', fogNear: 300, fogFar: 2800,
+                    amb: '#0284c7', ambI: 0.75,
+                    dir: '#38bdf8', dirI: 0.85,
+                    dirPos: { x: 100, y: 250, z: -100 },
+                    hemi: 0.45,
+                    sunI: 0.0, sunC: '#000000',
+                    sunPos: { x: 0, y: -300, z: -800 },
+                    sunScale: 0.1,
+                    starOp: 0.95
+                }
+            ]
         },
         redwood: {
             id: 'redwood',

@@ -155,6 +155,7 @@ export class VortexDemoApp {
         'Princess.glb':                      { x: 0.000, y: 0.000 },
         'porco_rosso_-_seaplane.glb':        { x: 0.245, y: 0.175 },
         'mitsubishi_b2m2_-_game_art_1_stylized_plane.glb': { x: 0.000, y: 0.000 },
+        'charizard_flying_animation.glb':    { x: 0.230, y: 0.150 },
     };
 
     // Per-model default visual scaling and rotation adjustments
@@ -171,6 +172,7 @@ export class VortexDemoApp {
         'Princess.glb':                                   { scale: 0.85, rotY: Math.PI },
         'porco_rosso_-_seaplane.glb':                     { scale: 0.18 },
         'mitsubishi_b2m2_-_game_art_1_stylized_plane.glb':{ scale: 0.22, rotY: Math.PI },
+        'charizard_flying_animation.glb':                 { scale: 0.65, rotY: Math.PI },
     };
     public currentModelKey = 'animated_parrot.glb';
 
@@ -300,6 +302,9 @@ export class VortexDemoApp {
 
     private loadParrotModel(filename = 'animated_parrot.glb') {
         const candidatePaths = [
+            `./dRAGON/${filename}`,
+            `dRAGON/${filename}`,
+            `/dRAGON/${filename}`,
             `./Assets/Flight/${filename}`,
             `Assets/Flight/${filename}`,
             `./assets/Flight/${filename}`,

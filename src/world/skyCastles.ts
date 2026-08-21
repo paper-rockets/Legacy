@@ -459,6 +459,7 @@ export class SkyCastleSystem {
         const clusterCount = 18;
         const clusterInstanced = new THREE.InstancedMesh(clusterGeo, this.matLayerFog, clusterCount);
         clusterInstanced.receiveShadow = true;
+        clusterInstanced.frustumCulled = false;
         const dummy = SkyCastleSystem.helperDummy;
 
         for (let i = 0; i < clusterCount; i++) {
@@ -537,6 +538,7 @@ export class SkyCastleSystem {
         const instancedSkirt = new THREE.InstancedMesh(this.sharedCloudGeo, this.matCloud, puffCount + 1);
         instancedSkirt.castShadow = false;
         instancedSkirt.receiveShadow = true;
+        instancedSkirt.frustumCulled = false;
         const dummy = SkyCastleSystem.helperDummy;
 
         for (let i = 0; i < puffCount; i++) {
@@ -1191,10 +1193,12 @@ export class SkyCastleSystem {
         const targetGlow = timePhase === 0 ? 0.0 : (timePhase === 1 ? 0.45 : 1.0);
         this.castleNightGlowUniform.value += (targetGlow - this.castleNightGlowUniform.value) * Math.min(1.0, dt * 4.0);
 
-        // Keep layer fog mesh centered under player on XZ
-        if (this.layerFogMesh) {
+        // Keep layer fog mesh centered under player on XZ and only display when at high altitude or in top view
+        if (this.layerFogMesh && this.layerFogGroup) {
             this.layerFogMesh.position.x = px;
             this.layerFogMesh.position.z = pz;
+            const isHighAltitude = py > 160;
+            this.layerFogGroup.visible = this.layerFogEnabled && !this.fogDeckDisabledInEditor && (isHighAltitude || this.isTopViewActive);
         }
 
         for (let i = 0; i < this.islands.length; i++) {

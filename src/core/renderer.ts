@@ -12,16 +12,26 @@ export class RenderPipeline {
     public camera: THREE.PerspectiveCamera;
     public scene: THREE.Scene;
     public container: HTMLElement;
-    public basePixelRatio: number = 2.0;
+    public basePixelRatio: number = 1.5;
+    public vibrancy: number = 1.25;
+    public contrast: number = 1.05;
+    public brightness: number = 1.0;
 
     constructor(container: HTMLElement) {
         this.container = container;
         this.scene = new THREE.Scene();
 
+        const isMobile = (typeof window !== 'undefined') && (
+            ('ontouchstart' in window) ||
+            (navigator.maxTouchPoints > 0) ||
+            /Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent)
+        );
+        this.basePixelRatio = isMobile ? 1.25 : 1.5;
+
         const initialWidth = this.container.clientWidth || window.innerWidth;
         const initialHeight = this.container.clientHeight || window.innerHeight;
 
-        this.camera = new THREE.PerspectiveCamera(60, initialWidth / initialHeight, 0.1, 1500);
+        this.camera = new THREE.PerspectiveCamera(60, initialWidth / initialHeight, 0.1, 750);
         this.camera.position.set(0, 9, 26);
 
         this.renderer = new THREE.WebGLRenderer({
@@ -41,6 +51,7 @@ export class RenderPipeline {
         this.renderer.toneMappingExposure = 1.1;
 
         this.container.appendChild(this.renderer.domElement);
+        this.updateCanvasFilter();
 
         this.composer = new EffectComposer(this.renderer);
         this.renderPass = new RenderPass(this.scene, this.camera);
@@ -132,6 +143,35 @@ export class RenderPipeline {
         globalConfigManager.config.globalBloom.threshold = this.bloomPass.threshold;
     }
 
+    public setVibrancy(val: number) {
+        this.vibrancy = Math.max(0.5, Math.min(2.5, val));
+        this.updateCanvasFilter();
+    }
+
+    public setContrast(val: number) {
+        this.contrast = Math.max(0.7, Math.min(1.8, val));
+        this.updateCanvasFilter();
+    }
+
+    public setBrightness(val: number) {
+        this.brightness = Math.max(0.6, Math.min(1.6, val));
+        this.updateCanvasFilter();
+    }
+
+    public setExposure(val: number) {
+        this.renderer.toneMappingExposure = Math.max(0.4, Math.min(2.5, val));
+    }
+
+    public getExposure(): number {
+        return this.renderer.toneMappingExposure;
+    }
+
+    public updateCanvasFilter() {
+        if (this.renderer && this.renderer.domElement) {
+            this.renderer.domElement.style.filter = `saturate(${this.vibrancy}) contrast(${this.contrast}) brightness(${this.brightness})`;
+        }
+    }
+
     public setPixelRatioCap(maxDpi: number) {
         this.basePixelRatio = maxDpi;
         this.handleResize();
@@ -142,7 +182,12 @@ export class RenderPipeline {
             this.basePixelRatio = 1.0;
             this.renderer.shadowMap.type = THREE.BasicShadowMap;
         } else {
-            this.basePixelRatio = 2.0;
+            const isMobile = (typeof window !== 'undefined') && (
+                ('ontouchstart' in window) ||
+                (navigator.maxTouchPoints > 0) ||
+                /Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent)
+            );
+            this.basePixelRatio = isMobile ? 1.25 : 1.5;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         }
         this.renderer.shadowMap.needsUpdate = true;

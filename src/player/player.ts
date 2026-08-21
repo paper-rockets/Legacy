@@ -99,9 +99,9 @@ export class PlayerSystem {
         return FLIGHT_MODELS;
     }
 
-    public teleportTo(x: number, z: number, yOffset: number = 50, fixedY?: number) {
+    public teleportTo(x: number, z: number, yOffset: number = 18, fixedY?: number) {
         const groundY = terrainHeightJS(x, z);
-        const targetY = fixedY !== undefined ? fixedY : Math.max(groundY + yOffset, 25);
+        const targetY = fixedY !== undefined ? fixedY : Math.max(groundY + yOffset, 10);
         this.playerGrp.position.set(x, targetY, z);
         this.cameraBase.position.copy(this.playerGrp.position);
         this.currentYaw = 0;
@@ -337,7 +337,7 @@ export class PlayerSystem {
         window.addEventListener('touchcancel', endPinch, { passive: true });
     }
 
-    public update(dt: number, inputState: InputState, skyCastles?: any) {
+    public update(dt: number, inputState: InputState, skyCastles?: any, trees?: any) {
         if (dt <= 0) return;
 
         // Update active flight model animation mixer
@@ -353,8 +353,7 @@ export class PlayerSystem {
         } else {
             this.turnVelocity *= Math.pow(0.05, dt);
         }
-
-        this.turnVelocity = Math.max(-this.maxTurnSpeed, Math.min(this.maxTurnSpeed, this.turnVelocity));
+        this.turnVelocity = THREE.MathUtils.clamp(this.turnVelocity, -this.maxTurnSpeed, this.maxTurnSpeed);
         this.currentYaw += this.turnVelocity * dt;
 
         // Banking
@@ -374,8 +373,8 @@ export class PlayerSystem {
         const terrainSlope = (aheadGroundY - currentGroundY) / lookAheadDist;
         const altAboveGround = this.playerGrp.position.y - currentGroundY;
 
-        // Estuary ground-effect water skimming
-        this.isSkimmingWater = this.currentBiome === 'estuary' && altAboveGround < 18.0 && this.playerGrp.position.y < 28.0;
+        // Fishing Village ground-effect water skimming
+        this.isSkimmingWater = this.currentBiome === 'fishing_village' && altAboveGround < 18.0 && this.playerGrp.position.y < 28.0;
 
         // Archipelago / Geothermal thermal updraft lift
         this.isUpdraftLift = (this.currentBiome === 'archipelago' || this.currentBiome === 'geothermal') && currentGroundY > 52.0 && altAboveGround < 45.0;
@@ -386,7 +385,7 @@ export class PlayerSystem {
             targetPitch = this.maxPitchAngle;
         } else if (inputState.down) {
             targetPitch = -this.maxPitchAngle;
-        } else if (terrainSlope > 0.02 && this.playerGrp.position.y < currentGroundY + 70) {
+        } else if (terrainSlope > 0.06 && this.playerGrp.position.y < currentGroundY + 12) {
             targetPitch = Math.min(this.maxPitchAngle * 0.75, Math.atan(terrainSlope) * 0.6);
         }
         this.currentPitch = THREE.MathUtils.lerp(this.currentPitch, targetPitch, 2.5 * dt);
@@ -405,12 +404,21 @@ export class PlayerSystem {
         this.velocity += (targetSpeed - this.velocity) * dt * (inputState.brake ? 4.0 : (inputState.boost ? 3.0 : 2.0));
         this.playerGrp.position.add(moveDir.multiplyScalar(this.velocity * dt));
 
-        // 3D Model & Castle Collision Resolution (prevents clipping)
+        // 3D Castle Island Collision Resolution (prevents clipping)
         if (skyCastles && typeof skyCastles.resolveCollisions === 'function') {
             const flightVel = moveDir.clone().multiplyScalar(this.velocity);
             const didCollide = skyCastles.resolveCollisions(this.playerGrp.position, 3.6, flightVel);
             if (didCollide) {
                 this.velocity = Math.max(6.0, this.velocity * 0.7);
+            }
+        }
+
+        // 3D Tree, Lollipop, & Foliage Obstacle Collision Resolution (prevents flying through objects)
+        if (trees && typeof trees.resolveCollisions === 'function') {
+            const flightVel = moveDir.clone().multiplyScalar(this.velocity);
+            const didCollideTree = trees.resolveCollisions(this.playerGrp.position, 2.2, flightVel);
+            if (didCollideTree) {
+                this.velocity = Math.max(8.0, this.velocity * 0.75);
             }
         }
 
@@ -438,15 +446,16 @@ export class PlayerSystem {
             this.camera.updateProjectionMatrix();
         }
 
-        // Smooth elevation clearance
-        const targetMinY = currentGroundY + 45;
+        // Smooth elevation clearance - lets the player fly low and skim ground/trees
+        const targetMinY = inputState.down ? currentGroundY + 1.2 : currentGroundY + 4.5;
         if (this.playerGrp.position.y < targetMinY) {
-            this.playerGrp.position.y = THREE.MathUtils.lerp(this.playerGrp.position.y, targetMinY, dt * 3.5);
-            if (this.playerGrp.position.y < currentGroundY + 12) {
-                this.playerGrp.position.y = currentGroundY + 12;
-            }
+            this.playerGrp.position.y = THREE.MathUtils.lerp(this.playerGrp.position.y, targetMinY, dt * 4.0);
         }
-        this.playerGrp.position.y = Math.min(Math.max(this.playerGrp.position.y, 18), 800);
+        const hardMinY = Math.max(currentGroundY + 0.8, 3.2);
+        if (this.playerGrp.position.y < hardMinY) {
+            this.playerGrp.position.y = hardMinY;
+        }
+        this.playerGrp.position.y = Math.min(this.playerGrp.position.y, 800);
 
         // Sync camera base
         this.cameraBase.position.copy(this.playerGrp.position);

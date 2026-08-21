@@ -103,109 +103,12 @@ export function buildWorldTab(ctx: WorldTabContext): ControlDef[] {
                     label: 'Terrain Shading Style',
                     options: [
                         { value: 'toon', text: 'Painterly Toon' },
-                        { value: 'standard', text: 'Modern PBR' },
-                        { value: 'crystal', text: 'Crystal Glass' }
+                        { value: 'standard', text: 'Modern PBR' }
                     ],
-                    get: () => ctx.terrain.terrainStyle,
+                    get: () => (ctx.terrain.terrainStyle === 'standard' ? 'standard' : 'toon'),
                     set: (val: string) => {
                         ctx.terrain.setTerrainStyle(val as any, biomeId());
                         ctx.rebuild();
-                    }
-                },
-                {
-                    kind: 'slider',
-                    label: 'Glass Transmission',
-                    visible: () => ctx.terrain.terrainStyle === 'crystal',
-                    min: 0.0,
-                    max: 1.0,
-                    step: 0.05,
-                    get: () => ctx.terrain.crystalParams.glassTransmission,
-                    set: (v: number) => {
-                        ctx.terrain.setCrystalParams({ glassTransmission: v }, biomeId());
-                    }
-                },
-                {
-                    kind: 'slider',
-                    label: 'Iridescence',
-                    visible: () => ctx.terrain.terrainStyle === 'crystal',
-                    min: 0.0,
-                    max: 3.0,
-                    step: 0.1,
-                    get: () => ctx.terrain.crystalParams.iridescence,
-                    set: (v: number) => {
-                        ctx.terrain.setCrystalParams({ iridescence: v }, biomeId());
-                    }
-                },
-                {
-                    kind: 'slider',
-                    label: 'Specular Glint',
-                    visible: () => ctx.terrain.terrainStyle === 'crystal',
-                    min: 0.0,
-                    max: 5.0,
-                    step: 0.1,
-                    get: () => ctx.terrain.crystalParams.specularGlint,
-                    set: (v: number) => {
-                        ctx.terrain.setCrystalParams({ specularGlint: v }, biomeId());
-                    }
-                },
-                {
-                    kind: 'slider',
-                    label: 'Bevel Gleam',
-                    visible: () => ctx.terrain.terrainStyle === 'crystal',
-                    min: 0.0,
-                    max: 3.0,
-                    step: 0.1,
-                    get: () => ctx.terrain.crystalParams.bevelGleam,
-                    set: (v: number) => {
-                        ctx.terrain.setCrystalParams({ bevelGleam: v }, biomeId());
-                    }
-                },
-                {
-                    kind: 'slider',
-                    label: 'Vein Glow',
-                    visible: () => ctx.terrain.terrainStyle === 'crystal',
-                    min: 0.0,
-                    max: 3.0,
-                    step: 0.1,
-                    get: () => ctx.terrain.crystalParams.veinGlow,
-                    set: (v: number) => {
-                        ctx.terrain.setCrystalParams({ veinGlow: v }, biomeId());
-                    }
-                },
-                {
-                    kind: 'slider',
-                    label: 'Glass Refraction (IOR)',
-                    visible: () => ctx.terrain.terrainStyle === 'crystal',
-                    min: 1.0,
-                    max: 2.5,
-                    step: 0.02,
-                    get: () => ctx.terrain.crystalParams.glassRefraction,
-                    set: (v: number) => {
-                        ctx.terrain.setCrystalParams({ glassRefraction: v }, biomeId());
-                    }
-                },
-                {
-                    kind: 'slider',
-                    label: 'Glass Tint',
-                    visible: () => ctx.terrain.terrainStyle === 'crystal',
-                    min: 0.0,
-                    max: 2.0,
-                    step: 0.05,
-                    get: () => ctx.terrain.crystalParams.glassTint,
-                    set: (v: number) => {
-                        ctx.terrain.setCrystalParams({ glassTint: v }, biomeId());
-                    }
-                },
-                {
-                    kind: 'slider',
-                    label: 'Vein Scale',
-                    visible: () => ctx.terrain.terrainStyle === 'crystal',
-                    min: 0.1,
-                    max: 5.0,
-                    step: 0.1,
-                    get: () => ctx.terrain.crystalParams.veinScale,
-                    set: (v: number) => {
-                        ctx.terrain.setCrystalParams({ veinScale: v }, biomeId());
                     }
                 }
             ]
@@ -451,7 +354,109 @@ export function buildWorldTab(ctx: WorldTabContext): ControlDef[] {
             ]
         },
 
-        // ── 4. PERFORMANCE ─────────────────────────────────────────────────────
+        // ── 4. COLOR & VIBRANCY ────────────────────────────────────────────────
+        {
+            kind: 'section',
+            title: 'COLOR & VIBRANCY',
+            tag: () => `${Math.round(ctx.pipeline.vibrancy * 100)}%`,
+            children: [
+                {
+                    kind: 'buttonRow',
+                    buttons: [
+                        {
+                            kind: 'button',
+                            text: 'Soft Pastel',
+                            onClick: () => {
+                                ctx.pipeline.setVibrancy(0.9);
+                                ctx.pipeline.setContrast(0.96);
+                                ctx.pipeline.setBrightness(1.04);
+                                ctx.pipeline.setExposure(1.05);
+                                ctx.status('Color profile: Soft Pastel');
+                            }
+                        },
+                        {
+                            kind: 'button',
+                            text: 'Natural',
+                            onClick: () => {
+                                ctx.pipeline.setVibrancy(1.0);
+                                ctx.pipeline.setContrast(1.0);
+                                ctx.pipeline.setBrightness(1.0);
+                                ctx.pipeline.setExposure(1.1);
+                                ctx.status('Color profile: Natural');
+                            }
+                        },
+                        {
+                            kind: 'button',
+                            text: 'Vibrant Pop',
+                            onClick: () => {
+                                ctx.pipeline.setVibrancy(1.35);
+                                ctx.pipeline.setContrast(1.08);
+                                ctx.pipeline.setBrightness(1.02);
+                                ctx.pipeline.setExposure(1.15);
+                                ctx.status('Color profile: Vibrant Pop');
+                            }
+                        },
+                        {
+                            kind: 'button',
+                            text: 'Neon Candy',
+                            onClick: () => {
+                                ctx.pipeline.setVibrancy(1.65);
+                                ctx.pipeline.setContrast(1.14);
+                                ctx.pipeline.setBrightness(1.04);
+                                ctx.pipeline.setExposure(1.2);
+                                ctx.status('Color profile: Neon Candy');
+                            }
+                        }
+                    ]
+                },
+                {
+                    kind: 'slider',
+                    label: 'Color Vibrancy / Saturation',
+                    min: 0.5,
+                    max: 2.5,
+                    step: 0.05,
+                    get: () => ctx.pipeline.vibrancy,
+                    set: (v: number) => {
+                        ctx.pipeline.setVibrancy(v);
+                    }
+                },
+                {
+                    kind: 'slider',
+                    label: 'Contrast Boost',
+                    min: 0.7,
+                    max: 1.8,
+                    step: 0.05,
+                    get: () => ctx.pipeline.contrast,
+                    set: (v: number) => {
+                        ctx.pipeline.setContrast(v);
+                    }
+                },
+                {
+                    kind: 'slider',
+                    label: 'Scene Brightness',
+                    min: 0.6,
+                    max: 1.6,
+                    step: 0.05,
+                    get: () => ctx.pipeline.brightness,
+                    set: (v: number) => {
+                        ctx.pipeline.setBrightness(v);
+                    }
+                },
+                {
+                    kind: 'slider',
+                    label: 'Camera Exposure',
+                    min: 0.4,
+                    max: 2.2,
+                    step: 0.05,
+                    get: () => ctx.pipeline.getExposure(),
+                    set: (v: number) => {
+                        ctx.pipeline.setExposure(v);
+                    }
+                }
+            ]
+        },
+
+        // ── 5. PERFORMANCE ─────────────────────────────────────────────────────
         {
             kind: 'section',
             title: 'PERFORMANCE',
@@ -510,7 +515,7 @@ export function buildWorldTab(ctx: WorldTabContext): ControlDef[] {
             ]
         },
 
-        // ── 5. SESSION TOOLS ───────────────────────────────────────────────────
+        // ── 6. SESSION TOOLS ───────────────────────────────────────────────────
         {
             kind: 'section',
             title: 'SESSION TOOLS',

@@ -1,0 +1,88 @@
+# Exported Charizard MTL
+newmtl ala
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+map_Kd ala.png
+
+newmtl cabeza
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+map_Kd cabeza.png
+
+newmtl cola
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+map_Kd cola.png
+
+newmtl cuerno
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+
+newmtl dientes
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+
+newmtl Dots Stroke
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+
+newmtl lengua
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+map_Kd lengua.png
+
+newmtl llama
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+map_Kd llama.png
+
+newmtl pecho
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+map_Kd pecho.png
+
+newmtl pie
+Ka 1.000 1.000 1.000
+Kd 0.8000 0.8000 0.8000
+Ks 0.200 0.200 0.200
+Ns 50.0
+d 1.0
+illum 2
+map_Kd pie.png
+

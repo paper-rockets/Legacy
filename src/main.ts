@@ -41,7 +41,7 @@ async function bootstrap() {
     await globalConfigManager.syncFromDisk();
 
     const lighting = new LightingSystem(pipeline.scene);
-    const terrain = new TerrainSystem(pipeline.scene, 128);
+    const terrain = new TerrainSystem(pipeline.scene, 96);
     const water = new WaterSystem(pipeline.scene);
     const props = new PropsSystem(pipeline.scene);
     const skyCastles = new SkyCastleSystem(pipeline.scene);
@@ -304,7 +304,7 @@ async function bootstrap() {
             const isTopView = blueprintView?.isActive ?? false;
 
             if (!isTopView) {
-                player.update(flightDt, inputState, skyCastles);
+                player.update(flightDt, inputState, skyCastles, trees);
 
                 // Sky Castle Updraft Lift
                 const updraft = skyCastles.getUpdraftLift(playerPos.x, playerPos.y, playerPos.z);

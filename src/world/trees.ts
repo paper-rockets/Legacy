@@ -9,19 +9,30 @@ import { globalConfigManager, ModelVegetationConfig, getDefaultModelConfig, Vege
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const SPAWN_RADIUS = 380;
-const REBUILD_THRESHOLD = 45;
+const SPAWN_RADIUS = 240;
+const REBUILD_THRESHOLD = 30;
 const MAX_CAPACITY = 800;
 const MIN_TREE_HEIGHT = 4.5;
 const MAX_TREE_HEIGHT = 24.0;
 
-export type PresetKey = 'candy' | 'cotton' | 'lollipop' | 'mints' | 'berry' | 'archipelago' | 'geothermal' | 'estuary' | 'redwood' | 'biome_auto';
+export type PresetKey = 'candy' | 'cotton' | 'lollipop' | 'mints' | 'berry' | 'archipelago' | 'geothermal' | 'fishing_village' | 'redwood' | 'biome_auto';
 
 export interface ColorPreset {
     name: string;
     canopyColors: string[];
     leafColors: string[];
     trunkColors: string[];
+}
+
+export interface TreeObstacle {
+    x: number;
+    y: number;
+    z: number;
+    height: number;
+    trunkRadius: number;
+    crownRadius: number;
+    crownBottom: number;
+    crownTop: number;
 }
 
 export const BIOME_VEG_PRESETS: Record<string, ColorPreset> = {
@@ -86,10 +97,10 @@ export const BIOME_VEG_PRESETS: Record<string, ColorPreset> = {
         trunkColors: ['#faf5ff', '#f3e8ff', '#e9d5ff']
     },
     geothermal: {
-        name: 'Ash & Lava Ember',
-        canopyColors: ['#ff3300', '#ff7700', '#ffaa00', '#cc1100', '#f59e0b'],
-        leafColors: ['#84cc16', '#a3e635', '#65a30d', '#4d7c0f'],
-        trunkColors: ['#27272a', '#3f3f46', '#1c1917']
+        name: 'Warm Sunset & Cedar',
+        canopyColors: ['#f97316', '#fbbf24', '#f43f5e', '#fde047', '#fb7185', '#10b981'],
+        leafColors: ['#fbbf24', '#fde047', '#f97316', '#84cc16'],
+        trunkColors: ['#78350f', '#9a3412', '#b45309', '#522e18']
     },
     geothermal_magma: {
         name: 'Molten Magma',
@@ -103,23 +114,23 @@ export const BIOME_VEG_PRESETS: Record<string, ColorPreset> = {
         leafColors: ['#84cc16', '#a3e635', '#65a30d', '#ca8a04'],
         trunkColors: ['#3f3f46', '#52525b', '#27272a']
     },
-    estuary: {
-        name: 'Bioluminescent Coral',
-        canopyColors: ['#00f5d4', '#00bbf9', '#f72585', '#7209b7', '#4cc9f0', '#10b981'],
-        leafColors: ['#00f5d4', '#10b981', '#34d399', '#00e676'],
-        trunkColors: ['#ffffff', '#e0f2fe', '#fce7f3']
+    fishing_village: {
+        name: 'Coastal Fishing Harbor',
+        canopyColors: ['#10b981', '#22c55e', '#16a34a', '#4ade80', '#059669', '#84cc16'],
+        leafColors: ['#34d399', '#4ade80', '#86efac', '#a7f3d0', '#a3e635'],
+        trunkColors: ['#78350f', '#854d0e', '#92400e', '#5c2c10']
     },
-    estuary_neon: {
-        name: 'Neon Lagoon',
-        canopyColors: ['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981'],
-        leafColors: ['#10b981', '#06b6d4', '#00ff88', '#22c55e'],
-        trunkColors: ['#0f172a', '#1e293b', '#334155']
+    fishing_village_coastal: {
+        name: 'Maritime Breeze',
+        canopyColors: ['#059669', '#10b981', '#22c55e', '#4ade80', '#34d399'],
+        leafColors: ['#22c55e', '#34d399', '#6ee7b7', '#a7f3d0'],
+        trunkColors: ['#78350f', '#92400e', '#522e18']
     },
-    estuary_spirit: {
-        name: 'Spirit Blossom',
-        canopyColors: ['#f472b6', '#38bdf8', '#818cf8', '#34d399', '#fbcfe8'],
-        leafColors: ['#34d399', '#6ee7b7', '#a7f3d0', '#fbcfe8'],
-        trunkColors: ['#fdf4ff', '#fae8ff', '#f5d0fe']
+    fishing_village_dusk: {
+        name: 'Golden Shoreline',
+        canopyColors: ['#ca8a04', '#eab308', '#65a30d', '#84cc16', '#4d7c0f'],
+        leafColors: ['#84cc16', '#a3e635', '#ca8a04', '#eab308'],
+        trunkColors: ['#451a03', '#5c2c10', '#78350f']
     },
     redwood: {
         name: 'Ancient Giant Redwood',
@@ -181,32 +192,33 @@ function extractVertexColorFromTexture(
     const h = img.height || (img.naturalHeight || 64);
     if (!w || !h) return fallback;
 
-    let canvas = img._cachedCanvas;
-    let ctx = img._cachedCtx;
-    if (!canvas) {
+    let data = img._cachedData;
+    let canvasW = img._cachedW;
+    let canvasH = img._cachedH;
+    if (!data) {
         try {
-            canvas = document.createElement('canvas');
+            const canvas = document.createElement('canvas');
             canvas.width = Math.min(w, 256);
             canvas.height = Math.min(h, 256);
-            ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
             if (ctx) {
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                img._cachedCanvas = canvas;
-                img._cachedCtx = ctx;
+                data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                img._cachedData = data;
+                img._cachedW = canvas.width;
+                img._cachedH = canvas.height;
+                canvasW = canvas.width;
+                canvasH = canvas.height;
             }
         } catch {
             return fallback;
         }
     }
-    if (!ctx) return fallback;
-    const px = Math.max(0, Math.min(canvas.width - 1, Math.floor(u * canvas.width)));
-    const py = Math.max(0, Math.min(canvas.height - 1, Math.floor((1 - v) * canvas.height)));
-    try {
-        const d = ctx.getImageData(px, py, 1, 1).data;
-        return [d[0] / 255, d[1] / 255, d[2] / 255];
-    } catch {
-        return fallback;
-    }
+    if (!data || !canvasW || !canvasH) return fallback;
+    const px = Math.max(0, Math.min(canvasW - 1, Math.floor(u * canvasW)));
+    const py = Math.max(0, Math.min(canvasH - 1, Math.floor((1 - v) * canvasH)));
+    const idx = (py * canvasW + px) * 4;
+    return [data[idx] / 255, data[idx + 1] / 255, data[idx + 2] / 255];
 }
 
 function attachAttributes(geo: THREE.BufferGeometry, partType: number, defaultColor: [number, number, number]): THREE.BufferGeometry {
@@ -741,7 +753,7 @@ export const DEFAULT_BIOME_TREE_IDS: Record<BiomeId, string[]> = {
     meadow: ['veg_cartoon_1', 'veg_cartoon_2', 'veg_bigtree_1', 'veg_tree_broadleaf_1'],
     archipelago: ['veg_cherry_blossom', 'veg_palm_a', 'veg_cartoon_7', 'veg_clover_2'],
     geothermal: ['veg_cartoon_8', 'veg_cartoon_10', 'veg_tree_var4'],
-    estuary: ['veg_palm_a', 'veg_palm_c', 'veg_fantasy_jungle', 'veg_clover_2'],
+    fishing_village: ['veg_palm_a', 'veg_palm_c', 'veg_tree_broadleaf_1', 'veg_cartoon_1', 'veg_clover_2'],
     redwood: ['veg_cartoon_11', 'veg_cartoon_12', 'veg_bigtree_1', 'veg_tree_var4'],
     sky_citadel: []
 };
@@ -767,7 +779,7 @@ function isVegetationAllowed(x: number, z: number, y: number, biome: BiomeId): b
         // Geothermal: land and ridges only, no high bare peaks
         return y <= 36.0 && slope < 0.85;
     } else {
-        // Meadow and Estuary: land only, not high peaks
+        // Meadow and Fishing Village: land only, not high peaks
         return y <= 40.0 && slope < 0.90;
     }
 }
@@ -817,6 +829,10 @@ export class TreeSystem {
     private tempColor = new THREE.Color();
     private tempHSL = { h: 0, s: 0, l: 0 };
 
+    // Obstacle & Flight Collision State
+    public activeObstacles: TreeObstacle[] = [];
+    private obstacleGrid: Map<number, number[]> = new Map();
+    private obstacleGridSize: number = 24.0;
     public loader!: GLTFLoader;
 
     constructor(private scene: THREE.Scene) {}
@@ -829,7 +845,7 @@ export class TreeSystem {
         inst.visible = false;
         inst.castShadow = false;
         inst.receiveShadow = true;
-        inst.frustumCulled = true;
+        inst.frustumCulled = false;
         inst.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
         const trunkColorAttr = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
         inst.geometry.setAttribute('aTrunkColor', trunkColorAttr);
@@ -1216,7 +1232,7 @@ export class TreeSystem {
         const treeGridSpacing = 16.0;
         const px = playerX;
         const pz = playerZ;
-        const activeSpawnRadius = (this.graphicsProfile === 'regular') ? 220 : SPAWN_RADIUS;
+        const activeSpawnRadius = (this.graphicsProfile === 'regular') ? 180 : SPAWN_RADIUS;
 
         const minCX = Math.floor((px - activeSpawnRadius) / treeGridSpacing);
         const maxCX = Math.ceil((px + activeSpawnRadius) / treeGridSpacing);
@@ -1228,10 +1244,14 @@ export class TreeSystem {
             modelCounts.set(key, 0);
         }
 
+        // Clear flight obstacles for this frame's active radius
+        this.activeObstacles.length = 0;
+        this.obstacleGrid.clear();
+
         // Spatial Collision Occupancy Grid to guarantee no trees/flowers/bushes clip
         const placedOccupancy: { x: number; z: number; radius: number }[] = [];
         const occGrid = new Map<number, number[]>();
-        const occGridSize = 20.0;
+        const occGridSize = 28.0;
 
         const getGridKey = (gx: number, gz: number) => ((gx + 2000) * 4000) + (gz + 2000);
 
@@ -1246,7 +1266,7 @@ export class TreeSystem {
                             const other = placedOccupancy[indices[i]];
                             const dx = pxPos - other.x;
                             const dz = pzPos - other.z;
-                            const reqDist = rad + other.radius;
+                            const reqDist = (rad + other.radius) * 1.05;
                             if (dx * dx + dz * dz < reqDist * reqDist) {
                                 return false;
                             }
@@ -1271,13 +1291,13 @@ export class TreeSystem {
             arr.push(idx);
         };
 
-        const allBiomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'estuary', 'redwood', 'sky_citadel'];
+        const allBiomes: BiomeId[] = ['candyland', 'meadow', 'archipelago', 'geothermal', 'fishing_village', 'redwood', 'sky_citadel'];
         const biomeActiveModels: Record<BiomeId, LoadedCatalogEntry[]> = {
             candyland: [],
             meadow: [],
             archipelago: [],
             geothermal: [],
-            estuary: [],
+            fishing_village: [],
             redwood: [],
             sky_citadel: []
         };
@@ -1337,18 +1357,22 @@ export class TreeSystem {
                     const mScale = (mCfg.scale !== undefined) ? mCfg.scale : (veg.treeScale || 6.0);
                     let baseScale = mScale * 0.16;
                     if (biome === 'redwood') baseScale *= 1.35;
-                    if (biome === 'estuary') baseScale *= 0.85;
+                    if (biome === 'fishing_village') baseScale *= 0.95;
 
-                    // Clearance radius: flowers need ~1.8m, regular trees ~3.6m
+                    // Accurate Crown & Clearance Radius calculation based on model geometry & scale
                     const isFlora = selectedModel.item.category === 'Flowers & Flora';
-                    const clearanceRadius = Math.max(isFlora ? 1.8 : 3.6, baseScale * (isFlora ? 0.65 : 1.2));
+                    const geoSphereRadius = (selectedModel.treeGeo && selectedModel.treeGeo.boundingSphere)
+                        ? selectedModel.treeGeo.boundingSphere.radius
+                        : 6.0;
+                    const actualCrownRadius = Math.max(isFlora ? 2.2 : 5.5, geoSphereRadius * baseScale * 0.85);
+                    const clearanceRadius = actualCrownRadius * 1.15; // 15% safety gap ensures no models ever intersect
 
-                    // Deterministic 2-attempt candidate placement to find non-colliding spot
+                    // Deterministic 4-attempt candidate placement to find non-colliding spot in cell
                     let placed = false;
                     let instX = 0, instZ = 0;
-                    for (let attempt = 0; attempt < 2; attempt++) {
-                        const u = 0.15 + (attempt * 0.40) + (modelRng() * 0.30);
-                        const v = 0.15 + (attempt * 0.40) + (modelRng() * 0.30);
+                    for (let attempt = 0; attempt < 4; attempt++) {
+                        const u = 0.12 + ((attempt % 2) * 0.44) + (modelRng() * 0.20);
+                        const v = 0.12 + (Math.floor(attempt / 2) * 0.44) + (modelRng() * 0.20);
                         const candX = (cx + u) * treeGridSpacing;
                         const candZ = (cz + v) * treeGridSpacing;
 
@@ -1375,6 +1399,35 @@ export class TreeSystem {
                     const scaleX = baseScale * sizeVariation;
                     const scaleY = baseScale * (0.9 + modelRng() * 0.25);
                     const scaleZ = baseScale * sizeVariation;
+
+                    // Register obstacle for player flight collision resolution
+                    const treeHeight = Math.max(MIN_TREE_HEIGHT, scaleY * 16.0);
+                    const trunkRad = Math.max(0.7, scaleX * 0.9);
+                    const crownRad = actualCrownRadius * 0.92;
+                    const crownBottom = instY + treeHeight * 0.25;
+                    const crownTop = instY + treeHeight * 1.05;
+
+                    const obsIdx = this.activeObstacles.length;
+                    this.activeObstacles.push({
+                        x: instX,
+                        y: instY,
+                        z: instZ,
+                        height: treeHeight,
+                        trunkRadius: trunkRad,
+                        crownRadius: crownRad,
+                        crownBottom: crownBottom,
+                        crownTop: crownTop
+                    });
+
+                    const ogx = Math.floor(instX / this.obstacleGridSize);
+                    const ogz = Math.floor(instZ / this.obstacleGridSize);
+                    const oKey = getGridKey(ogx, ogz);
+                    let oArr = this.obstacleGrid.get(oKey);
+                    if (!oArr) {
+                        oArr = [];
+                        this.obstacleGrid.set(oKey, oArr);
+                    }
+                    oArr.push(obsIdx);
 
                     const rotY = modelRng() * Math.PI * 2;
                     const tiltX = (modelRng() - 0.5) * 0.08;
@@ -1462,18 +1515,39 @@ export class TreeSystem {
             const isVisible = count > 0;
             entry.treeInst.visible = isVisible;
             if (isVisible) {
-                if (entry.treeInst.instanceMatrix) entry.treeInst.instanceMatrix.needsUpdate = true;
-                if (entry.treeInst.instanceColor) entry.treeInst.instanceColor.needsUpdate = true;
-                const trunkAttr = entry.treeInst.geometry.getAttribute('aTrunkColor');
-                if (trunkAttr) trunkAttr.needsUpdate = true;
-                const leafAttr = entry.treeInst.geometry.getAttribute('aLeafColor');
-                if (leafAttr) leafAttr.needsUpdate = true;
-                const colorModeAttr = entry.treeInst.geometry.getAttribute('aColorMode');
-                if (colorModeAttr) colorModeAttr.needsUpdate = true;
-                const textureStyleAttr = entry.treeInst.geometry.getAttribute('aTextureStyle');
-                if (textureStyleAttr) textureStyleAttr.needsUpdate = true;
-                const glowAttr = entry.treeInst.geometry.getAttribute('aGlowFactor');
-                if (glowAttr) glowAttr.needsUpdate = true;
+                if (entry.treeInst.instanceMatrix) {
+                    entry.treeInst.instanceMatrix.addUpdateRange(0, count * 16);
+                    entry.treeInst.instanceMatrix.needsUpdate = true;
+                }
+                if (entry.treeInst.instanceColor) {
+                    entry.treeInst.instanceColor.addUpdateRange(0, count * 3);
+                    entry.treeInst.instanceColor.needsUpdate = true;
+                }
+                const trunkAttr = entry.treeInst.geometry.getAttribute('aTrunkColor') as THREE.BufferAttribute;
+                if (trunkAttr) {
+                    trunkAttr.addUpdateRange(0, count * 3);
+                    trunkAttr.needsUpdate = true;
+                }
+                const leafAttr = entry.treeInst.geometry.getAttribute('aLeafColor') as THREE.BufferAttribute;
+                if (leafAttr) {
+                    leafAttr.addUpdateRange(0, count * 3);
+                    leafAttr.needsUpdate = true;
+                }
+                const colorModeAttr = entry.treeInst.geometry.getAttribute('aColorMode') as THREE.BufferAttribute;
+                if (colorModeAttr) {
+                    colorModeAttr.addUpdateRange(0, count);
+                    colorModeAttr.needsUpdate = true;
+                }
+                const textureStyleAttr = entry.treeInst.geometry.getAttribute('aTextureStyle') as THREE.BufferAttribute;
+                if (textureStyleAttr) {
+                    textureStyleAttr.addUpdateRange(0, count);
+                    textureStyleAttr.needsUpdate = true;
+                }
+                const glowAttr = entry.treeInst.geometry.getAttribute('aGlowFactor') as THREE.BufferAttribute;
+                if (glowAttr) {
+                    glowAttr.addUpdateRange(0, count);
+                    glowAttr.needsUpdate = true;
+                }
             }
         }
 
@@ -1506,9 +1580,30 @@ export class TreeSystem {
                 if (rng() > bushChance) continue;
 
                 const bScale = veg.bushScale * (0.8 + rng() * 0.4);
-                const bushClearance = Math.max(1.8, bScale * 0.9);
+                const bushClearance = Math.max(2.4, bScale * 1.5);
                 if (!canPlace(x, z, bushClearance)) continue;
                 registerPlace(x, z, bushClearance);
+
+                const bObsIdx = this.activeObstacles.length;
+                this.activeObstacles.push({
+                    x: x,
+                    y: y,
+                    z: z,
+                    height: bScale * 2.2,
+                    trunkRadius: bScale * 0.4,
+                    crownRadius: bScale * 1.4,
+                    crownBottom: y,
+                    crownTop: y + bScale * 2.2
+                });
+                const bogx = Math.floor(x / this.obstacleGridSize);
+                const bogz = Math.floor(z / this.obstacleGridSize);
+                const boKey = getGridKey(bogx, bogz);
+                let boArr = this.obstacleGrid.get(boKey);
+                if (!boArr) {
+                    boArr = [];
+                    this.obstacleGrid.set(boKey, boArr);
+                }
+                boArr.push(bObsIdx);
 
                 const variant = rng() > 0.5 ? 1 : 0;
                 const inst = this.bushInsts[variant];
@@ -1537,15 +1632,27 @@ export class TreeSystem {
         this.bushInsts[0].count = bushCount0;
         this.bushInsts[0].visible = bushCount0 > 0;
         if (bushCount0 > 0) {
-            if (this.bushInsts[0].instanceMatrix) this.bushInsts[0].instanceMatrix.needsUpdate = true;
-            if (this.bushInsts[0].instanceColor) this.bushInsts[0].instanceColor.needsUpdate = true;
+            if (this.bushInsts[0].instanceMatrix) {
+                this.bushInsts[0].instanceMatrix.addUpdateRange(0, bushCount0 * 16);
+                this.bushInsts[0].instanceMatrix.needsUpdate = true;
+            }
+            if (this.bushInsts[0].instanceColor) {
+                this.bushInsts[0].instanceColor.addUpdateRange(0, bushCount0 * 3);
+                this.bushInsts[0].instanceColor.needsUpdate = true;
+            }
         }
 
         this.bushInsts[1].count = bushCount1;
         this.bushInsts[1].visible = bushCount1 > 0;
         if (bushCount1 > 0) {
-            if (this.bushInsts[1].instanceMatrix) this.bushInsts[1].instanceMatrix.needsUpdate = true;
-            if (this.bushInsts[1].instanceColor) this.bushInsts[1].instanceColor.needsUpdate = true;
+            if (this.bushInsts[1].instanceMatrix) {
+                this.bushInsts[1].instanceMatrix.addUpdateRange(0, bushCount1 * 16);
+                this.bushInsts[1].instanceMatrix.needsUpdate = true;
+            }
+            if (this.bushInsts[1].instanceColor) {
+                this.bushInsts[1].instanceColor.addUpdateRange(0, bushCount1 * 3);
+                this.bushInsts[1].instanceColor.needsUpdate = true;
+            }
         }
     }
 
@@ -1818,6 +1925,90 @@ export class TreeSystem {
                 this.dirty = false;
             });
         }
+    }
+
+    // ── Flight Model Obstacle Collision Resolution ────────────────────────────
+    public resolveCollisions(playerPos: THREE.Vector3, playerRadius: number = 2.2, velocity?: THREE.Vector3): boolean {
+        if (this.activeObstacles.length === 0) return false;
+
+        let collided = false;
+        const px = playerPos.x;
+        const py = playerPos.y;
+        const pz = playerPos.z;
+
+        const gx = Math.floor(px / this.obstacleGridSize);
+        const gz = Math.floor(pz / this.obstacleGridSize);
+
+        for (let nx = gx - 1; nx <= gx + 1; nx++) {
+            for (let nz = gz - 1; nz <= gz + 1; nz++) {
+                const key = ((nx + 2000) * 4000) + (nz + 2000);
+                const indices = this.obstacleGrid.get(key);
+                if (!indices) continue;
+
+                for (let i = 0; i < indices.length; i++) {
+                    const obs = this.activeObstacles[indices[i]];
+                    const dx = px - obs.x;
+                    const dz = pz - obs.z;
+                    const maxRad = obs.crownRadius + playerRadius;
+                    const distSq = dx * dx + dz * dz;
+                    if (distSq > maxRad * maxRad) continue;
+
+                    const horizDist = Math.sqrt(distSq);
+
+                    // 1. Trunk collision (from ground to crown bottom)
+                    if (py >= obs.y - 1.0 && py <= obs.crownBottom) {
+                        const reqTrunk = obs.trunkRadius + playerRadius;
+                        if (horizDist < reqTrunk) {
+                            collided = true;
+                            const push = reqTrunk - horizDist;
+                            const nxVal = horizDist > 0.001 ? dx / horizDist : 1;
+                            const nzVal = horizDist > 0.001 ? dz / horizDist : 0;
+                            playerPos.x += nxVal * push;
+                            playerPos.z += nzVal * push;
+
+                            if (velocity) {
+                                const dot = velocity.x * nxVal + velocity.z * nzVal;
+                                if (dot < 0) {
+                                    velocity.x -= dot * nxVal * 1.35;
+                                    velocity.z -= dot * nzVal * 1.35;
+                                }
+                            }
+                        }
+                    }
+                    // 2. Crown / Canopy / Lollipop disc collision
+                    else if (py > obs.crownBottom && py < obs.crownTop + playerRadius) {
+                        const reqCrown = obs.crownRadius + playerRadius;
+                        if (horizDist < reqCrown) {
+                            collided = true;
+                            const push = reqCrown - horizDist;
+                            const nxVal = horizDist > 0.001 ? dx / horizDist : 1;
+                            const nzVal = horizDist > 0.001 ? dz / horizDist : 0;
+
+                            const crownMid = (obs.crownBottom + obs.crownTop) * 0.5;
+                            if (py > crownMid) {
+                                const vertPush = (obs.crownTop + playerRadius) - py;
+                                playerPos.y += vertPush * 0.35;
+                                playerPos.x += nxVal * push * 0.65;
+                                playerPos.z += nzVal * push * 0.65;
+                            } else {
+                                playerPos.x += nxVal * push;
+                                playerPos.z += nzVal * push;
+                            }
+
+                            if (velocity) {
+                                const dot = velocity.x * nxVal + velocity.z * nzVal;
+                                if (dot < 0) {
+                                    velocity.x -= dot * nxVal * 1.25;
+                                    velocity.z -= dot * nzVal * 1.25;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return collided;
     }
 }
 

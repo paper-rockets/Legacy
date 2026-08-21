@@ -225,27 +225,27 @@ export const BIOMES: Record<string, BiomeProfile> = {
             return col;
         }
     },
-    estuary: {
-        id: 'estuary',
-        name: 'Bioluminescent Estuary',
-        description: 'Shallow crystal waters, sandbars, and twilight bioluminescence',
+    fishing_village: {
+        id: 'fishing_village',
+        name: 'Fishing Village',
+        description: 'Coastal harbor, seaside bluffs, and tranquil ocean cove',
         beaconPos: new THREE.Vector3(0, 10, 0),
         cameraPos: new THREE.Vector3(0, 18, 35),
         cameraTarget: new THREE.Vector3(0, 45, -110),
-        sunElevation: 18,
+        sunElevation: 22,
         sunAzimuth: 195,
-        skyTop: '#1e1b4b',
-        skyHorizon: '#06b6d4',
-        palette: 'Fairy Mist',
+        skyTop: '#0284c7',
+        skyHorizon: '#38bdf8',
+        palette: 'Ocean Breeze',
         heightFn: (x, z) => {
-            const flats = snoise(x * 0.002, z * 0.002) * 7.0 + 5.0;
-            return Math.max(0.5, flats);
+            const hills = snoise(x * 0.0025, z * 0.0025) * 10.0 + 6.0;
+            return Math.max(1.5, hills);
         },
         colorFn: (x, y, z) => {
-            const sand = new THREE.Color('#fef08a');
-            const wetSand = new THREE.Color('#0d9488');
-            let col = sand.clone();
-            if (y < 3.5) col.lerp(wetSand, 0.7);
+            const grass = new THREE.Color('#10b981');
+            const sand = new THREE.Color('#fde047');
+            let col = grass.clone();
+            if (y < 4.5) col.lerp(sand, 0.85);
             return col;
         }
     },

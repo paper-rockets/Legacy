@@ -1,9 +1,16 @@
 // Pure procedural noise and elevation calculation engine
 
 const perm = new Uint8Array(512);
+const gradX = new Float32Array(512);
+const gradZ = new Float32Array(512);
+
 // Deterministic pseudo-random seed for coherent infinite terrain
 for (let i = 0; i < 512; i++) {
-    perm[i] = ((i * 137 + 43) ^ (i * 31)) & 255;
+    const val = ((i * 137 + 43) ^ (i * 31)) & 255;
+    perm[i] = val;
+    const gi = val % 12;
+    gradX[i] = gi > 5 ? 1.0 : -1.0;
+    gradZ[i] = gi % 2 === 0 ? 1.0 : -1.0;
 }
 
 export function snoise(x: number, z: number): number {
@@ -26,42 +33,40 @@ export function snoise(x: number, z: number): number {
     const z2 = z0 - 1.0 + 2.0 * G2;
     const ii = i & 255;
     const jj = j & 255;
-    const gi0 = perm[ii + perm[jj]] % 12;
-    const gi1 = perm[ii + i1 + perm[jj + j1]] % 12;
-    const gi2 = perm[ii + 1 + perm[jj + 1]] % 12;
+
+    const gi0 = ii + perm[jj];
+    const gi1 = ii + i1 + perm[jj + j1];
+    const gi2 = ii + 1 + perm[jj + 1];
 
     let t0 = 0.5 - x0 * x0 - z0 * z0;
-    if (t0 < 0) n0 = 0.0;
-    else {
+    if (t0 > 0) {
         t0 *= t0;
-        n0 = t0 * t0 * (x0 * (gi0 > 5 ? 1 : -1) + z0 * (gi0 % 2 === 0 ? 1 : -1));
+        n0 = t0 * t0 * (x0 * gradX[gi0] + z0 * gradZ[gi0]);
     }
 
     let t1 = 0.5 - x1 * x1 - z1 * z1;
-    if (t1 < 0) n1 = 0.0;
-    else {
+    if (t1 > 0) {
         t1 *= t1;
-        n1 = t1 * t1 * (x1 * (gi1 > 5 ? 1 : -1) + z1 * (gi1 % 2 === 0 ? 1 : -1));
+        n1 = t1 * t1 * (x1 * gradX[gi1] + z1 * gradZ[gi1]);
     }
 
     let t2 = 0.5 - x2 * x2 - z2 * z2;
-    if (t2 < 0) n2 = 0.0;
-    else {
+    if (t2 > 0) {
         t2 *= t2;
-        n2 = t2 * t2 * (x2 * (gi2 > 5 ? 1 : -1) + z2 * (gi2 % 2 === 0 ? 1 : -1));
+        n2 = t2 * t2 * (x2 * gradX[gi2] + z2 * gradZ[gi2]);
     }
 
     return 70.0 * (n0 + n1 + n2);
 }
 
-export type BiomeId = 'candyland' | 'meadow' | 'archipelago' | 'geothermal' | 'estuary' | 'redwood' | 'sky_citadel';
+export type BiomeId = 'candyland' | 'meadow' | 'archipelago' | 'geothermal' | 'fishing_village' | 'redwood' | 'sky_citadel';
 
 export interface BiomeWeights {
     candyland: number;
     meadow: number;
     archipelago: number;
     geothermal: number;
-    estuary: number;
+    fishing_village: number;
     redwood: number;
     sky_citadel?: number;
 }
@@ -105,8 +110,8 @@ export const BIOME_LOCATIONS: BiomeLocation[] = [
         z: -3200
     },
     {
-        id: 'estuary',
-        name: 'Estuary',
+        id: 'fishing_village',
+        name: 'Fishing Village',
         description: '',
         x: -3200,
         z: 3200
@@ -152,18 +157,18 @@ export function getBiomeWeights(x: number, z: number): BiomeWeights {
 
     let wArch = wxPositive * wzPositive * remainingOuter;
     let wGeoth = wxPositive * wzNegative * remainingOuter;
-    let wEst = wxNegative * wzPositive * remainingOuter;
+    let wFish = wxNegative * wzPositive * remainingOuter;
     let wRed = wxNegative * wzNegative * remainingOuter;
     let wMeadow = meadowWeight;
     let wCandy = originCandy;
 
-    const total = wCandy + wMeadow + wArch + wGeoth + wEst + wRed + 0.00001;
+    const total = wCandy + wMeadow + wArch + wGeoth + wFish + wRed + 0.00001;
     return {
         candyland: wCandy / total,
         meadow: wMeadow / total,
         archipelago: wArch / total,
         geothermal: wGeoth / total,
-        estuary: wEst / total,
+        fishing_village: wFish / total,
         redwood: wRed / total
     };
 }
@@ -178,7 +183,7 @@ export function getDominantBiome(x: number, z: number, y?: number): BiomeId {
     if (w.meadow > maxW) { maxW = w.meadow; dominant = 'meadow'; }
     if (w.archipelago > maxW) { maxW = w.archipelago; dominant = 'archipelago'; }
     if (w.geothermal > maxW) { maxW = w.geothermal; dominant = 'geothermal'; }
-    if (w.estuary > maxW) { maxW = w.estuary; dominant = 'estuary'; }
+    if (w.fishing_village > maxW) { maxW = w.fishing_village; dominant = 'fishing_village'; }
     if (w.redwood > maxW) { maxW = w.redwood; dominant = 'redwood'; }
     return dominant;
 }
@@ -190,7 +195,7 @@ export function getDominantBiomeName(x: number, z: number, y?: number): string {
         case 'meadow': return 'Meadow';
         case 'archipelago': return 'Archipelago';
         case 'geothermal': return 'Geothermal';
-        case 'estuary': return 'Estuary';
+        case 'fishing_village': return 'Fishing Village';
         case 'redwood': return 'Redwood';
         case 'sky_citadel': return 'Citadel';
     }
@@ -245,15 +250,35 @@ function heightGeothermal(x: number, z: number): number {
     return Math.max(3.0, y);
 }
 
-// 4. Bioluminescent Estuary: Broad flat shallow water lagoon (70% water), sandbars, tide flats (max elevation 6.5m)
-function heightEstuary(x: number, z: number): number {
-    const lagoon = snoise(x * 0.0025, z * 0.0025) * 1.8 + 2.7;
-    const sandbarNoise = Math.abs(snoise(x * 0.006 + 300, z * 0.006 - 300));
-    const sandbars = smoothstep(0.22, 0.65, sandbarNoise) * 2.8;
-    const ripples = snoise(x * 0.018, z * 0.018) * 0.6;
+// 4. Fishing Village: Expansive coastal ocean, sweeping bays, smooth sandy beachfronts, and emerald coastal bluffs
+function heightFishingVillage(x: number, z: number): number {
+    // Harbor center in scaled coordinates
+    const dx = x - (-2000);
+    const dz = z - 2000;
+    const distToHarbor = Math.hypot(dx, dz);
 
-    let y = lagoon + sandbars + ripples;
-    return Math.min(6.5, Math.max(2.1, y));
+    // Natural harbor basin around center: broad sheltered bay of open water
+    const harborBasin = smoothstep(650, 180, distToHarbor) * -0.45;
+
+    // Broad continental ocean / bay landmass mask (low frequency for smooth natural bays & open sea)
+    const oceanShape = snoise(x * 0.0016 + 240, z * 0.0016 - 240);
+    const bayNoise = snoise(x * 0.0032 + 500, z * 0.0032 + 120) * 0.35;
+    const landMass = oceanShape + bayNoise + harborBasin;
+
+    // Coastal hills & bluffs
+    const hillsNoise = snoise(x * 0.0024 + 120, z * 0.0024 - 120);
+    const hillHeight = Math.pow(Math.max(0, hillsNoise + 0.22), 1.6) * 26.0;
+    const bluffTerrace = snoise(x * 0.0048 + 320, z * 0.0048 - 280) * 3.2;
+
+    // Smooth shoreline beach transition:
+    // Submerged seabed floor when landMass <= 0.0
+    // Sloping beach across the y = 2.5m water plane into lush hills
+    const beachT = smoothstep(-0.08, 0.38, landMass);
+    const oceanFloor = -2.5 + Math.sin(x * 0.0015 + z * 0.0015) * 1.2;
+    const landY = 1.2 + beachT * (hillHeight + bluffTerrace + 4.8);
+
+    const y = oceanFloor * (1.0 - beachT) + landY * beachT;
+    return Math.max(-5.0, Math.min(32.0, y));
 }
 
 // 5. Colossal Redwood: Towering grand mountain massifs (110m), deep valleys, monolithic slopes
@@ -276,7 +301,7 @@ export function terrainHeightWithWeights(x: number, z: number, w: BiomeWeights):
            heightMeadow(sx, sz) * w.meadow +
            heightArchipelago(sx, sz) * w.archipelago +
            heightGeothermal(sx, sz) * w.geothermal +
-           heightEstuary(sx, sz) * w.estuary +
+           heightFishingVillage(sx, sz) * w.fishing_village +
            heightRedwood(sx, sz) * w.redwood;
 }
 
